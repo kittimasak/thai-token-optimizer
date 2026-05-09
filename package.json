@@ -1,0 +1,52 @@
+{
+  "name": "thai-token-optimizer",
+  "version": "1.0.0",
+  "description": "Thai Token Optimizer v1.0 — adaptive Thai token optimization for Codex, Claude Code, Gemini CLI, and OpenCode.",
+  "private": false,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test 'tests/test_*.js'",
+    "install:codex": "node bin/thai-token-optimizer.js install codex",
+    "install:claude": "node bin/thai-token-optimizer.js install claude",
+    "install:all": "node bin/thai-token-optimizer.js install all",
+    "tto:on": "node bin/thai-token-optimizer.js on",
+    "tto:off": "node bin/thai-token-optimizer.js off",
+    "tto:auto": "node bin/thai-token-optimizer.js auto",
+    "tto:full": "node bin/thai-token-optimizer.js full",
+    "tto:safe": "node bin/thai-token-optimizer.js safe",
+    "tto:benchmark": "node bin/thai-token-optimizer.js benchmark",
+    "tto:doctor": "node bin/thai-token-optimizer.js doctor",
+    "tto:backup": "node bin/thai-token-optimizer.js backup all",
+    "tto:compress:budget": "node bin/thai-token-optimizer.js compress --budget 500",
+    "benchmark": "node bin/thai-token-optimizer.js benchmark",
+    "benchmark:strict": "node bin/thai-token-optimizer.js benchmark --strict",
+    "doctor": "node bin/thai-token-optimizer.js doctor",
+    "ci": "npm test && node bin/thai-token-optimizer.js benchmark --strict --default-policy && node bin/thai-token-optimizer.js doctor --ci"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT",
+  "author": "Dr.Kittimask Naijit",
+  "bin": {
+    "thai-token-optimizer": "bin/thai-token-optimizer.js",
+    "tto": "bin/thai-token-optimizer.js"
+  },
+  "keywords": [
+    "codex",
+    "claude-code",
+    "hooks",
+    "thai",
+    "token",
+    "prompt-compression",
+    "thai-token-optimizer",
+    "gemini-cli",
+    "opencode",
+    "extension",
+    "ai-coding-agent"
+  ],
+  "optionalDependencies": {
+    "@dqbd/tiktoken": "^1.0.21",
+    "gpt-tokenizer": "^2.9.0"
+  }
+}

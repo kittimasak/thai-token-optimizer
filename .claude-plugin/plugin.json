@@ -1,0 +1,87 @@
+{
+  "name": "thai-token-optimizer",
+  "description": "Thai Token Optimizer v1.0 — adaptive compact Thai+English communication mode for Claude Code. Reduces Thai output tokens while preserving technical accuracy and safety clarity.",
+  "author": {
+    "name": "Dr.Kittimasak Naijit",
+    "url": "https://github.com/kittimasak"
+  },
+  "version": "1.0.0",
+  "license": "MIT",
+  "keywords": [
+    "thai",
+    "token-optimizer",
+    "prompt-compression",
+    "claude-code",
+    "hooks",
+    "productivity",
+    "safety"
+  ],
+  "repository": "https://github.com/kittimasak/thai-token-optimizer",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/tto-activate.js\"",
+            "timeout": 5,
+            "statusMessage": "Loading Thai Token Optimizer v1.0"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/tto-mode-tracker.js\"",
+            "timeout": 5,
+            "statusMessage": "Tracking Thai Token Optimizer mode"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/tto-pretool-guard.js\"",
+            "timeout": 5,
+            "statusMessage": "Checking Thai Token Optimizer safety guard"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/tto-posttool-summary.js\"",
+            "timeout": 5,
+            "statusMessage": "Preparing compact Thai tool summary"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/tto-stop-summary.js\"",
+            "timeout": 5,
+            "statusMessage": "Finalizing compact Thai response"
+          }
+        ]
+      }
+    ]
+  }
+}

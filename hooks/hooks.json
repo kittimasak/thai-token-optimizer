@@ -1,0 +1,61 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${TTO_ROOT:-.}/hooks/tto-activate.js\"",
+            "timeout": 5,
+            "statusMessage": "Loading Thai Token Optimizer v1.0"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${TTO_ROOT:-.}/hooks/tto-mode-tracker.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${TTO_ROOT:-.}/hooks/tto-pretool-guard.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${TTO_ROOT:-.}/hooks/tto-posttool-summary.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${TTO_ROOT:-.}/hooks/tto-stop-summary.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

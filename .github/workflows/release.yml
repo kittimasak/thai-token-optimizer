@@ -1,0 +1,23 @@
+name: release-check
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v1.0*'
+
+jobs:
+  release-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install --include=optional
+      - run: npm test
+      - run: node bin/thai-token-optimizer.js benchmark --strict --default-policy
+      - run: node bin/thai-token-optimizer.js config get
+      - run: test "$(node -p "require('./package.json').version")" = "1.0.0"
+      - run: grep -R "Thai Token Optimizer v1.0" README.md AGENTS.md benchmarks || true

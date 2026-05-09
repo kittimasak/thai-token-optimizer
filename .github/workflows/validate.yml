@@ -1,0 +1,111 @@
+name: validate-repository
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate repository files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --include=optional
+
+      - name: JavaScript syntax check
+        run: |
+          find bin hooks adapters benchmarks tests -name "*.js" -type f -print0 | xargs -0 -I{} node --check {}
+
+      - name: Validate JSON files
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+
+          function walk(dir) {
+            if (!fs.existsSync(dir)) return [];
+            const out = [];
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              const full = path.join(dir, entry.name);
+              if (entry.name === 'node_modules' || entry.name === '.git') continue;
+              if (entry.isDirectory()) out.push(...walk(full));
+              else if (entry.isFile() && entry.name.endsWith('.json')) out.push(full);
+            }
+            return out;
+          }
+
+          const files = walk('.');
+          for (const file of files) {
+            JSON.parse(fs.readFileSync(file, 'utf8'));
+            console.log('JSON OK:', file);
+          }
+          NODE
+
+      - name: Validate JSONL files
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+
+          function walk(dir) {
+            if (!fs.existsSync(dir)) return [];
+            const out = [];
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+              const full = path.join(dir, entry.name);
+              if (entry.name === 'node_modules' || entry.name === '.git') continue;
+              if (entry.isDirectory()) out.push(...walk(full));
+              else if (entry.isFile() && entry.name.endsWith('.jsonl')) out.push(full);
+            }
+            return out;
+          }
+
+          for (const file of walk('.')) {
+            const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/).filter(Boolean);
+            lines.forEach((line, i) => {
+              JSON.parse(line);
+              console.log(`JSONL OK: ${file}:${i + 1}`);
+            });
+          }
+          NODE
+
+      - name: Validate version lock
+        run: |
+          test "$(node -p "require('./package.json').version")" = "1.0.0"
+          ! grep -R "v1.1\|1.1.0" README.md AGENTS.md MANUAL.md README_TH.md package.json hooks adapters benchmarks tests bin .github 2>/dev/null
+
+      - name: Validate marketplace/plugin JSON files
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const files = [
+            '.agents/plugins/marketplace.json',
+            '.claude-plugin/marketplace.json',
+            '.claude-plugin/plugin.json',
+            '.codex-plugin/plugin.json',
+            '.codex-plugin/hooks/hooks.json'
+          ];
+          for (const file of files) {
+            if (fs.existsSync(file)) {
+              JSON.parse(fs.readFileSync(file, 'utf8'));
+              console.log('Plugin metadata OK:', file);
+            }
+          }
+          NODE

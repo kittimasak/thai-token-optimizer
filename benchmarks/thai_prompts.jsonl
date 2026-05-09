@@ -1,0 +1,5 @@
+{"id":"debug-react","text":"ช่วยอธิบายรายละเอียดเกี่ยวกับวิธีการตรวจสอบและแก้ไขปัญหา TypeScript error ใน React component ให้เข้าใจง่าย พร้อมตัวอย่างโค้ดประกอบด้วยครับ"}
+{"id":"database-risk","text":"ช่วยเขียนคำสั่ง SQL สำหรับลบข้อมูลเก่าจากตาราง logs ใน production database และขอขั้นตอน rollback ที่ปลอดภัย"}
+{"id":"research","text":"ช่วยสรุปแนวทางการเขียน research gap ของงานวิจัยด้าน AI Agent สำหรับการเทรดอัตโนมัติ โดยขอให้แยก methodological gap analytical gap และ practical gap"}
+{"id":"deploy","text":"ช่วยอธิบายขั้นตอน deploy ระบบ Node.js และ PHP ขึ้น production server อย่างละเอียด พร้อมข้อควรระวังเรื่อง environment variable และ API key"}
+{"id":"teaching","text":"ช่วยอธิบาย ONNX และ Transformers.js ให้นักศึกษาปริญญาตรีเข้าใจง่าย โดยยกตัวอย่างเปรียบเทียบกับการส่งออกไฟล์โมเดล"}

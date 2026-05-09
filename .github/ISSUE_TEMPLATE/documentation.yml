@@ -1,0 +1,27 @@
+name: Documentation improvement
+description: Report missing, unclear, or outdated documentation.
+title: "[Docs]: "
+labels:
+  - documentation
+body:
+  - type: textarea
+    id: location
+    attributes:
+      label: Location
+      description: Which file/section needs improvement?
+      placeholder: "README.md > Install from GitHub"
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: What should be improved?
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested wording
+      render: markdown

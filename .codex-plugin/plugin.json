@@ -1,0 +1,41 @@
+{
+  "name": "thai-token-optimizer",
+  "version": "1.0.0",
+  "description": "Thai Token Optimizer v1.0 — adaptive Thai token optimization for Codex using lifecycle hooks.",
+  "author": {
+    "name": "Dr.Kittimasak Naijit",
+    "url": "https://github.com/kittimasak"
+  },
+  "homepage": "https://github.com/kittimasak/thai-token-optimizer",
+  "repository": "https://github.com/kittimasak/thai-token-optimizer",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "hooks",
+    "thai",
+    "token",
+    "prompt-compression",
+    "productivity",
+    "safety",
+    "local-first"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
+  "commands": "./commands/",
+  "interface": {
+    "displayName": "Thai Token Optimizer",
+    "shortDescription": "Adaptive compact Thai mode for Codex",
+    "longDescription": "Use lifecycle hooks, auto mode, safety classifier, token estimator, and prompt compressor to reduce Thai response tokens while preserving technical English terms, exact identifiers, commands, paths, versions, and safety clarity.",
+    "developerName": "Dr.Kittimasak Naijit",
+    "category": "Productivity",
+    "capabilities": [
+      "Read"
+    ],
+    "defaultPrompt": [
+      "token thai auto",
+      "thai compact full",
+      "ลด token ไทย"
+    ],
+    "brandColor": "#0EA5E9"
+  }
+}

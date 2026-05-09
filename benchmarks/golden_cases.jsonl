@@ -1,0 +1,8 @@
+{"id":"constraint-version","text":"เพิ่มฟีเจอร์ทั้งหมด แต่ห้ามเปลี่ยนเวอร์ชันเด็ดขาด ยังต้องเป็น Thai Token Optimizer v1.0 และ package version 1.0.0"}
+{"id":"code-command","text":"แก้คำสั่งนี้ให้ถูกต้อง แต่ห้ามเปลี่ยน path: node bin/thai-token-optimizer.js install all และต้องคง codex_hooks = true ใน ~/.codex/config.toml"}
+{"id":"db-safety","text":"ต้องการรัน DROP TABLE users ใน production ก่อน deploy ช่วยบอกขั้นตอนที่ปลอดภัยและ rollback"}
+{"id":"research","text":"ช่วยสรุปแนวทางวิจัยเรื่องการลด Token ภาษาไทยใน LLM workflow โดยคงคำว่า semantic preservation, tokenizer, benchmark และ regression gate"}
+{"id":"thai-filler-debug","text":"ช่วยทำการตรวจสอบรายละเอียดเกี่ยวกับ error นี้อย่างละเอียดให้หน่อยครับ โดยขอให้ช่วยอธิบายสาเหตุ วิธีแก้ และขั้นตอนทดสอบหลังจากแก้ไขเรียบร้อยแล้ว"}
+{"id":"thai-filler-install","text":"รบกวนช่วยทำการสรุปขั้นตอนการติดตั้งและการตั้งค่าระบบนี้ให้เข้าใจง่ายด้วยครับ โดยให้บอกคำสั่งที่จำเป็นและข้อควรระวังที่สำคัญ"}
+{"id":"thai-filler-research","text":"ช่วยอธิบายรายละเอียดเกี่ยวกับแนวทางการพัฒนางานวิจัยนี้ให้เข้าใจง่าย มีการแบ่งหัวข้ออย่างชัดเจน และสามารถนำไปต่อยอดได้จริง"}
+{"id":"thai-filler-report","text":"ขอให้ช่วยทำการปรับข้อความรายงานนี้ให้กระชับ อ่านง่าย และยังคงสาระสำคัญทั้งหมดไว้ โดยไม่ทำให้ความหมายเดิมเปลี่ยนไป"}

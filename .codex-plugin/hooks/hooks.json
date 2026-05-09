@@ -1,0 +1,67 @@
+{
+  "SessionStart": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"${CODEX_PLUGIN_ROOT:-.}/hooks/tto-activate.js\"",
+          "timeout": 5,
+          "statusMessage": "Loading Thai Token Optimizer v1.0"
+        }
+      ]
+    }
+  ],
+  "UserPromptSubmit": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"${CODEX_PLUGIN_ROOT:-.}/hooks/tto-mode-tracker.js\"",
+          "timeout": 5,
+          "statusMessage": "Tracking Thai Token Optimizer mode"
+        }
+      ]
+    }
+  ],
+  "PreToolUse": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"${CODEX_PLUGIN_ROOT:-.}/hooks/tto-pretool-guard.js\"",
+          "timeout": 5,
+          "statusMessage": "Checking Thai Token Optimizer safety guard"
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"${CODEX_PLUGIN_ROOT:-.}/hooks/tto-posttool-summary.js\"",
+          "timeout": 5,
+          "statusMessage": "Preparing compact Thai tool summary"
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"${CODEX_PLUGIN_ROOT:-.}/hooks/tto-stop-summary.js\"",
+          "timeout": 5,
+          "statusMessage": "Finalizing compact Thai response"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+name: Feature request
+description: Suggest an improvement for Thai Token Optimizer v1.0.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please keep the project identity as `Thai Token Optimizer v1.0 / package version: 1.0.0`.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem should this feature solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the feature and expected behavior.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - CLI
+        - Pretty CLI UI
+        - Compression
+        - Safety
+        - Agent integration
+        - Documentation
+        - Testing/CI
+        - Other
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Example commands or output
+      render: text

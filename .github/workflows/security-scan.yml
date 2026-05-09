@@ -1,0 +1,26 @@
+name: security-scan
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  security-scan:
+    name: Secret and unsafe pattern scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Scan for obvious secrets
+        run: |
+          ! grep -RInE "(OPENAI_API_KEY|ANTHROPIC_API_KEY|GEMINI_API_KEY|api[_-]?key\s*=|secret\s*=|password\s*=|bearer\s+[A-Za-z0-9._-]+)" .             --exclude-dir=.git             --exclude-dir=node_modules             --exclude="*.md"             --exclude="package-lock.json"             || (echo "Potential secret found" && exit 1)
+
+      - name: Scan for accidental destructive command examples outside docs/tests
+        run: |
+          grep -RInE "rm -rf /|DROP TABLE users" .             --exclude-dir=.git             --exclude-dir=node_modules             --include="*.js"             --include="*.json"             && echo "Review destructive command examples above" || true

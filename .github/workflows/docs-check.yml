@@ -1,0 +1,42 @@
+name: docs-check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docs-check:
+    name: Documentation consistency
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check required docs exist
+        run: |
+          test -f README.md
+          test -f AGENTS.md
+          test -f MANUAL.md || true
+          test -f README_TH.md || true
+
+      - name: Check canonical identity in docs
+        run: |
+          grep -q "Thai Token Optimizer v1.0" README.md
+          grep -q "package version: 1.0.0" README.md
+          grep -q "Thai Token Optimizer v1.0" AGENTS.md || true
+
+      - name: Check important commands documented
+        run: |
+          grep -q "tto install all" README.md
+          grep -q "tto doctor --pretty" README.md
+          grep -q "tto rollback latest --dry-run" README.md
+          grep -q "token thai auto" README.md
+
+      - name: Check no macOS junk files
+        run: |
+          ! find . -name ".DS_Store" -o -name "__MACOSX" | grep .
