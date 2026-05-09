@@ -47,6 +47,6 @@
   ],
   "optionalDependencies": {
     "@dqbd/tiktoken": "^1.0.21",
-    "gpt-tokenizer": "^2.9.0"
+    "gpt-tokenizer": "^3.4.0"
   }
 }
