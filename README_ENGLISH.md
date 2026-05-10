@@ -1688,6 +1688,96 @@ Adds:
 - Plugin hooks: `pre_llm_call`, `pre_tool_call`, `post_tool_call`, `post_llm_call`, session lifecycle, `transform_terminal_output`, `transform_llm_output`
 - `hooks_auto_accept: true` inside the managed block so shell hooks are ready in non-TTY/gateway runs
 - `plugins.enabled: [thai-token-optimizer]` to enable plugin hooks
+
+### OpenClaw and Hermes Agent: Detailed Integration Model
+
+Thai Token Optimizer integrates with OpenClaw and Hermes Agent using the same core idea: install an adapter inside the agent-specific config area, then let the agent call hooks before, during, or after important workflow events. The two agents expose different hook models, so the adapters are intentionally separate and target-aware.
+
+#### OpenClaw Integration Flow
+
+```text
+tto install openclaw
+  -> backup target: openclaw
+  -> write ~/.openclaw/hooks/thai-token-optimizer/HOOK.md
+  -> write ~/.openclaw/hooks/thai-token-optimizer/handler.ts
+  -> write ~/.openclaw/hooks/thai-token-optimizer/simulate.cjs
+  -> enable hooks.internal.entries["thai-token-optimizer"] in ~/.openclaw/openclaw.json
+  -> tto doctor openclaw simulates a risky command event
+```
+
+OpenClaw uses a managed hook pack discovered from `~/.openclaw/hooks/`. `HOOK.md` provides metadata, `handler.ts` is the main runtime handler, and `simulate.cjs` is used for local validation so `tto doctor openclaw` can verify safety behavior even when the OpenClaw binary is not installed or no live session is running.
+
+| OpenClaw event | Thai Token Optimizer behavior | Purpose |
+|---|---|---|
+| `gateway:startup` | Emits TTO active context | Prepares compact Thai behavior from gateway startup |
+| `agent:bootstrap` | Emits preservation and safety rules | Tells the agent to preserve commands, paths, versions, and errors exactly |
+| `command:new` | Analyzes new command payloads | Detects risky commands before work starts |
+| `command:reset` | Restores safe context after reset | Reduces loss of critical constraints |
+| `command` | Checks payload during command flow | Adds safety guidance for production, secret, or destructive intent |
+
+The OpenClaw adapter does not randomly rewrite user prompts. It adds structured guidance at hook points supported by OpenClaw. If it detects risky intent such as `rm -rf`, `DROP TABLE`, `git push --force`, production, secret, auth, payment, or migration, it forces safe-mode guidance: preserve the exact command, explain risk, include backup, verification, and rollback.
+
+#### Hermes Agent Integration Flow
+
+```text
+tto install hermes
+  -> backup target: hermes
+  -> write ~/.hermes/config.yaml managed block
+  -> write shell hooks into ~/.hermes/agent-hooks/*.cjs
+  -> write plugin pack into ~/.hermes/plugins/thai-token-optimizer/
+  -> enable plugins.enabled: [thai-token-optimizer]
+  -> tto doctor hermes simulates pre_tool_call with a risky command
+```
+
+Hermes supports both Shell hooks and Plugin hooks, so the adapter uses hybrid integration for CLI/local sessions and Gateway/plugin sessions:
+
+| Hermes layer | Installed file | Role |
+|---|---|---|
+| Shell hooks | `~/.hermes/agent-hooks/thai-token-optimizer-*.cjs` | Subprocess hooks for context injection and risky tool guards |
+| Config block | `~/.hermes/config.yaml` | Enables `hooks_auto_accept`, maps events to shell scripts, and enables the plugin |
+| Plugin manifest | `~/.hermes/plugins/thai-token-optimizer/plugin.yaml` | Lets Hermes discover the plugin pack |
+| Plugin runtime | `~/.hermes/plugins/thai-token-optimizer/__init__.py` | Registers plugin hooks through `ctx.register_hook()` |
+
+| Hermes hook | Thai Token Optimizer behavior | Purpose |
+|---|---|---|
+| `pre_llm_call` | Injects compact Thai context | Guides the LLM to answer compactly in Thai while preserving technical details |
+| `pre_tool_call` | Blocks/warns when payload is risky | Prevents destructive tool use while preserving the exact command |
+| `post_tool_call` | Keeps an extension point for post-tool summaries | Reduces noise after tool output |
+| `post_llm_call` | Pass-through output transformation | Preserves compatibility with plugin lifecycle |
+| `on_session_start` / `on_session_reset` / `on_session_finalize` | Lifecycle context hooks | Keeps TTO rules active after session start/reset/finalize |
+| `subagent_stop` | Session/subagent lifecycle guard | Helps preserve next action and constraints when a subagent finishes |
+| `transform_terminal_output` | Safely truncates long terminal output | Reduces tokens while preserving command, exit code, and cwd |
+| `transform_llm_output` | Pass-through final answer | Avoids unnecessary final-answer rewriting |
+
+#### Validation and Doctor Checks
+
+```bash
+tto doctor openclaw --pretty
+tto doctor hermes --pretty
+```
+
+`tto doctor openclaw` validates metadata, handler, config entry, command events, and local simulation. `tto doctor hermes` validates `config.yaml`, shell hook scripts, plugin manifest, plugin runtime, and simulates `pre_tool_call` with a risky command to confirm the hook returns `action: block` plus backup/verification/rollback guidance.
+
+#### Backup, Rollback, and Uninstall
+
+```bash
+tto backup openclaw
+tto backup hermes
+tto rollback openclaw --dry-run
+tto rollback hermes --dry-run
+tto uninstall openclaw
+tto uninstall hermes
+```
+
+Every `tto install openclaw` or `tto install hermes` run creates a backup first through the shared Thai Token Optimizer backup system. Target-specific rollback restores only files for that target and does not touch Codex, Claude, Gemini, or OpenCode unless explicitly requested.
+
+#### Intentional Limitations
+
+- The OpenClaw/Hermes adapters do not replace the agent's internal policy system; they add a safety/context layer for the agent to use.
+- If the OpenClaw or Hermes binary is not installed, `doctor` can still validate files, config, and simulation, but it does not claim a live session was executed.
+- Shell/plugin hooks are designed to fail safely: if input parsing fails, they do not break the session or mutate commands arbitrarily.
+- The version remains locked to `Thai Token Optimizer v1.0` and package `1.0.0` by project constraint.
+
 ### Portable adapters
 
 | Adapter | File |

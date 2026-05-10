@@ -1684,6 +1684,96 @@ Hooks:
 - Plugin hooks: `pre_llm_call`, `pre_tool_call`, `post_tool_call`, `post_llm_call`, session lifecycle, `transform_terminal_output`, `transform_llm_output`
 - `hooks_auto_accept: true` ใน managed block เพื่อให้ shell hooks พร้อมทำงานหลังติดตั้งใน non-TTY/gateway
 - `plugins.enabled: [thai-token-optimizer]` เพื่อเปิด plugin hooks
+
+### OpenClaw และ Hermes Agent: การทำงานร่วมกันแบบละเอียด
+
+Thai Token Optimizer เชื่อมกับ OpenClaw และ Hermes Agent ผ่านแนวคิดเดียวกันคือ “ติดตั้ง adapter ในพื้นที่ config ของ agent แล้วให้ agent เรียก hook ก่อน/ระหว่าง/หลังงานสำคัญ” แต่ทั้งสองระบบมี model ไม่เหมือนกัน จึงออกแบบ adapter แยกกันเพื่อใช้ความสามารถของแต่ละ agent ให้เต็มที่สุด
+
+#### OpenClaw Integration Flow
+
+```text
+tto install openclaw
+  -> backup target: openclaw
+  -> write ~/.openclaw/hooks/thai-token-optimizer/HOOK.md
+  -> write ~/.openclaw/hooks/thai-token-optimizer/handler.ts
+  -> write ~/.openclaw/hooks/thai-token-optimizer/simulate.cjs
+  -> enable hooks.internal.entries["thai-token-optimizer"] in ~/.openclaw/openclaw.json
+  -> tto doctor openclaw simulates a risky command event
+```
+
+OpenClaw ใช้ managed hook pack ที่ถูก discover จาก `~/.openclaw/hooks/` โดยมี `HOOK.md` เป็น metadata และ `handler.ts` เป็น runtime handler หลัก ส่วน `simulate.cjs` ใช้สำหรับ validation แบบ local เพื่อให้ `tto doctor openclaw` ตรวจพฤติกรรม safety ได้ แม้เครื่องนั้นยังไม่มี OpenClaw binary หรือยังไม่ได้เปิด session จริง
+
+| OpenClaw event | Thai Token Optimizer behavior | จุดประสงค์ |
+|---|---|---|
+| `gateway:startup` | ส่ง context ว่า TTO active | เตรียม compact Thai behavior ตั้งแต่เริ่ม gateway |
+| `agent:bootstrap` | ส่งกฎ preservation และ safety | ให้ agent รู้ว่าต้องคง command/path/version/error exact |
+| `command:new` | วิเคราะห์คำสั่ง/ข้อความใหม่ | จับ risky command ก่อนงานเริ่ม |
+| `command:reset` | คืน context แบบปลอดภัยหลัง reset | ลดโอกาสสูญเสีย constraint สำคัญ |
+| `command` | ตรวจ payload ระหว่าง command flow | เพิ่ม safety guidance เมื่อพบ production/secret/destructive intent |
+
+OpenClaw adapter ไม่แก้ prompt ของผู้ใช้แบบสุ่ม แต่เพิ่ม structured guidance ให้ agent เห็นในจุดที่ hook model รองรับ ถ้าพบคำสั่งเสี่ยง เช่น `rm -rf`, `DROP TABLE`, `git push --force`, production, secret, auth, payment หรือ migration จะบังคับแนวทาง safe mode: คงคำสั่ง exact, อธิบาย risk, มี backup, verification และ rollback
+
+#### Hermes Agent Integration Flow
+
+```text
+tto install hermes
+  -> backup target: hermes
+  -> write ~/.hermes/config.yaml managed block
+  -> write shell hooks into ~/.hermes/agent-hooks/*.cjs
+  -> write plugin pack into ~/.hermes/plugins/thai-token-optimizer/
+  -> enable plugins.enabled: [thai-token-optimizer]
+  -> tto doctor hermes simulates pre_tool_call with a risky command
+```
+
+Hermes รองรับทั้ง Shell hooks และ Plugin hooks ดังนั้น adapter จึงใช้ hybrid integration เพื่อให้ทำงานได้ทั้ง CLI/local session และ Gateway/plugin session:
+
+| Hermes layer | Installed file | Role |
+|---|---|---|
+| Shell hooks | `~/.hermes/agent-hooks/thai-token-optimizer-*.cjs` | subprocess hooks สำหรับ context injection และ risky tool guard |
+| Config block | `~/.hermes/config.yaml` | เปิด `hooks_auto_accept`, map events ไป shell scripts, และเปิด plugin |
+| Plugin manifest | `~/.hermes/plugins/thai-token-optimizer/plugin.yaml` | ให้ Hermes discover plugin pack |
+| Plugin runtime | `~/.hermes/plugins/thai-token-optimizer/__init__.py` | register plugin hooks ผ่าน `ctx.register_hook()` |
+
+| Hermes hook | Thai Token Optimizer behavior | จุดประสงค์ |
+|---|---|---|
+| `pre_llm_call` | inject compact Thai context | ให้ LLM ตอบไทยกระชับและคง technical details |
+| `pre_tool_call` | block/เตือนเมื่อ payload เสี่ยง | ป้องกัน destructive command โดยยังคงคำสั่ง exact |
+| `post_tool_call` | คงจุดเชื่อมสำหรับ summary หลัง tool | ลด noise หลัง tool output |
+| `post_llm_call` | pass-through output transformation | รักษาความเข้ากันได้กับ plugin lifecycle |
+| `on_session_start` / `on_session_reset` / `on_session_finalize` | lifecycle context hooks | คงกฎ TTO หลังเริ่ม session/reset/finalize |
+| `subagent_stop` | session/subagent lifecycle guard | ช่วยรักษา next action/constraints หลัง subagent จบ |
+| `transform_terminal_output` | truncate output ยาวแบบปลอดภัย | ลด token โดยเก็บ command, exit code, cwd |
+| `transform_llm_output` | pass-through final answer | ไม่แก้ final answer โดยไม่จำเป็น |
+
+#### Validation และ Doctor Checks
+
+```bash
+tto doctor openclaw --pretty
+tto doctor hermes --pretty
+```
+
+`tto doctor openclaw` ตรวจว่า metadata, handler, config entry, command events และ local simulation พร้อมใช้งาน ส่วน `tto doctor hermes` ตรวจ `config.yaml`, shell hook scripts, plugin manifest, plugin runtime และจำลอง `pre_tool_call` ด้วย risky command เพื่อยืนยันว่า hook คืน `action: block` พร้อมข้อความ backup/verification/rollback
+
+#### Backup, Rollback และ Uninstall
+
+```bash
+tto backup openclaw
+tto backup hermes
+tto rollback openclaw --dry-run
+tto rollback hermes --dry-run
+tto uninstall openclaw
+tto uninstall hermes
+```
+
+ทุกการติดตั้งผ่าน `tto install openclaw` หรือ `tto install hermes` จะสร้าง backup ก่อนเสมอผ่านระบบ backup กลางของ Thai Token Optimizer และ rollback แบบ target-specific จะ restore เฉพาะไฟล์ของ target นั้น ไม่แตะ Codex, Claude, Gemini หรือ OpenCode โดยไม่จำเป็น
+
+#### ข้อจำกัดที่ตั้งใจออกแบบไว้
+
+- OpenClaw/Hermes adapter ไม่แทนที่ระบบ policy ภายใน agent แต่เพิ่ม safety/context layer ให้ agent ใช้ประกอบการตัดสินใจ
+- หากไม่มี binary ของ OpenClaw หรือ Hermes ในเครื่อง `doctor` ยังตรวจได้ระดับ file/config/simulation แต่ไม่ claim ว่าได้รัน session จริง
+- Shell/plugin hooks ถูกออกแบบให้ fail-safe: หาก parsing input ผิดพลาด hook จะไม่ทำลาย session และจะไม่แก้ command โดยพลการ
+- Version ยังคงล็อกที่ `Thai Token Optimizer v1.0` และ package `1.0.0` ตาม project constraint
+
 ### Portable adapters
 
 | Adapter | ไฟล์ |
