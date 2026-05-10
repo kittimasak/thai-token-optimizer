@@ -705,6 +705,8 @@ Priority order:
 - `--check` semantic preservation
 - Code-aware compression
 - Constraint lock for words such as `ต้อง`, `ห้าม`, `เด็ดขาด`, `v1.0`, `1.0.0`
+- Adaptive Compression Learning with `tto keep`, `tto forget`, and `tto dictionary`
+- User-specific Dictionary for jargon and writing style that must be preserved
 
 ### Safety
 
@@ -717,6 +719,10 @@ Priority order:
 ### Reliability
 
 - `tto doctor`
+- `tto doctor codex`
+- `tto doctor claude`
+- `tto doctor gemini`
+- `tto doctor opencode`
 - `tto backup`
 - `tto backups`
 - `tto rollback`
@@ -1043,6 +1049,15 @@ tto compress --level full prompt.txt
 cat prompt.txt | tto compress --level auto
 ```
 
+### Personalization
+
+```bash
+tto keep "รบกวนช่วย"
+tto keep "API_KEY(foo)[bar]*"
+tto dictionary
+tto forget "รบกวนช่วย"
+```
+
 ### Budget compression
 
 ```bash
@@ -1082,6 +1097,8 @@ tto rollback latest --no-prebackup
 
 ```bash
 tto doctor
+tto doctor codex
+tto doctor codex --pretty
 tto doctor --pretty
 tto doctor --ci
 ```
@@ -1150,6 +1167,142 @@ Example output:
 ```
 
 If the budget is too small, the compressor prioritizes preservation over forced shortening.
+
+---
+
+## 🧠 Adaptive Compression Learning
+
+Personalization makes Thai Token Optimizer v1.0 more than a static compression rule set. It can learn user-specific terms through a local User-specific Dictionary and protect those terms during compression.
+
+Core idea:
+
+```text
+Static filler rules + User-specific keep dictionary = personalized compression
+```
+
+### When to use it
+
+Use personalization when a word or phrase looks like filler to a generic compressor but carries meaning in your workflow, such as:
+
+- team jargon
+- internal system names
+- feature or module names
+- writing style that should remain intact
+- prompt phrases that influence agent behavior
+- tokens, config keys, labels, or identifiers that should not be touched
+
+Examples:
+
+```bash
+tto keep "รบกวนช่วย"
+tto keep "ระบบเทพ"
+tto keep "API_KEY(foo)[bar]*"
+```
+
+After this, the compressor protects those terms during `tto compress` and `tto rewrite`.
+
+### Commands
+
+| Command | Purpose |
+|---|---|
+| `tto keep <word>` | Add a word or phrase to the personal dictionary so the compressor preserves it |
+| `tto forget <word>` | Remove a word or phrase from the personal dictionary |
+| `tto dictionary` | Show the words currently protected for this user |
+
+Example workflow:
+
+```bash
+tto compress --level auto "รบกวนช่วยอธิบายขั้นตอนแบบละเอียดครับ"
+tto keep "รบกวนช่วย"
+tto compress --level auto "รบกวนช่วยอธิบายขั้นตอนแบบละเอียดครับ"
+tto forget "รบกวนช่วย"
+tto dictionary
+```
+
+Before `keep`, the phrase `รบกวนช่วย` may be treated as filler.  
+After `keep`, it is preserved as part of the user's style.
+
+### Persistent storage
+
+The dictionary is stored locally at:
+
+```text
+~/.thai-token-optimizer/dictionary.json
+```
+
+If `TTO_HOME` or `THAI_TOKEN_OPTIMIZER_HOME` is set, the dictionary is stored under that directory:
+
+```bash
+TTO_HOME=/tmp/tto-home tto keep "ระบบเทพ"
+```
+
+File format:
+
+```json
+{
+  "keep": [
+    "รบกวนช่วย",
+    "ระบบเทพ",
+    "API_KEY(foo)[bar]*"
+  ],
+  "version": 1
+}
+```
+
+The implementation uses an in-memory cache inside each process to avoid repeated disk reads. It also normalizes malformed dictionary files so empty values, duplicates, unexpected types, or hand-edited files do not crash compression.
+
+### Parser-level protection
+
+The personal dictionary is integrated into `tto-code-aware-parser.js`; it is not applied as a fragile post-compression string replacement.
+
+Protection order:
+
+1. Protected technical ranges such as code fences, inline code, URLs, paths, commands, versions, and env/config lines
+2. User-specific keep dictionary
+3. Filler/replacement compression
+4. Constraint lock and preservation check
+
+Technical structures remain the highest priority, then user-specific terms are protected before compression rules run.
+
+### RegExp safety
+
+Dictionary entries may contain special characters:
+
+```bash
+tto keep "API_KEY(foo)[bar]*"
+```
+
+Thai Token Optimizer escapes dictionary entries before building dynamic RegExp patterns, so these values do not break parsing or match unintended patterns.
+
+### Overlapping terms
+
+Overlapping entries are handled safely:
+
+```bash
+tto keep "ระบบ"
+tto keep "ระบบเทพ"
+```
+
+Longer entries are prioritized so `ระบบเทพ` can be protected as a full phrase before shorter terms like `ระบบ`.
+
+### Backup and rollback
+
+`dictionary.json` is part of the user's learned behavior, so backup and rollback include it:
+
+```bash
+tto backup codex
+tto rollback codex --dry-run
+tto rollback codex
+```
+
+After rollback, the personal dictionary is restored to the snapshot state together with related state/config files.
+
+### Limitations
+
+- Learning is explicit: the user teaches terms with `tto keep`
+- The tool does not yet infer important terms automatically from behavior
+- The dictionary is local per machine and per `TTO_HOME`
+- Very broad entries such as `ระบบ` may reduce compression opportunities because they are always protected
 
 ---
 
@@ -1413,6 +1566,8 @@ Input Thai prompt
   ↓
 Code-aware parser
   ↓
+User-specific dictionary protection
+  ↓
 Constraint locker
   ↓
 Safety classifier
@@ -1433,6 +1588,7 @@ Main modules:
 | `tto-compressor.js` | Main prompt rewrite/compression engine |
 | `tto-budget-compressor.js` | Compresses toward token budget |
 | `tto-code-aware-parser.js` | Protects code/config/path/URL/command/version |
+| `tto-config.js` | Stores state, policy home paths, and personal dictionary |
 | `tto-constraint-locker.js` | Extracts and re-adds hard constraints |
 | `tto-preservation-checker.js` | Checks missing protected items |
 | `tto-token-estimator.js` | Estimates token savings |
