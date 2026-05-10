@@ -23,17 +23,17 @@ const CATEGORIES = [
   {
     id: 'destructive_command',
     severity: 'high',
-    patterns: [/\brm\s+-rf\b/i, /\bchmod\s+777\b/i, /\bchown\s+-R\b/i, /\bgit\s+reset\s+--hard\b/i, /\bgit\s+push\s+--force\b/i, /\bmkfs\b/i, /\bdd\s+if=/i]
+    patterns: [/\brm\s+-rf\b/i, /\bchmod\s+777\b/i, /\bchown\s+-R\b/i, /\bgit\s+reset\s+--hard\b/i, /\bgit\s+push\s+--force\b/i, /\bmkfs\b/i, /\bdd\s+if=/i, /พุชฟอร์ซ|ลบไฟล์ทั้งหมด|ฟอร์แมต/i]
   },
   {
     id: 'database_migration',
     severity: 'high',
-    patterns: [/\bDROP\s+TABLE\b/i, /\bTRUNCATE\s+TABLE\b/i, /\bALTER\s+TABLE\b/i, /\bDELETE\s+FROM\b/i, /migration/i, /schema/i, /ฐานข้อมูล|ตาราง|ลบข้อมูล|ย้ายข้อมูล/]
+    patterns: [/\bDROP\s+TABLE\b/i, /\bTRUNCATE\s+TABLE\b/i, /\bALTER\s+TABLE\b/i, /\bDELETE\s+FROM\b/i, /migration/i, /schema/i, /ฐานข้อมูล|ตาราง|ลบข้อมูล|ย้ายข้อมูล|ดรอปเทเบิ้ล|ดรอปดาต้าเบส/i]
   },
   {
     id: 'production_deploy',
     severity: 'high',
-    patterns: [/production|prod\b|deploy|release|rollback|hotfix/i, /ขึ้นระบบจริง|โปรดักชัน|ปล่อยระบบ|ดีพลอย/]
+    patterns: [/production|prod\b|deploy|release|rollback|hotfix/i, /ขึ้นระบบจริง|โปรดักชัน|ปล่อยระบบ|ดีพลอย|ดันขึ้นโปรดักชัน/i]
   },
   {
     id: 'security_secret',
@@ -43,7 +43,7 @@ const CATEGORIES = [
   {
     id: 'auth_payment',
     severity: 'medium',
-    patterns: [/auth|oauth|jwt|session|permission|role|payment|billing|invoice/i, /สิทธิ์|ยืนยันตัวตน|ชำระเงิน|ใบแจ้งหนี้/]
+    patterns: [/auth|oauth|jwt|session|permission|role|payment|billing|invoice/i, /สิทธิ์|ยืนยันตัวตน|ชำระเงิน|ใบแจ้งหนี้|จ่ายเงิน|เก็บเงิน/]
   },
   {
     id: 'clarification_requested',

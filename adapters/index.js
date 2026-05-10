@@ -85,6 +85,7 @@ function readJson(file, fallback = {}) {
 }
 function writeJson(file, obj) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
+  if (fs.existsSync(file)) fs.copyFileSync(file, uniqueAdapterBackupPath(file));
   fs.writeFileSync(file, JSON.stringify(obj, null, 2) + '\n');
   return file;
 }

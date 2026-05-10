@@ -70,7 +70,15 @@ function tryGptTokenizer(text) {
 }
 function exactEstimate(text, target = 'generic') {
   const base = heuristicEstimate(text, target);
-  const exact = tryTiktoken(text) || tryGptTokenizer(text);
+  let exact = null;
+  const isOpenAi = /codex|openai|gpt/i.test(target);
+  
+  if (isOpenAi) {
+    exact = tryGptTokenizer(text) || tryTiktoken(text);
+  } else {
+    exact = tryTiktoken(text) || tryGptTokenizer(text);
+  }
+
   if (!exact) return { ...base, requestedExact: true, exactAvailable: false, note: 'Optional tokenizer not installed; used heuristic fallback.' };
   return { ...base, estimatedTokens: exact.count, exact: true, requestedExact: true, exactAvailable: true, tokenizer: exact.tokenizer };
 }
