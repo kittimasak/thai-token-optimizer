@@ -47,7 +47,7 @@ Commands:
   off|stop                Disable optimizer
   status [--pretty]       Show state
   ui|dashboard            Show pretty terminal dashboard
-  doctor [--pretty]       Health check Codex/Claude/state/backups
+  doctor [target] [--pretty] Health check target: all|codex|claude|gemini|opencode
   backup [target]         Create config backup
   backups                 List backups
   rollback [latest|id|target] [--dry-run] Restore backup
@@ -65,6 +65,7 @@ Pretty UI:
   tto ui
   tto status --pretty
   tto doctor --pretty
+  tto doctor codex --pretty
   tto compress --pretty --budget 500 prompt.txt
   tto classify --pretty "DROP TABLE users production"
   tto benchmark --pretty --strict --default-policy
@@ -255,6 +256,13 @@ function runClassify(args) {
   const result = classifyText(text);
   console.log(pretty ? renderSafety(result) : JSON.stringify(result, null, 2));
 }
+function runDoctorCommand(args = []) {
+  validateKnownOptions(args, { flags: ['--ci', '--pretty'] });
+  const target = args.find(a => !String(a).startsWith('--')) || 'all';
+  const result = runDoctor({ ci: hasFlag(args, '--ci'), target });
+  console.log(hasFlag(args, '--pretty') ? renderDoctor(result) : formatDoctor(result));
+  process.exitCode = result.ok ? 0 : 1;
+}
 function runBenchmark(args=[]) {
   validateKnownOptions(args, { flags: ['--strict', '--default-policy', '--pretty'] });
   const root = path.resolve(__dirname, '..');
@@ -304,7 +312,7 @@ try {
     console.log(hasFlag(rest, '--pretty') ? renderStatus(state) : JSON.stringify(state, null, 2));
   }
   else if (cmd === 'ui' || cmd === 'dashboard') { const result = runDoctor({ ci: false }); console.log(renderDashboard(getState(), result)); }
-  else if (cmd === 'doctor') { const result = runDoctor({ ci: hasFlag(rest, '--ci') }); console.log(hasFlag(rest, '--pretty') ? renderDoctor(result) : formatDoctor(result)); process.exitCode = result.ok ? 0 : 1; }
+  else if (cmd === 'doctor') runDoctorCommand(rest);
   else if (cmd === 'backup') runBackup(rest);
   else if (cmd === 'backups') runBackups();
   else if (cmd === 'rollback') runRollback(rest);

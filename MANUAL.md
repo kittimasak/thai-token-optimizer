@@ -122,7 +122,7 @@ Commands:
   off|stop                Disable optimizer
   status [--pretty]       Show state
   ui|dashboard            Show pretty terminal dashboard
-  doctor [--pretty]       Health check Codex/Claude/state/backups
+  doctor [target] [--pretty] Health check target: all|codex|claude|gemini|opencode
   backup [target]         Create config backup
   backups                 List backups
   rollback [latest|id|target] [--dry-run] Restore backup
@@ -140,6 +140,7 @@ Pretty UI:
   tto ui
   tto status --pretty
   tto doctor --pretty
+  tto doctor codex --pretty
   tto compress --pretty --budget 500 prompt.txt
   tto classify --pretty "DROP TABLE users production"
   tto benchmark --pretty --strict --default-policy
@@ -1928,6 +1929,8 @@ tto rollback latest --no-prebackup
 
 # Doctor / benchmark
 tto doctor
+tto doctor codex
+tto doctor codex --pretty
 tto doctor --pretty
 tto doctor --ci
 tto benchmark

@@ -115,6 +115,7 @@ function renderDashboard(state = {}, doctor = null) {
 function renderDoctor(result = {}) {
   const body = [
     `Mode          ${result.mode || 'installed'}`,
+    `Target        ${result.target || 'all'}`,
     `Status        ${result.ok ? 'PASS' : 'WARN'}`,
     `Package       ${result.packageVersion || '1.0.0'}`,
     ''

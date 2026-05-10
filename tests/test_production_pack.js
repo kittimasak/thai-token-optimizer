@@ -96,3 +96,70 @@ test('doctor reports installed Codex and Claude hooks in isolated home', () => {
     fs.rmSync(home, { recursive: true, force: true });
   }
 });
+
+test('doctor codex validates only Codex integration with hook simulations', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'tto-doctor-codex-'));
+  const env = { HOME: home, CODEX_HOME: path.join(home, '.codex'), CLAUDE_HOME: path.join(home, '.claude'), TTO_HOME: path.join(home, '.tto') };
+  try {
+    assert.equal(run(['install', 'codex'], env).status, 0);
+    const codex = run(['doctor', 'codex'], env);
+    assert.equal(codex.status, 0, codex.stdout + codex.stderr);
+    assert.match(codex.stdout, /Target: codex/);
+    assert.match(codex.stdout, /Codex UserPromptSubmit hook simulation/);
+    assert.doesNotMatch(codex.stdout, /Claude hooks installed/);
+
+    const all = run(['doctor', 'all'], env);
+    assert.notEqual(all.status, 0);
+    assert.match(all.stdout, /Claude hooks installed/);
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('doctor codex fails when installed hook command points to the wrong script path', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'tto-doctor-bad-hook-'));
+  const codexHome = path.join(home, '.codex');
+  const env = { HOME: home, CODEX_HOME: codexHome, TTO_HOME: path.join(home, '.tto') };
+  try {
+    assert.equal(run(['install', 'codex'], env).status, 0);
+    const hooksPath = path.join(codexHome, 'hooks.json');
+    const hooks = JSON.parse(fs.readFileSync(hooksPath, 'utf8'));
+    hooks.hooks.UserPromptSubmit[0].hooks[0].command = 'node /tmp/missing/tto-mode-tracker.js';
+    fs.writeFileSync(hooksPath, JSON.stringify(hooks, null, 2) + '\n');
+
+    const res = run(['doctor', 'codex'], env);
+    assert.notEqual(res.status, 0);
+    assert.match(res.stdout, /Codex UserPromptSubmit hook command/);
+    assert.match(res.stdout, /Status: WARN/);
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('doctor supports target-specific Claude Gemini and OpenCode checks', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'tto-doctor-targets-'));
+  const env = {
+    HOME: home,
+    CODEX_HOME: path.join(home, '.codex'),
+    CLAUDE_HOME: path.join(home, '.claude'),
+    GEMINI_HOME: path.join(home, '.gemini'),
+    OPENCODE_CONFIG_DIR: path.join(home, '.config', 'opencode'),
+    TTO_HOME: path.join(home, '.tto')
+  };
+  try {
+    assert.equal(run(['install', 'claude'], env).status, 0);
+    assert.equal(run(['doctor', 'claude'], env).status, 0);
+
+    assert.equal(run(['install', 'gemini'], env).status, 0);
+    const gemini = run(['doctor', 'gemini'], env);
+    assert.equal(gemini.status, 0, gemini.stdout + gemini.stderr);
+    assert.match(gemini.stdout, /Target: gemini/);
+
+    assert.equal(run(['install', 'opencode'], env).status, 0);
+    const opencode = run(['doctor', 'opencode'], env);
+    assert.equal(opencode.status, 0, opencode.stdout + opencode.stderr);
+    assert.match(opencode.stdout, /OpenCode plugin exposes hooks/);
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
