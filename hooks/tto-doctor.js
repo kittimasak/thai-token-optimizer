@@ -47,7 +47,7 @@ function packageChecks(root, pkg) {
     { name: 'Benchmark golden cases exist', ok: fileOk(root, 'benchmarks/golden_cases.jsonl'), detail: 'benchmarks/golden_cases.jsonl', required: true }
   ];
 }
-const DOCTOR_TARGETS = Object.freeze(['all', 'codex', 'claude', 'gemini', 'opencode']);
+const DOCTOR_TARGETS = Object.freeze(['all', 'codex', 'claude', 'gemini', 'opencode', 'openclaw', 'hermes']);
 
 function normalizeDoctorTarget(target = 'all') {
   const value = String(target || 'all').toLowerCase();
@@ -149,6 +149,61 @@ function addOpenCodeChecks(checks, paths) {
   );
 }
 
+function simulateOpenClawHook(paths, input) {
+  if (!fs.existsSync(paths.openclawSimulator)) return { ok: false, detail: paths.openclawSimulator };
+  const r = spawnSync(process.execPath, [paths.openclawSimulator], { input, encoding: 'utf8', timeout: 5000 });
+  if (r.status !== 0) return { ok: false, detail: `simulate.cjs exit ${r.status}: ${(r.stderr || '').trim()}` };
+  try {
+    const parsed = JSON.parse(r.stdout);
+    return { ok: parsed.service === 'thai-token-optimizer' && parsed.version === '1.0.0' && String(parsed.safety || '').includes('backup'), detail: paths.openclawSimulator };
+  } catch (e) {
+    return { ok: false, detail: `simulate.cjs invalid JSON: ${e.message}` };
+  }
+}
+
+function addOpenClawChecks(checks, paths) {
+  const config = readJson(paths.openclawConfig);
+  const hookMd = fs.existsSync(paths.openclawHookMd) ? fs.readFileSync(paths.openclawHookMd, 'utf8') : '';
+  const handlerText = fs.existsSync(paths.openclawHandler) ? fs.readFileSync(paths.openclawHandler, 'utf8') : '';
+  const entry = config?.hooks?.internal?.entries?.['thai-token-optimizer'];
+  checks.push(
+    { name: 'OpenClaw hook metadata installed', ok: hookMd.includes('name: thai-token-optimizer') && hookMd.includes('gateway:startup') && hookMd.includes('agent:bootstrap'), detail: paths.openclawHookMd, required: true },
+    { name: 'OpenClaw handler installed', ok: handlerText.includes('Thai Token Optimizer v1.0') && handlerText.includes('export default handler'), detail: paths.openclawHandler, required: true },
+    { name: 'OpenClaw config enables hook', ok: !!entry?.enabled && String(entry.path || '').includes('thai-token-optimizer'), detail: paths.openclawConfig, required: true },
+    { name: 'OpenClaw command events configured', ok: Array.isArray(entry?.events) && entry.events.includes('command:new') && entry.events.includes('command:reset') && entry.events.includes('command'), detail: paths.openclawConfig, required: true }
+  );
+  const sim = simulateOpenClawHook(paths, '{"type":"command","action":"new","text":"rm -rf /tmp/x production secret"}');
+  checks.push({ name: 'OpenClaw hook simulation', ok: sim.ok, detail: sim.detail, required: true });
+}
+
+function simulateHermesShellHook(paths, input) {
+  if (!fs.existsSync(paths.hermesPreTool)) return { ok: false, detail: paths.hermesPreTool };
+  const r = spawnSync(process.execPath, [paths.hermesPreTool], { input, encoding: 'utf8', timeout: 5000 });
+  if (r.status !== 0) return { ok: false, detail: `Hermes shell hook exit ${r.status}: ${(r.stderr || '').trim()}` };
+  try {
+    const parsed = JSON.parse(r.stdout);
+    return { ok: parsed.action === 'block' && String(parsed.message || '').includes('backup'), detail: paths.hermesPreTool };
+  } catch (e) {
+    return { ok: false, detail: `Hermes shell hook invalid JSON: ${e.message}` };
+  }
+}
+
+function addHermesChecks(checks, paths) {
+  const configText = fs.existsSync(paths.hermesConfig) ? fs.readFileSync(paths.hermesConfig, 'utf8') : '';
+  const pluginYaml = fs.existsSync(paths.hermesPluginYaml) ? fs.readFileSync(paths.hermesPluginYaml, 'utf8') : '';
+  const pluginPy = fs.existsSync(paths.hermesPluginPy) ? fs.readFileSync(paths.hermesPluginPy, 'utf8') : '';
+  const shellScripts = paths.hermesShellScripts || [];
+  checks.push(
+    { name: 'Hermes config enables plugin', ok: configText.includes('plugins:') && configText.includes('- thai-token-optimizer'), detail: paths.hermesConfig, required: true },
+    { name: 'Hermes shell hooks configured', ok: configText.includes('pre_llm_call') && configText.includes('pre_tool_call') && configText.includes('thai-token-optimizer-pre_tool_call.cjs'), detail: paths.hermesConfig, required: true },
+    { name: 'Hermes plugin manifest installed', ok: pluginYaml.includes('name: thai-token-optimizer') && pluginYaml.includes('1.0.0'), detail: paths.hermesPluginYaml, required: true },
+    { name: 'Hermes plugin hooks registered', ok: pluginPy.includes('ctx.register_hook("pre_llm_call"') && pluginPy.includes('ctx.register_hook("pre_tool_call"') && pluginPy.includes('transform_terminal_output'), detail: paths.hermesPluginPy, required: true },
+    { name: 'Hermes shell hook scripts installed', ok: shellScripts.every(file => fs.existsSync(file)), detail: `${shellScripts.length} scripts`, required: true }
+  );
+  const sim = simulateHermesShellHook(paths, '{"hook_event_name":"pre_tool_call","tool_name":"terminal","tool_input":{"command":"rm -rf /tmp/x production secret"},"session_id":"doctor","cwd":"/tmp","extra":{}}');
+  checks.push({ name: 'Hermes shell hook simulation', ok: sim.ok, detail: sim.detail, required: true });
+}
+
 function runDoctor(options = {}) {
   const ci = Boolean(options.ci);
   const target = normalizeDoctorTarget(options.target || 'all');
@@ -164,6 +219,8 @@ function runDoctor(options = {}) {
   const claudeHome = process.env.CLAUDE_HOME || path.join(os.homedir(), '.claude');
   const geminiHome = process.env.GEMINI_HOME || path.join(os.homedir(), '.gemini');
   const opencodeHome = process.env.OPENCODE_CONFIG_DIR || path.join(os.homedir(), '.config', 'opencode');
+  const openclawHome = process.env.OPENCLAW_HOME || path.join(os.homedir(), '.openclaw');
+  const hermesHome = process.env.HERMES_HOME || path.join(os.homedir(), '.hermes');
   const codexHooks = path.join(codexHome, 'hooks.json');
   const codexConfig = path.join(codexHome, 'config.toml');
   const codexAgents = path.join(codexHome, 'AGENTS.md');
@@ -173,12 +230,23 @@ function runDoctor(options = {}) {
   const geminiCtx = path.join(geminiHome, 'extensions', 'thai-token-optimizer', 'GEMINI.md');
   const opencodePlugin = path.join(opencodeHome, 'plugins', 'thai-token-optimizer.js');
   const opencodeConfig = path.join(opencodeHome, 'opencode.json');
-  const paths = { codexHooks, codexConfig, codexAgents, claudeSettings, geminiSettings, geminiExt, geminiCtx, opencodePlugin, opencodeConfig };
+  const openclawConfig = path.join(openclawHome, 'openclaw.json');
+  const openclawHookMd = path.join(openclawHome, 'hooks', 'thai-token-optimizer', 'HOOK.md');
+  const openclawHandler = path.join(openclawHome, 'hooks', 'thai-token-optimizer', 'handler.ts');
+  const openclawSimulator = path.join(openclawHome, 'hooks', 'thai-token-optimizer', 'simulate.cjs');
+  const hermesConfig = path.join(hermesHome, 'config.yaml');
+  const hermesPluginYaml = path.join(hermesHome, 'plugins', 'thai-token-optimizer', 'plugin.yaml');
+  const hermesPluginPy = path.join(hermesHome, 'plugins', 'thai-token-optimizer', '__init__.py');
+  const hermesShellScripts = ['pre_llm_call', 'pre_tool_call', 'post_tool_call', 'on_session_start', 'on_session_reset', 'on_session_finalize', 'subagent_stop'].map(eventName => path.join(hermesHome, 'agent-hooks', `thai-token-optimizer-${eventName}.cjs`));
+  const hermesPreTool = path.join(hermesHome, 'agent-hooks', 'thai-token-optimizer-pre_tool_call.cjs');
+  const paths = { codexHooks, codexConfig, codexAgents, claudeSettings, geminiSettings, geminiExt, geminiCtx, opencodePlugin, opencodeConfig, openclawConfig, openclawHookMd, openclawHandler, openclawSimulator, hermesConfig, hermesPluginYaml, hermesPluginPy, hermesShellScripts, hermesPreTool };
   addCommonRuntimeChecks(checks);
   if (target === 'all' || target === 'codex') addCodexChecks(checks, paths, root);
   if (target === 'all' || target === 'claude') addClaudeChecks(checks, paths, root);
   if (target === 'all' || target === 'gemini') addGeminiChecks(checks, paths, root);
   if (target === 'all' || target === 'opencode') addOpenCodeChecks(checks, paths);
+  if (target === 'all' || target === 'openclaw') addOpenClawChecks(checks, paths);
+  if (target === 'all' || target === 'hermes') addHermesChecks(checks, paths);
   const ok = checks.every(c => c.ok || !c.required);
   return { name: 'Thai Token Optimizer', versionLabel: 'v1.0', packageVersion: pkg.version, ok, mode: 'installed', target, checks };
 }

@@ -47,7 +47,7 @@ Commands:
   off|stop                Disable optimizer
   status [--pretty]       Show state
   ui|dashboard            Show pretty terminal dashboard
-  doctor [target] [--pretty] Health check target: all|codex|claude|gemini|opencode
+  doctor [target] [--pretty] Health check target: all|codex|claude|gemini|opencode|openclaw|hermes
   backup [target]         Create config backup
   backups                 List backups
   rollback [latest|id|target] [--dry-run] Restore backup
@@ -146,7 +146,7 @@ function uninstallClaude() {
   writeJson(settingsPath, settings);
   console.log(`Removed ${NAME} Claude Code entries from ${settingsPath}.`);
 }
-function normalizeTarget(arg) { const target = (arg || 'codex').toLowerCase(); const valid = VALID_TARGETS || ['codex', 'claude', 'cursor', 'aider', 'opencode', 'gemini', 'cline', 'roo', 'all']; if (valid.includes(target)) return target; console.error('Target must be: ' + valid.join(', ')); process.exit(1); }
+function normalizeTarget(arg) { const target = (arg || 'codex').toLowerCase(); const valid = VALID_TARGETS || ['codex', 'claude', 'cursor', 'aider', 'opencode', 'openclaw', 'hermes', 'gemini', 'cline', 'roo', 'all']; if (valid.includes(target)) return target; console.error('Target must be: ' + valid.join(', ')); process.exit(1); }
 function installAdapter(target) { const { installAdapter } = require('../adapters'); return installAdapter(target); }
 function uninstallAdapter(target) { const { uninstallAdapter } = require('../adapters'); return uninstallAdapter(target); }
 function install(target) {

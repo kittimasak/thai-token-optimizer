@@ -46,7 +46,7 @@ package version: 1.0.0
 
 ## 🔥 What is Thai Token Optimizer?
 
-Thai Token Optimizer is a token-efficient Thai communication layer for AI coding tools such as **Codex**, **Claude Code**, **Gemini CLI**, **OpenCode**, **Cursor**, **Aider**, **Cline**, and **Roo Code**.
+Thai Token Optimizer is a token-efficient Thai communication layer for AI coding tools such as **Codex**, **Claude Code**, **Gemini CLI**, **OpenCode**, **OpenClaw**, **Hermes Agent**, **Cursor**, **Aider**, **Cline**, and **Roo Code**.
 
 It helps agents answer in Thai more compactly by removing filler, repeated explanation, unnecessary politeness, and verbose phrasing — while protecting technical details that must never be corrupted.
 
@@ -107,6 +107,8 @@ Thai Token Optimizer solves this by adding:
 | **Claude Code** | Hooks in `settings.json` | `tto install claude` |
 | **Gemini CLI** | Extension + commands + hooks | `tto install gemini` |
 | **OpenCode** | Native plugin + config | `tto install opencode` |
+| **OpenClaw** | Managed hook + `openclaw.json` config | `tto install openclaw` |
+| **Hermes Agent** | Shell hooks + plugin hooks + `config.yaml` | `tto install hermes` |
 | **Cursor** | Rule file adapter | `tto install cursor` |
 | **Aider** | Guidance file adapter | `tto install aider` |
 | **Cline** | Rule file adapter | `tto install cline` |
@@ -155,7 +157,7 @@ Example:
 ╭────────────────────────────────────────────────────────────────────────────╮
 │ ⚡ Thai Token Optimizer v1.0                              ● ACTIVE          │
 ├────────────────────────────────────────────────────────────────────────────┤
-│ Token-efficient Thai workflow for Codex / Claude / Gemini / OpenCode       │
+│ Token-efficient Thai workflow for Codex / Claude / Gemini / OpenCode / OpenClaw / Hermes       │
 │                                                                            │
 │ Mode          auto            Profile   coding                             │
 │ Safety        strict          Version   1.0.0                              │
@@ -168,6 +170,8 @@ Example:
 │ ✓ Claude Code   settings hooks                                             │
 │ ✓ Gemini CLI    extension                                                  │
 │ ✓ OpenCode      native plugin                                              │
+│ ✓ OpenClaw      managed hook                                               │
+│ ✓ Hermes Agent  shell + plugin hooks                                       │
 │ ✓ Cursor/Aider/Cline/Roo rules                                             │
 │                                                                            │
 │ Quick Commands                                                             │
@@ -247,7 +251,7 @@ tto auto
 
 ### 7. Restart your AI CLI tool
 
-Then type inside Codex / Claude Code / Gemini CLI / OpenCode:
+Then type inside Codex / Claude Code / Gemini CLI / OpenCode / OpenClaw / Hermes Agent:
 
 ```text
 token thai auto
@@ -377,6 +381,8 @@ This installs integrations for:
 - Claude Code
 - Gemini CLI
 - OpenCode
+- OpenClaw
+- Hermes Agent
 - Cursor
 - Aider
 - Cline
@@ -472,6 +478,8 @@ After installation, restart the tools you use:
 - Claude Code
 - Gemini CLI
 - OpenCode
+- OpenClaw
+- Hermes Agent
 - Cursor
 - Aider
 - Cline
@@ -562,6 +570,52 @@ Files involved:
 ~/.config/opencode/opencode.json
 ```
 
+#### OpenClaw
+
+```bash
+tto backup openclaw
+tto install openclaw
+tto doctor openclaw --pretty
+```
+
+Related files:
+
+```text
+~/.openclaw/openclaw.json
+~/.openclaw/hooks/thai-token-optimizer/HOOK.md
+~/.openclaw/hooks/thai-token-optimizer/handler.ts
+~/.openclaw/hooks/thai-token-optimizer/simulate.cjs
+```
+
+The OpenClaw adapter follows OpenClaw's managed hook model: the hook is discovered from `~/.openclaw/hooks/`, enabled through `hooks.internal.entries["thai-token-optimizer"]`, and `tto doctor openclaw` validates metadata, handler, config entry, command events, and a safety-event simulation.
+
+**OpenClaw Integration Highlights:**
+- **Managed Lifecycle**: Supports `gateway:startup`, `agent:bootstrap`, and `command:*` events to inject compact Thai guidance seamlessly.
+- **Enhanced Thai Safety**: The risk detection system now supports Thai keywords (e.g., "ลบไฟล์ทั้งหมด", "โปรดักชัน", "ฐานข้อมูล"), allowing for accurate safe-mode switching even when prompted in Thai.
+- **Automated Validation**: Includes a built-in simulator to verify hook behavior without needing to run the full OpenClaw binary.
+
+#### Hermes Agent
+
+```bash
+tto backup hermes
+tto install hermes
+tto doctor hermes --pretty
+```
+
+Related Files:
+
+```text
+~/.hermes/config.yaml
+~/.hermes/plugins/thai-token-optimizer/
+~/.hermes/agent-hooks/
+```
+
+**Hermes Agent Integration Highlights (Hybrid Integration):**
+- **Native Python Plugin**: Operates at the agent's highest layer via the Hermes plugin system, allowing full intervention in LLM calls and tool execution.
+- **Terminal Output Truncation**: Features an intelligent system that truncates excessively long terminal output (over 50,000 characters) into a concise summary, saving massive amounts of tokens while preserving task context.
+- **Multi-layer Protection**: Combines Shell Hooks (Node.js) and Plugin Hooks (Python) to block risky tool calls and maintain technical precision (preserving commands/paths/versions).
+- **Thai-Aware Guard**: The guard system detects both English and Thai risk patterns, covering destructive commands, database migrations, production deployments, secrets, and payments.
+
 #### Cursor / Aider / Cline / Roo Code
 
 ```bash
@@ -626,6 +680,8 @@ tto uninstall codex
 tto uninstall claude
 tto uninstall gemini
 tto uninstall opencode
+tto uninstall openclaw
+tto uninstall hermes
 tto uninstall cursor
 tto uninstall aider
 tto uninstall cline
@@ -723,6 +779,8 @@ Priority order:
 - `tto doctor claude`
 - `tto doctor gemini`
 - `tto doctor opencode`
+- `tto doctor openclaw`
+- `tto doctor hermes`
 - `tto backup`
 - `tto backups`
 - `tto rollback`
@@ -758,6 +816,8 @@ This installs integrations for:
 - Claude Code
 - Gemini CLI
 - OpenCode
+- OpenClaw
+- Hermes Agent
 - Cursor
 - Aider
 - Cline
@@ -851,6 +911,46 @@ Creates:
 ~/.config/opencode/commands/tto-safe.md
 ```
 
+### Install only OpenClaw
+
+```bash
+tto install openclaw
+tto doctor openclaw --pretty
+```
+
+Installed files:
+
+```text
+~/.openclaw/openclaw.json
+~/.openclaw/hooks/thai-token-optimizer/HOOK.md
+~/.openclaw/hooks/thai-token-optimizer/handler.ts
+~/.openclaw/hooks/thai-token-optimizer/simulate.cjs
+```
+
+### Install only Hermes Agent
+
+```bash
+tto backup hermes
+tto install hermes
+tto doctor hermes --pretty
+```
+
+Installed files:
+
+```text
+~/.hermes/config.yaml
+~/.hermes/plugins/thai-token-optimizer/plugin.yaml
+~/.hermes/plugins/thai-token-optimizer/__init__.py
+~/.hermes/agent-hooks/thai-token-optimizer-pre_llm_call.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-pre_tool_call.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-post_tool_call.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-on_session_start.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-on_session_reset.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-on_session_finalize.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-subagent_stop.cjs
+```
+
+The Hermes adapter uses two layers at once: shell hooks through `hooks:` in `~/.hermes/config.yaml` for subprocess context injection and tool guards, plus plugin hooks through `ctx.register_hook()` for CLI + Gateway sessions.
 ### Install portable adapters
 
 ```bash
@@ -1116,7 +1216,7 @@ tto benchmark --pretty --strict --default-policy
 
 ## 💬 In-chat controls
 
-Use inside Codex, Claude Code, Gemini CLI, OpenCode, or compatible tools.
+Use inside Codex, Claude Code, Gemini CLI, OpenCode, OpenClaw, Hermes Agent, or compatible tools.
 
 | User message | Result |
 |---|---|
@@ -1548,6 +1648,46 @@ Adds:
 - session compaction guidance
 - environment hints
 
+### OpenClaw
+
+Files:
+
+```text
+~/.openclaw/openclaw.json
+~/.openclaw/hooks/thai-token-optimizer/HOOK.md
+~/.openclaw/hooks/thai-token-optimizer/handler.ts
+~/.openclaw/hooks/thai-token-optimizer/simulate.cjs
+```
+
+Adds:
+
+- Managed hook metadata for `gateway:startup`, `agent:bootstrap`, `command:new`, `command:reset`, and `command`
+- Config entry `hooks.internal.entries["thai-token-optimizer"].enabled = true`
+- Local simulator for `tto doctor openclaw` so safety behavior can be validated without requiring the OpenClaw binary
+
+### Hermes Agent
+
+Files:
+
+```text
+~/.hermes/config.yaml
+~/.hermes/plugins/thai-token-optimizer/plugin.yaml
+~/.hermes/plugins/thai-token-optimizer/__init__.py
+~/.hermes/agent-hooks/thai-token-optimizer-pre_llm_call.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-pre_tool_call.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-post_tool_call.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-on_session_start.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-on_session_reset.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-on_session_finalize.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-subagent_stop.cjs
+```
+
+Adds:
+
+- Shell hooks: `pre_llm_call`, `pre_tool_call`, `post_tool_call`, `on_session_start`, `on_session_reset`, `on_session_finalize`, `subagent_stop`
+- Plugin hooks: `pre_llm_call`, `pre_tool_call`, `post_tool_call`, `post_llm_call`, session lifecycle, `transform_terminal_output`, `transform_llm_output`
+- `hooks_auto_accept: true` inside the managed block so shell hooks are ready in non-TTY/gateway runs
+- `plugins.enabled: [thai-token-optimizer]` to enable plugin hooks
 ### Portable adapters
 
 | Adapter | File |
@@ -1603,7 +1743,7 @@ This diagram summarizes the full execution path, from user input to safe, contex
 
 ```text
 User / Agent
-  (Codex / Claude / Gemini CLI / OpenCode)
+  (Codex / Claude / Gemini CLI / OpenCode / OpenClaw / Hermes)
             │
             ▼
 Entry Points

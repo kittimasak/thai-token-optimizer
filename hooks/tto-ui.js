@@ -91,7 +91,7 @@ function renderDashboard(state = {}, doctor = null) {
   const status = state.enabled ? '● ACTIVE' : '○ OFF';
   const doctorStatus = doctor ? (doctor.ok ? 'PASS' : 'WARN') : 'N/A';
   return box('⚡ Thai Token Optimizer v1.0                              ' + status, [
-    'Token-efficient Thai workflow for Codex / Claude / Gemini / OpenCode',
+    'Token-efficient Thai workflow for Codex / Claude / Gemini / OpenCode / OpenClaw / Hermes',
     '',
     `Mode          ${padRight(state.level || 'auto', 15)} Profile   ${state.profile || 'coding'}`,
     `Safety        ${padRight(state.safetyMode || 'strict', 15)} Version   1.0.0`,
@@ -104,6 +104,8 @@ function renderDashboard(state = {}, doctor = null) {
     '✓ Claude Code   settings hooks',
     '✓ Gemini CLI    extension',
     '✓ OpenCode      native plugin',
+    '✓ OpenClaw      managed hook',
+    '✓ Hermes Agent  shell + plugin hooks',
     '✓ Cursor/Aider/Cline/Roo rules',
     '',
     'Quick Commands',

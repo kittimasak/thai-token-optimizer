@@ -1,7 +1,7 @@
 {
   "name": "thai-token-optimizer",
   "version": "1.0.0",
-  "description": "Thai Token Optimizer v1.0 — adaptive Thai token optimization for Codex, Claude Code, Gemini CLI, and OpenCode.",
+  "description": "Thai Token Optimizer v1.0 — adaptive Thai token optimization for Codex, Claude Code, Gemini CLI, OpenCode, OpenClaw, and Hermes Agent.",
   "private": false,
   "type": "commonjs",
   "scripts": {
@@ -42,6 +42,8 @@
     "thai-token-optimizer",
     "gemini-cli",
     "opencode",
+    "openclaw",
+    "hermes-agent",
     "extension",
     "ai-coding-agent"
   ],

@@ -45,6 +45,8 @@ const DEFAULT_POLICY = Object.freeze({
     cursor: false,
     aider: false,
     opencode: false,
+    openclaw: false,
+    hermes: false,
     gemini: false,
     cline: false,
     roo: false

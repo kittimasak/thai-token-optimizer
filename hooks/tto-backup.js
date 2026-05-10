@@ -24,7 +24,7 @@ const path = require('path');
 const os = require('os');
 const { HOME_DIR, DICTIONARY_PATH } = require('./tto-config');
 
-const VALID_TARGETS = Object.freeze(['codex', 'claude', 'gemini', 'opencode', 'cursor', 'aider', 'cline', 'roo', 'all']);
+const VALID_TARGETS = Object.freeze(['codex', 'claude', 'gemini', 'opencode', 'openclaw', 'hermes', 'cursor', 'aider', 'cline', 'roo', 'all']);
 
 function timestamp() {
   // Include milliseconds to avoid collisions when backups happen within one second.
@@ -48,6 +48,8 @@ function adapterPaths(target) {
   const home = os.homedir();
   const geminiHome = process.env.GEMINI_HOME || path.join(home, '.gemini');
   const opencodeHome = process.env.OPENCODE_CONFIG_DIR || path.join(home, '.config', 'opencode');
+  const openclawHome = process.env.OPENCLAW_HOME || path.join(home, '.openclaw');
+  const hermesHome = process.env.HERMES_HOME || path.join(home, '.hermes');
   const paths = {
     gemini: [
       path.join(geminiHome, 'settings.json'),
@@ -71,12 +73,30 @@ function adapterPaths(target) {
       path.join(opencodeHome, 'commands', 'tto-auto.md'),
       path.join(opencodeHome, 'commands', 'tto-safe.md')
     ],
+    openclaw: [
+      path.join(openclawHome, 'openclaw.json'),
+      path.join(openclawHome, 'hooks', 'thai-token-optimizer', 'HOOK.md'),
+      path.join(openclawHome, 'hooks', 'thai-token-optimizer', 'handler.ts'),
+      path.join(openclawHome, 'hooks', 'thai-token-optimizer', 'simulate.cjs')
+    ],
+    hermes: [
+      path.join(hermesHome, 'config.yaml'),
+      path.join(hermesHome, 'plugins', 'thai-token-optimizer', 'plugin.yaml'),
+      path.join(hermesHome, 'plugins', 'thai-token-optimizer', '__init__.py'),
+      path.join(hermesHome, 'agent-hooks', 'thai-token-optimizer-pre_llm_call.cjs'),
+      path.join(hermesHome, 'agent-hooks', 'thai-token-optimizer-pre_tool_call.cjs'),
+      path.join(hermesHome, 'agent-hooks', 'thai-token-optimizer-post_tool_call.cjs'),
+      path.join(hermesHome, 'agent-hooks', 'thai-token-optimizer-on_session_start.cjs'),
+      path.join(hermesHome, 'agent-hooks', 'thai-token-optimizer-on_session_reset.cjs'),
+      path.join(hermesHome, 'agent-hooks', 'thai-token-optimizer-on_session_finalize.cjs'),
+      path.join(hermesHome, 'agent-hooks', 'thai-token-optimizer-subagent_stop.cjs')
+    ],
     cursor: [path.join(home, '.cursor', 'rules', 'thai-token-optimizer.mdc')],
     aider: [path.join(home, '.aider', 'thai-token-optimizer.md')],
     cline: [path.join(home, '.cline', 'rules', 'thai-token-optimizer.md')],
     roo: [path.join(home, '.roo', 'rules', 'thai-token-optimizer.md')]
   };
-  if (target === 'all') return ['gemini', 'opencode', 'cursor', 'aider', 'cline', 'roo'].flatMap(k => paths[k]);
+  if (target === 'all') return ['gemini', 'opencode', 'openclaw', 'hermes', 'cursor', 'aider', 'cline', 'roo'].flatMap(k => paths[k]);
   return paths[target] || [];
 }
 function targetFiles(target) {

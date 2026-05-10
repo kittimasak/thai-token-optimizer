@@ -36,7 +36,7 @@ function run(args, env = {}) {
 
 test('install all installs multi-agent adapters exactly once', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'tto-install-all-once-'));
-  const env = { HOME: home, CODEX_HOME: path.join(home, '.codex'), CLAUDE_HOME: path.join(home, '.claude'), TTO_HOME: path.join(home, '.tto') };
+  const env = { HOME: home, CODEX_HOME: path.join(home, '.codex'), CLAUDE_HOME: path.join(home, '.claude'), OPENCLAW_HOME: path.join(home, '.openclaw'), HERMES_HOME: path.join(home, '.hermes'), TTO_HOME: path.join(home, '.tto') };
   try {
     const res = run(['install', 'all'], env);
     assert.equal(res.status, 0, res.stdout + res.stderr);
@@ -46,7 +46,10 @@ test('install all installs multi-agent adapters exactly once', () => {
     const payload = JSON.parse(res.stdout.slice(jsonStart, jsonEnd));
     const files = payload.installed.map(x => x.file);
     assert.equal(new Set(files).size, files.length, 'adapter files should not be duplicated');
-    assert.equal(files.length, 11, res.stdout);
+    assert.equal(files.length, 25, res.stdout);
+    assert.ok(files.some(file => file.endsWith(path.join('.openclaw', 'hooks', 'thai-token-optimizer', 'handler.ts'))), res.stdout);
+    assert.ok(files.some(file => file.endsWith(path.join('.hermes', 'plugins', 'thai-token-optimizer', '__init__.py'))), res.stdout);
+    assert.ok(files.some(file => file.endsWith(path.join('.hermes', 'agent-hooks', 'thai-token-optimizer-pre_tool_call.cjs'))), res.stdout);
   } finally {
     fs.rmSync(home, { recursive: true, force: true });
   }

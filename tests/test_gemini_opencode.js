@@ -29,7 +29,7 @@ const bin = path.join(root, 'bin', 'thai-token-optimizer.js');
 function run(args, tmp) {
   return execFileSync('node', [bin, ...args], {
     cwd: root,
-    env: { ...process.env, HOME: tmp, TTO_HOME: path.join(tmp, '.tto'), GEMINI_HOME: path.join(tmp, '.gemini'), OPENCODE_CONFIG_DIR: path.join(tmp, '.config', 'opencode') },
+    env: { ...process.env, HOME: tmp, TTO_HOME: path.join(tmp, '.tto'), GEMINI_HOME: path.join(tmp, '.gemini'), OPENCODE_CONFIG_DIR: path.join(tmp, '.config', 'opencode'), OPENCLAW_HOME: path.join(tmp, '.openclaw'), HERMES_HOME: path.join(tmp, '.hermes') },
     encoding: 'utf8'
   });
 }
@@ -65,6 +65,64 @@ test('OpenCode adapter installs native plugin, config, agent, and skill', () => 
   assert.ok(fs.existsSync(path.join(cfg, 'opencode.json')));
   assert.ok(fs.existsSync(path.join(cfg, 'agents', 'thai-token-optimizer.md')));
   assert.ok(fs.existsSync(path.join(cfg, 'skills', 'thai-token-optimizer.md')));
+});
+
+test('OpenClaw adapter installs managed hook, config entry, and simulator', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'tto-openclaw-'));
+  const out = run(['install', 'openclaw'], tmp);
+  assert.match(out, /openclaw/);
+  const home = path.join(tmp, '.openclaw');
+  const hookDir = path.join(home, 'hooks', 'thai-token-optimizer');
+  const hookMd = path.join(hookDir, 'HOOK.md');
+  const handler = path.join(hookDir, 'handler.ts');
+  const simulator = path.join(hookDir, 'simulate.cjs');
+  assert.ok(fs.existsSync(hookMd));
+  assert.ok(fs.existsSync(handler));
+  assert.ok(fs.existsSync(simulator));
+  assert.match(fs.readFileSync(hookMd, 'utf8'), /gateway:startup/);
+  assert.match(fs.readFileSync(handler, 'utf8'), /export default handler/);
+  const config = JSON.parse(fs.readFileSync(path.join(home, 'openclaw.json'), 'utf8'));
+  assert.equal(config.hooks.internal.entries['thai-token-optimizer'].enabled, true);
+  assert.ok(config.hooks.internal.entries['thai-token-optimizer'].events.includes('command:new'));
+  const sim = execFileSync('node', [simulator], {
+    env: { ...process.env, HOME: tmp, TTO_HOME: path.join(tmp, '.tto'), OPENCLAW_HOME: home },
+    input: JSON.stringify({ type: 'command', action: 'new', text: 'DROP TABLE users production secret' }),
+    encoding: 'utf8'
+  });
+  assert.match(sim, /safe mode required/);
+  assert.match(sim, /backup/);
+});
+
+test('Hermes adapter installs shell hooks, plugin hooks, config, and simulator behavior', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'tto-hermes-'));
+  const out = run(['install', 'hermes'], tmp);
+  assert.match(out, /hermes/);
+  const home = path.join(tmp, '.hermes');
+  const config = fs.readFileSync(path.join(home, 'config.yaml'), 'utf8');
+  const plugin = path.join(home, 'plugins', 'thai-token-optimizer');
+  const preTool = path.join(home, 'agent-hooks', 'thai-token-optimizer-pre_tool_call.cjs');
+  const preLlm = path.join(home, 'agent-hooks', 'thai-token-optimizer-pre_llm_call.cjs');
+  assert.match(config, /hooks_auto_accept: true/);
+  assert.match(config, /pre_tool_call/);
+  assert.match(config, /- thai-token-optimizer/);
+  assert.ok(fs.existsSync(path.join(plugin, 'plugin.yaml')));
+  assert.match(fs.readFileSync(path.join(plugin, '__init__.py'), 'utf8'), /ctx\.register_hook\("pre_llm_call"/);
+  assert.ok(fs.existsSync(preTool));
+  assert.ok(fs.existsSync(preLlm));
+  const blocked = execFileSync('node', [preTool], {
+    env: { ...process.env, HOME: tmp, TTO_HOME: path.join(tmp, '.tto'), HERMES_HOME: home },
+    input: JSON.stringify({ hook_event_name: 'pre_tool_call', tool_name: 'terminal', tool_input: { command: 'rm -rf /tmp/x production secret' } }),
+    encoding: 'utf8'
+  });
+  assert.match(blocked, /"action":"block"/);
+  assert.match(blocked, /backup/);
+  const context = execFileSync('node', [preLlm], {
+    env: { ...process.env, HOME: tmp, TTO_HOME: path.join(tmp, '.tto'), HERMES_HOME: home },
+    input: JSON.stringify({ hook_event_name: 'pre_llm_call', extra: { user_message: 'token thai auto' } }),
+    encoding: 'utf8'
+  });
+  assert.match(context, /"context"/);
+  assert.match(context, /Hermes shell hook active/);
 });
 
 test('Gemini hook wrappers emit compact context when enabled', () => {

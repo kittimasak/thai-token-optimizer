@@ -35,7 +35,9 @@ function env(home) {
     CODEX_HOME: path.join(home, '.codex'),
     CLAUDE_HOME: path.join(home, '.claude'),
     GEMINI_HOME: path.join(home, '.gemini'),
-    OPENCODE_CONFIG_DIR: path.join(home, '.config', 'opencode')
+    OPENCODE_CONFIG_DIR: path.join(home, '.config', 'opencode'),
+    OPENCLAW_HOME: path.join(home, '.openclaw'),
+    HERMES_HOME: path.join(home, '.hermes')
   };
 }
 function run(home, args, opts = {}) {
@@ -61,6 +63,9 @@ test('uninstall all removes Gemini/OpenCode and guidance adapter files', () => {
   const paths = [
     path.join(home, '.gemini', 'extensions', 'thai-token-optimizer', 'gemini-extension.json'),
     path.join(home, '.config', 'opencode', 'plugins', 'thai-token-optimizer.js'),
+    path.join(home, '.openclaw', 'hooks', 'thai-token-optimizer', 'handler.ts'),
+    path.join(home, '.hermes', 'plugins', 'thai-token-optimizer', '__init__.py'),
+    path.join(home, '.hermes', 'agent-hooks', 'thai-token-optimizer-pre_tool_call.cjs'),
     path.join(home, '.cursor', 'rules', 'thai-token-optimizer.mdc'),
     path.join(home, '.aider', 'thai-token-optimizer.md'),
     path.join(home, '.cline', 'rules', 'thai-token-optimizer.md'),

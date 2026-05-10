@@ -144,6 +144,8 @@ test('doctor supports target-specific Claude Gemini and OpenCode checks', () => 
     CLAUDE_HOME: path.join(home, '.claude'),
     GEMINI_HOME: path.join(home, '.gemini'),
     OPENCODE_CONFIG_DIR: path.join(home, '.config', 'opencode'),
+    OPENCLAW_HOME: path.join(home, '.openclaw'),
+    HERMES_HOME: path.join(home, '.hermes'),
     TTO_HOME: path.join(home, '.tto')
   };
   try {
@@ -159,6 +161,16 @@ test('doctor supports target-specific Claude Gemini and OpenCode checks', () => 
     const opencode = run(['doctor', 'opencode'], env);
     assert.equal(opencode.status, 0, opencode.stdout + opencode.stderr);
     assert.match(opencode.stdout, /OpenCode plugin exposes hooks/);
+
+    assert.equal(run(['install', 'openclaw'], env).status, 0);
+    const openclaw = run(['doctor', 'openclaw'], env);
+    assert.equal(openclaw.status, 0, openclaw.stdout + openclaw.stderr);
+    assert.match(openclaw.stdout, /OpenClaw hook simulation/);
+
+    assert.equal(run(['install', 'hermes'], env).status, 0);
+    const hermes = run(['doctor', 'hermes'], env);
+    assert.equal(hermes.status, 0, hermes.stdout + hermes.stderr);
+    assert.match(hermes.stdout, /Hermes shell hook simulation/);
   } finally {
     fs.rmSync(home, { recursive: true, force: true });
   }
