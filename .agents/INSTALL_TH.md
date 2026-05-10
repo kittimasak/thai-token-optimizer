@@ -38,7 +38,7 @@ thai-token-optimizer/
 │       ├── README.md
 │       └── marketplace.json
 ├── README.md
-├── README_TH.md
+├── README_ENGLISH.md
 ├── MANUAL.md
 ├── AGENTS.md
 ├── package.json

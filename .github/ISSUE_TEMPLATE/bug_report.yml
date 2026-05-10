@@ -29,6 +29,8 @@ body:
         - Claude Code integration
         - Gemini CLI integration
         - OpenCode integration
+        - OpenClaw integration
+        - Hermes Agent integration
         - Cursor/Aider/Cline/Roo adapter
         - Compression
         - Safety classifier

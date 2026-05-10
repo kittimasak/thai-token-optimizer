@@ -89,7 +89,8 @@ jobs:
       - name: Validate version lock
         run: |
           test "$(node -p "require('./package.json').version")" = "1.0.0"
-          ! grep -R "v1.1\|1.1.0" README.md AGENTS.md MANUAL.md README_TH.md package.json hooks adapters benchmarks tests bin .github 2>/dev/null
+          ! grep -R --exclude=validate.yml "v1.1\|1.1.0" README.md MANUAL.md README_ENGLISH.md package.json hooks adapters benchmarks tests bin .github 2>/dev/null
+          ! grep -R "v1.1\|1.1.0" AGENTS.md 2>/dev/null | grep -v "Do not rename, upgrade, or mention"
 
       - name: Validate marketplace/plugin JSON files
         run: |

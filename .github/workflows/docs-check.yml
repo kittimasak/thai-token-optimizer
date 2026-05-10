@@ -22,7 +22,7 @@ jobs:
           test -f README.md
           test -f AGENTS.md
           test -f MANUAL.md || true
-          test -f README_TH.md || true
+          test -f README_ENGLISH.md || true
 
       - name: Check canonical identity in docs
         run: |

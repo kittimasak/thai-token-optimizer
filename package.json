@@ -27,7 +27,7 @@
     "node": ">=18.0.0"
   },
   "license": "MIT",
-  "author": "Dr.Kittimask Naijit",
+  "author": "Dr.Kittimasak Naijit",
   "bin": {
     "thai-token-optimizer": "bin/thai-token-optimizer.js",
     "tto": "bin/thai-token-optimizer.js"
