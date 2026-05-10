@@ -54,6 +54,8 @@ Thai Token Optimizer UI
 | Claude Code | hooks ใน `settings.json` | `tto install claude` |
 | Gemini CLI | extension + custom commands | `tto install gemini` |
 | OpenCode | native plugin + config | `tto install opencode` |
+| OpenClaw | managed hook + `openclaw.json` | `tto install openclaw` |
+| Hermes Agent | shell hooks + plugin hooks + `config.yaml` | `tto install hermes` |
 | Cursor | rule file | `tto install cursor` |
 | Aider | instruction file | `tto install aider` |
 | Cline | rule file | `tto install cline` |
@@ -81,7 +83,7 @@ npm run ci
 ผลที่คาดหวัง:
 
 ```text
-75 tests passed
+79 tests passed
 0 failed
 package version: 1.0.0
 ```
@@ -122,13 +124,16 @@ Commands:
   off|stop                Disable optimizer
   status [--pretty]       Show state
   ui|dashboard            Show pretty terminal dashboard
-  doctor [target] [--pretty] Health check target: all|codex|claude|gemini|opencode
+  doctor [target] [--pretty] Health check target: all|codex|claude|gemini|opencode|openclaw|hermes
   backup [target]         Create config backup
   backups                 List backups
   rollback [latest|id|target] [--dry-run] Restore backup
   install <target|all>    Install hooks/adapters with backup
   uninstall <target|all>  Remove hooks/adapters with backup
   install-agents [codex]  Merge AGENTS.md into ~/.codex/AGENTS.md with backup
+  keep <word>             Add a word to personal dictionary (never compress)
+  forget <word>           Remove a word from personal dictionary
+  dictionary              List personal dictionary words
   estimate [--target codex|claude] [--exact] <text> Estimate tokens
   compress [--pretty] [--level auto|lite|full|safe] [--budget N] [--target codex|claude] [--check] [text|file]
   rewrite                 Alias of compress
@@ -182,12 +187,12 @@ tto ui
 ╭────────────────────────────────────────────────────────────────────────────╮
 │ ⚡ Thai Token Optimizer v1.0                              ○ OFF             │
 ├────────────────────────────────────────────────────────────────────────────┤
-│ Token-efficient Thai workflow for Codex / Claude / Gemini / OpenCode       │
+│ Token-efficient Thai workflow for Codex / Claude / Gemini / OpenCode / Op… │
 │                                                                            │
 │ Mode          auto            Profile   coding                             │
 │ Safety        strict          Version   1.0.0                              │
 │                                                                            │
-│ Doctor        WARN            Checks    9/17                               │
+│ Doctor        PASS            Checks    52/53                              │
 │ Saving        ██████████░░░░░░ 63%                                         │
 │                                                                            │
 │ Agents                                                                     │
@@ -195,6 +200,8 @@ tto ui
 │ ✓ Claude Code   settings hooks                                             │
 │ ✓ Gemini CLI    extension                                                  │
 │ ✓ OpenCode      native plugin                                              │
+│ ✓ OpenClaw      managed hook                                               │
+│ ✓ Hermes Agent  shell + plugin hooks                                       │
 │ ✓ Cursor/Aider/Cline/Roo rules                                             │
 │                                                                            │
 │ Quick Commands                                                             │
@@ -572,6 +579,8 @@ tto config get
     "cursor": false,
     "aider": false,
     "opencode": true,
+    "openclaw": true,
+    "hermes": true,
     "gemini": true,
     "cline": false,
     "roo": false
@@ -647,6 +656,8 @@ codex
 claude
 gemini
 opencode
+openclaw
+hermes
 ```
 
 ---
@@ -775,11 +786,124 @@ tto preserve original.txt optimized.txt
 
 ---
 
-## 12. Safety Classifier
+## 12. Adaptive Compression Learning / Personalization
+
+Personalization คือระบบเรียนรู้รายบุคคลที่ทำให้ Thai Token Optimizer v1.0 ไม่ได้ใช้ filler rules แบบ static อย่างเดียว แต่ให้ผู้ใช้สอนระบบได้ว่าคำไหนเป็นศัพท์เฉพาะหรือสไตล์ที่ต้องคงไว้
+
+### 12.1 แนวคิดหลัก
+
+```text
+Static filler rules
+  + User-specific Dictionary
+  + Code-aware Parser
+  + Preservation Check
+  = Personalized compression ที่ลด token ได้โดยไม่ทำ context สำคัญหาย
+```
+
+ตัวอย่าง:
+
+```text
+ก่อน keep:  "รบกวนช่วย" อาจถูกมองเป็น filler และถูกตัด
+หลัง keep: "รบกวนช่วย" ถูกคงไว้ เพราะเป็นสไตล์/เจตนาของผู้ใช้คนนี้
+```
+
+### 12.2 คำสั่ง Personalization
+
+| Command | หน้าที่ |
+|---|---|
+| `tto keep <word>` | เพิ่มคำ/วลีลง personal dictionary เพื่อห้าม compressor ตัดหรือเปลี่ยน |
+| `tto forget <word>` | ลบคำ/วลีออกจาก personal dictionary |
+| `tto dictionary` | แสดงคำทั้งหมดที่ระบบกำลังปกป้อง |
+
+ตัวอย่าง:
+
+```bash
+tto keep "รบกวนช่วย"
+tto keep "ระบบเทพ"
+tto keep "API_KEY(foo)[bar]*"
+tto dictionary
+tto forget "รบกวนช่วย"
+```
+
+### 12.3 Storage
+
+ค่า dictionary ถูกเก็บแบบ local-first:
+
+```text
+~/.thai-token-optimizer/dictionary.json
+```
+
+ถ้ากำหนด `TTO_HOME` หรือ `THAI_TOKEN_OPTIMIZER_HOME` ระบบจะเก็บใต้ path นั้น:
+
+```bash
+TTO_HOME=/tmp/tto-home tto keep "ระบบเทพ"
+```
+
+ตัวอย่างไฟล์:
+
+```json
+{
+  "keep": [
+    "รบกวนช่วย",
+    "ระบบเทพ",
+    "API_KEY(foo)[bar]*"
+  ]
+}
+```
+
+### 12.4 Parser-level integration
+
+Personal dictionary ถูกผูกเข้ากับ `tto-code-aware-parser.js` โดยตรง ไม่ใช่ string replace หลัง compress
+
+ลำดับความสำคัญ:
+
+```text
+1. Protect code blocks / inline code / URLs / paths / commands / versions
+2. Protect user-specific dictionary entries
+3. Apply filler compression
+4. Run preservation check
+```
+
+เหตุผล: คำส่วนตัวควรถูกปกป้อง แต่ต้องไม่ไปทำให้ parser หลักพัง เช่น code block, path, URL, command และ version ยังต้องถูก preserve ก่อนเสมอ
+
+### 12.5 RegExp safety
+
+คำใน dictionary รองรับอักขระพิเศษ:
+
+```bash
+tto keep "API_KEY(foo)[bar]*"
+tto keep "ระบบ"
+tto keep "ระบบเทพ"
+```
+
+ระบบ escape ค่า dynamic RegExp ก่อนใช้งาน จึงไม่ทำให้ parser crash และลดความเสี่ยง match ผิด
+
+### 12.6 Backup / rollback ของ dictionary
+
+`dictionary.json` เป็นส่วนหนึ่งของ state สำคัญ จึงถูก backup/rollback ด้วย:
+
+```bash
+tto backup codex
+tto rollback codex --dry-run
+tto rollback codex
+```
+
+หลัง rollback แล้ว dictionary จะกลับไปตาม snapshot เดิมพร้อม state/config อื่น ๆ
+
+### 12.7 ข้อจำกัดของ Personalization
+
+- ระบบเรียนรู้เฉพาะคำที่ผู้ใช้สั่งผ่าน `tto keep`
+- ไม่ส่ง dictionary ออกนอกเครื่อง
+- dictionary เป็น local ต่อเครื่อง/ต่อ `TTO_HOME`
+- ถ้าผู้ใช้ keep คำทั่วไปมากเกินไป saving อาจลดลง
+
+---
+
+## 13. Safety Classifier
 
 ใช้ตรวจ prompt หรือคำสั่งที่เสี่ยง เช่น database, production, secret, auth, payment, destructive command
 
-### 12.1 JSON safety classification
+### 13.1 JSON safety classification
 
 ```bash
 tto classify "DROP TABLE users production secret token"
@@ -800,7 +924,7 @@ tto classify "DROP TABLE users production secret token"
 }
 ```
 
-### 12.2 Pretty safety UI
+### 13.2 Pretty safety UI
 
 ```bash
 tto classify --pretty "DROP TABLE users production secret token"
@@ -826,7 +950,7 @@ tto classify --pretty "DROP TABLE users production secret token"
 ╰────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-### 12.3 Categories ที่อาจพบ
+### 13.3 Categories ที่อาจพบ
 
 | Category | ตัวอย่าง trigger |
 |---|---|
@@ -844,11 +968,11 @@ backup → dry-run → verify → rollback ready
 
 ---
 
-## 13. Doctor / Health Check
+## 14. Doctor / Health Check
 
 ใช้ตรวจสุขภาพระบบและ integration
 
-### 13.1 Doctor แบบ text
+### 14.1 Doctor แบบ text
 
 ```bash
 tto doctor
@@ -870,7 +994,7 @@ tto doctor
 - OpenCode plugin installed
 - backup directory writable
 
-### 13.2 Pretty doctor UI
+### 14.2 Pretty doctor UI
 
 ```bash
 tto doctor --pretty
@@ -906,7 +1030,7 @@ tto doctor --pretty
 ╰────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-### 13.3 CI doctor
+### 14.3 CI doctor
 
 ```bash
 tto doctor --ci
@@ -916,23 +1040,23 @@ tto doctor --ci
 
 ---
 
-## 14. Benchmark / Regression Gate
+## 15. Benchmark / Regression Gate
 
 ใช้วัดคุณภาพการลด token และ preservation
 
-### 14.1 Benchmark ปกติ
+### 15.1 Benchmark ปกติ
 
 ```bash
 tto benchmark
 ```
 
-### 14.2 Strict benchmark
+### 15.2 Strict benchmark
 
 ```bash
 tto benchmark --strict
 ```
 
-### 14.3 Strict benchmark แบบ reproducible
+### 15.3 Strict benchmark แบบ reproducible
 
 ```bash
 tto benchmark --strict --default-policy
@@ -940,7 +1064,7 @@ tto benchmark --strict --default-policy
 
 ใช้ใน CI เพราะไม่อิง user policy ใน `~/.thai-token-optimizer/config.json`
 
-### 14.4 Pretty benchmark UI
+### 15.4 Pretty benchmark UI
 
 ```bash
 tto benchmark --pretty --strict --default-policy
@@ -969,7 +1093,7 @@ tto benchmark --pretty --strict --default-policy
 ╰────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-### 14.5 สิ่งที่ benchmark ตรวจ
+### 15.5 สิ่งที่ benchmark ตรวจ
 
 - average saving
 - minimum preservation
@@ -981,11 +1105,11 @@ tto benchmark --pretty --strict --default-policy
 
 ---
 
-## 15. Backup / Rollback / Uninstall
+## 16. Backup / Rollback / Uninstall
 
 ระบบนี้แก้ global config หลายจุด จึงมี backup/rollback built-in
 
-### 15.1 Backup target
+### 16.1 Backup target
 
 ```bash
 tto backup all
@@ -993,6 +1117,8 @@ tto backup codex
 tto backup claude
 tto backup gemini
 tto backup opencode
+tto backup openclaw
+tto backup hermes
 tto backup cursor
 tto backup aider
 tto backup cline
@@ -1010,7 +1136,7 @@ tto backup roo
 }
 ```
 
-### 15.2 List backups
+### 16.2 List backups
 
 ```bash
 tto backups
@@ -1041,7 +1167,7 @@ tto backups
 ]
 ```
 
-### 15.3 Rollback dry-run
+### 16.3 Rollback dry-run
 
 ```bash
 tto rollback latest --dry-run
@@ -1089,7 +1215,7 @@ tto rollback gemini --dry-run
 }
 ```
 
-### 15.4 Rollback จริง
+### 16.4 Rollback จริง
 
 ```bash
 tto rollback latest
@@ -1097,6 +1223,8 @@ tto rollback codex
 tto rollback claude
 tto rollback gemini
 tto rollback opencode
+tto rollback openclaw
+tto rollback hermes
 tto rollback cursor
 tto rollback aider
 tto rollback cline
@@ -1114,13 +1242,15 @@ tto rollback roo
 tto rollback latest --no-prebackup
 ```
 
-### 15.5 Uninstall
+### 16.5 Uninstall
 
 ```bash
 tto uninstall codex
 tto uninstall claude
 tto uninstall gemini
 tto uninstall opencode
+tto uninstall openclaw
+tto uninstall hermes
 tto uninstall cursor
 tto uninstall aider
 tto uninstall cline
@@ -1138,9 +1268,9 @@ tto uninstall all
 
 ---
 
-## 16. Install commands
+## 17. Install commands
 
-### 16.1 Install all
+### 17.1 Install all
 
 ```bash
 tto install all
@@ -1214,7 +1344,7 @@ Restart the target CLI, then type: token thai auto
 token thai auto
 ```
 
-### 16.2 Install Codex
+### 17.2 Install Codex
 
 ```bash
 tto install codex
@@ -1234,7 +1364,7 @@ tto install codex
 codex_hooks = true
 ```
 
-### 16.3 Install AGENTS.md สำหรับ Codex
+### 17.3 Install AGENTS.md สำหรับ Codex
 
 ```bash
 tto install-agents
@@ -1253,7 +1383,7 @@ Installed Thai Token Optimizer v1.0 AGENTS block to /mnt/data/tto_home_manual/.c
 ~/.codex/AGENTS.md
 ```
 
-### 16.4 Install Claude Code
+### 17.4 Install Claude Code
 
 ```bash
 tto install claude
@@ -1265,7 +1395,7 @@ tto install claude
 ~/.claude/settings.json
 ```
 
-### 16.5 Install Gemini CLI
+### 17.5 Install Gemini CLI
 
 ```bash
 tto install gemini
@@ -1293,7 +1423,7 @@ Gemini commands ที่มี:
 /tto:estimate
 ```
 
-### 16.6 Install OpenCode
+### 17.6 Install OpenCode
 
 ```bash
 tto install opencode
@@ -1310,7 +1440,59 @@ tto install opencode
 ~/.config/opencode/commands/tto-safe.md
 ```
 
-### 16.7 Install portable adapters
+### 17.7 Install OpenClaw
+
+```bash
+tto install openclaw
+tto doctor openclaw --pretty
+```
+
+ไฟล์ที่สร้าง:
+
+```text
+~/.openclaw/openclaw.json
+~/.openclaw/hooks/thai-token-optimizer/HOOK.md
+~/.openclaw/hooks/thai-token-optimizer/handler.ts
+~/.openclaw/hooks/thai-token-optimizer/simulate.cjs
+```
+
+OpenClaw adapter ใช้ managed hook model:
+
+- `HOOK.md` เป็น metadata ให้ OpenClaw discover hook
+- `handler.ts` เป็น runtime handler สำหรับ event เช่น `gateway:startup`, `agent:bootstrap`, `command:new`, `command:reset`, `command`
+- `simulate.cjs` ใช้ให้ `tto doctor openclaw` ตรวจ behavior ได้แม้ยังไม่ได้เปิด OpenClaw session จริง
+- `openclaw.json` เปิด hook ภายใต้ `hooks.internal.entries["thai-token-optimizer"]`
+
+### 17.8 Install Hermes Agent
+
+```bash
+tto install hermes
+tto doctor hermes --pretty
+```
+
+ไฟล์ที่สร้าง:
+
+```text
+~/.hermes/config.yaml
+~/.hermes/plugins/thai-token-optimizer/plugin.yaml
+~/.hermes/plugins/thai-token-optimizer/__init__.py
+~/.hermes/agent-hooks/thai-token-optimizer-pre_llm_call.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-pre_tool_call.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-post_tool_call.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-on_session_start.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-on_session_reset.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-on_session_finalize.cjs
+~/.hermes/agent-hooks/thai-token-optimizer-subagent_stop.cjs
+```
+
+Hermes adapter ใช้ hybrid integration:
+
+- Shell hooks ใน `~/.hermes/config.yaml` สำหรับ context injection และ tool guard
+- Plugin hooks ใน `__init__.py` ผ่าน `ctx.register_hook()`
+- `pre_tool_call` block งานเสี่ยง เช่น `DROP TABLE`, `git push --force`, production, secret, auth, payment
+- `pre_llm_call` เติม instruction ให้ตอบไทยกระชับและ preserve technical details
+
+### 17.9 Install portable adapters
 
 ```bash
 tto install cursor
@@ -1330,13 +1512,13 @@ tto install roo
 
 ---
 
-## 17. Agent/Hook UI
+## 18. Agent/Hook UI
 
 Agent/Hook UI คือการใช้งานผ่านช่อง prompt ของ AI agent ไม่ใช่ Terminal โดยตรง
 
-### 17.1 คำสั่งใน agent
+### 18.1 คำสั่งใน agent
 
-พิมพ์ใน Codex / Claude Code / Gemini CLI / OpenCode:
+พิมพ์ใน Codex / Claude Code / Gemini CLI / OpenCode / OpenClaw / Hermes Agent:
 
 ```text
 token thai auto
@@ -1354,7 +1536,7 @@ User: token thai auto
 Agent: เปิด `token thai auto` แล้ว
 ```
 
-### 17.2 พฤติกรรมหลังเปิด auto
+### 18.2 พฤติกรรมหลังเปิด auto
 
 User:
 
@@ -1375,7 +1557,7 @@ tto doctor
 ```
 ```
 
-### 17.3 เมื่อเจองานเสี่ยง
+### 18.3 เมื่อเจองานเสี่ยง
 
 User:
 
@@ -1403,9 +1585,9 @@ SELECT COUNT(*) FROM users;
 
 ---
 
-## 18. Hook events
+## 19. Hook events
 
-### 18.1 Codex / Claude Code hooks
+### 19.1 Codex / Claude Code hooks
 
 ติดตั้ง events:
 
@@ -1417,7 +1599,7 @@ SELECT COUNT(*) FROM users;
 | `PostToolUse` | `tto-posttool-summary.js` | สรุปผล tool แบบ compact |
 | `Stop` | `tto-stop-summary.js` | สรุปท้าย turn/session |
 
-### 18.2 Gemini hooks
+### 19.2 Gemini hooks
 
 | Hook | Script | หน้าที่ |
 |---|---|---|
@@ -1426,7 +1608,7 @@ SELECT COUNT(*) FROM users;
 | `AfterTool` | `tto-gemini-aftertool.js` | สรุปผล tool |
 | `PreCompress` | `tto-gemini-precompress.js` | บีบ/จัด prompt ก่อน compress |
 
-### 18.3 OpenCode plugin events
+### 19.3 OpenCode plugin events
 
 รองรับแนวคิด:
 
@@ -1436,11 +1618,49 @@ tool.execute.after
 experimental.session.compacting
 ```
 
+### 19.4 OpenClaw hook events
+
+OpenClaw adapter ติดตั้ง managed hook pack ที่ `~/.openclaw/hooks/thai-token-optimizer/`
+
+| Event | Behavior | จุดประสงค์ |
+|---|---|---|
+| `gateway:startup` | ส่ง compact Thai instruction | ให้ OpenClaw รู้ policy ตั้งแต่เริ่ม gateway |
+| `agent:bootstrap` | ส่ง agent guidance | bootstrap agent context |
+| `command:new` | ตรวจคำสั่งใหม่ | จับงานเสี่ยงก่อน agent ลงมือ |
+| `command:reset` | reset context guidance | ลด state drift |
+| `command` | safety guidance | บังคับ safe mode เมื่องานเสี่ยง |
+
+ตรวจแบบ local simulation:
+
+```bash
+tto doctor openclaw --pretty
+```
+
+### 19.5 Hermes shell hooks + plugin hooks
+
+Hermes adapter ใช้ทั้ง shell layer และ plugin layer เพื่อครอบคลุม CLI/local session และ plugin/gateway session
+
+| Hook | File | หน้าที่ |
+|---|---|---|
+| `pre_llm_call` | `thai-token-optimizer-pre_llm_call.cjs` | inject compact Thai instruction ก่อนเรียก LLM |
+| `pre_tool_call` | `thai-token-optimizer-pre_tool_call.cjs` | block หรือเตือนเมื่อเจอ destructive/production/secret |
+| `post_tool_call` | `thai-token-optimizer-post_tool_call.cjs` | สรุปผล tool แบบ compact |
+| `on_session_start` | `thai-token-optimizer-on_session_start.cjs` | แจ้งสถานะ/โหลด context |
+| `on_session_reset` | `thai-token-optimizer-on_session_reset.cjs` | reset context |
+| `on_session_finalize` | `thai-token-optimizer-on_session_finalize.cjs` | สรุปท้าย session |
+| `subagent_stop` | `thai-token-optimizer-subagent_stop.cjs` | สรุป subagent แบบสั้น |
+
+ตรวจ:
+
+```bash
+tto doctor hermes --pretty
+```
+
 ---
 
-## 19. Pretty CLI UI Reference
+## 20. Pretty CLI UI Reference
 
-### 19.1 Status Card
+### 20.1 Status Card
 
 ```bash
 tto status --pretty
@@ -1466,7 +1686,7 @@ tto status --pretty
 ╰──────────────────────────────────────────────────────────────────────╯
 ```
 
-### 19.2 Dashboard Card
+### 20.2 Dashboard Card
 
 ```bash
 tto ui
@@ -1476,12 +1696,12 @@ tto ui
 ╭────────────────────────────────────────────────────────────────────────────╮
 │ ⚡ Thai Token Optimizer v1.0                              ○ OFF             │
 ├────────────────────────────────────────────────────────────────────────────┤
-│ Token-efficient Thai workflow for Codex / Claude / Gemini / OpenCode       │
+│ Token-efficient Thai workflow for Codex / Claude / Gemini / OpenCode / Op… │
 │                                                                            │
 │ Mode          auto            Profile   coding                             │
 │ Safety        strict          Version   1.0.0                              │
 │                                                                            │
-│ Doctor        WARN            Checks    9/17                               │
+│ Doctor        PASS            Checks    52/53                              │
 │ Saving        ██████████░░░░░░ 63%                                         │
 │                                                                            │
 │ Agents                                                                     │
@@ -1489,6 +1709,8 @@ tto ui
 │ ✓ Claude Code   settings hooks                                             │
 │ ✓ Gemini CLI    extension                                                  │
 │ ✓ OpenCode      native plugin                                              │
+│ ✓ OpenClaw      managed hook                                               │
+│ ✓ Hermes Agent  shell + plugin hooks                                       │
 │ ✓ Cursor/Aider/Cline/Roo rules                                             │
 │                                                                            │
 │ Quick Commands                                                             │
@@ -1498,7 +1720,7 @@ tto ui
 ╰────────────────────────────────────────────────────────────────────────────╯
 ```
 
-### 19.3 Doctor Card
+### 20.3 Doctor Card
 
 ```bash
 tto doctor --pretty
@@ -1532,7 +1754,7 @@ tto doctor --pretty
 ╰────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-### 19.4 Compress Card
+### 20.4 Compress Card
 
 ```bash
 tto compress --pretty --budget 80 --target codex --check "..."
@@ -1560,7 +1782,7 @@ tto compress --pretty --budget 80 --target codex --check "..."
 ╰────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-### 19.5 Safety Card
+### 20.5 Safety Card
 
 ```bash
 tto classify --pretty "DROP TABLE users production secret token"
@@ -1584,7 +1806,7 @@ tto classify --pretty "DROP TABLE users production secret token"
 ╰────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-### 19.6 Benchmark Card
+### 20.6 Benchmark Card
 
 ```bash
 tto benchmark --pretty --strict --default-policy
@@ -1613,7 +1835,7 @@ tto benchmark --pretty --strict --default-policy
 
 ---
 
-## 20. NPM scripts
+## 21. NPM scripts
 
 จาก `package.json` มี scripts สำคัญ:
 
@@ -1637,7 +1859,7 @@ npm run benchmark:strict
 npm run doctor
 ```
 
-### 20.1 Test
+### 21.1 Test
 
 ```bash
 npm test
@@ -1646,11 +1868,11 @@ npm test
 คาดหวัง:
 
 ```text
-75 tests passed
+79 tests passed
 0 failed
 ```
 
-### 20.2 CI
+### 21.2 CI
 
 ```bash
 npm run ci
@@ -1666,26 +1888,37 @@ node bin/thai-token-optimizer.js doctor --ci
 
 ---
 
-## 21. Environment variables
+## 22. Environment variables
 
 | Variable | ใช้ทำอะไร |
 |---|---|
 | `HOME` | root สำหรับ state/config ถ้าไม่ override |
+| `TTO_HOME` | override state/config/dictionary/backup root ของ Thai Token Optimizer |
+| `THAI_TOKEN_OPTIMIZER_HOME` | alias สำหรับ override home ของ Thai Token Optimizer |
 | `CODEX_HOME` | path ของ Codex config เช่น `~/.codex` |
 | `CLAUDE_HOME` | path ของ Claude config เช่น `~/.claude` |
+| `GEMINI_HOME` | path ของ Gemini config เช่น `~/.gemini` |
+| `OPENCODE_CONFIG_DIR` | path ของ OpenCode config เช่น `~/.config/opencode` |
+| `OPENCLAW_HOME` | path ของ OpenClaw config เช่น `~/.openclaw` |
+| `HERMES_HOME` | path ของ Hermes config เช่น `~/.hermes` |
 
 ตัวอย่าง isolated test:
 
 ```bash
 export HOME=/tmp/tto-home
+export TTO_HOME=$HOME/.thai-token-optimizer
 export CODEX_HOME=$HOME/.codex
 export CLAUDE_HOME=$HOME/.claude
+export GEMINI_HOME=$HOME/.gemini
+export OPENCODE_CONFIG_DIR=$HOME/.config/opencode
+export OPENCLAW_HOME=$HOME/.openclaw
+export HERMES_HOME=$HOME/.hermes
 npm test
 ```
 
 ---
 
-## 22. File structure สำคัญ
+## 23. File structure สำคัญ
 
 ```text
 thai-token-optimizer/
@@ -1712,17 +1945,33 @@ thai-token-optimizer/
 │   ├── golden_cases.jsonl
 │   └── report.md
 ├── tests/
-├── skills/thai-token-optimizer/SKILL.md
+├── .codex-plugin/
+│   ├── plugin.json
+│   └── hooks/
+├── .claude-plugin/
+│   ├── plugin.json
+│   ├── marketplace.json
+│   └── hooks/
+├── .agents/
+│   ├── README.md
+│   ├── INSTALL_TH.md
+│   └── plugins/marketplace.json
+├── .github/
+│   ├── README.md
+│   ├── ISSUE_TEMPLATE/
+│   └── workflows/
 ├── AGENTS.md
 ├── README.md
-└── package.json
+├── README_ENGLISH.md
+├── package.json
+└── LICENSE
 ```
 
 ---
 
-## 23. Troubleshooting
+## 24. Troubleshooting
 
-### 23.1 คำสั่ง `tto` ไม่เจอ
+### 24.1 คำสั่ง `tto` ไม่เจอ
 
 ใช้ node path แทน:
 
@@ -1737,7 +1986,7 @@ npm link
 which tto
 ```
 
-### 23.2 Codex hooks ไม่ทำงาน
+### 24.2 Codex hooks ไม่ทำงาน
 
 ตรวจ:
 
@@ -1762,7 +2011,7 @@ tto install-agents
 tto doctor
 ```
 
-### 23.3 Doctor WARN เพราะ AGENTS.md ยังไม่ติดตั้ง
+### 24.3 Doctor WARN เพราะ AGENTS.md ยังไม่ติดตั้ง
 
 ติดตั้ง:
 
@@ -1771,7 +2020,7 @@ tto install-agents
 tto doctor
 ```
 
-### 23.4 Benchmark fail ในเครื่องส่วนตัว
+### 24.4 Benchmark fail ในเครื่องส่วนตัว
 
 ใช้ default policy:
 
@@ -1779,7 +2028,7 @@ tto doctor
 tto benchmark --strict --default-policy
 ```
 
-### 23.5 Rollback ก่อนทำจริง
+### 24.5 Rollback ก่อนทำจริง
 
 ```bash
 tto rollback latest --dry-run
@@ -1793,7 +2042,7 @@ tto rollback latest
 
 ---
 
-## 24. Best Practices
+## 25. Best Practices
 
 ### ใช้งานทั่วไป
 
@@ -1836,7 +2085,7 @@ tto backup all
 
 ---
 
-## 25. สรุปคำสั่งทั้งหมดแบบ Quick Reference
+## 26. สรุปคำสั่งทั้งหมดแบบ Quick Reference
 
 ```bash
 # Status / UI
@@ -1874,11 +2123,19 @@ tto config set defaultProfile coding
 tto config set safetyMode strict
 tto config set exactTokenizer true
 
+# Personalization
+tto keep "รบกวนช่วย"
+tto keep "API_KEY(foo)[bar]*"
+tto dictionary
+tto forget "รบกวนช่วย"
+
 # Install
 tto install codex
 tto install claude
 tto install gemini
 tto install opencode
+tto install openclaw
+tto install hermes
 tto install cursor
 tto install aider
 tto install cline
@@ -1891,6 +2148,8 @@ tto uninstall codex
 tto uninstall claude
 tto uninstall gemini
 tto uninstall opencode
+tto uninstall openclaw
+tto uninstall hermes
 tto uninstall cursor
 tto uninstall aider
 tto uninstall cline
@@ -1920,17 +2179,23 @@ tto classify --pretty "DROP TABLE users production secret token"
 tto backup all
 tto backup codex
 tto backup gemini
+tto backup openclaw
+tto backup hermes
 tto backups
 tto rollback latest --dry-run
 tto rollback latest
 tto rollback gemini --dry-run
 tto rollback gemini
+tto rollback openclaw --dry-run
+tto rollback hermes --dry-run
 tto rollback latest --no-prebackup
 
 # Doctor / benchmark
 tto doctor
 tto doctor codex
 tto doctor codex --pretty
+tto doctor openclaw --pretty
+tto doctor hermes --pretty
 tto doctor --pretty
 tto doctor --ci
 tto benchmark
@@ -1945,7 +2210,259 @@ npm run ci
 
 ---
 
-## 26. ข้อควรระวัง
+## 27. Text Diagram กระบวนการทำงานทั้งหมด
+
+ภาพรวม pipeline หลัก:
+
+```text
+User / Agent Prompt
+  |
+  v
+CLI or Agent Hook Entry
+  |
+  +--> Mode/Profile State
+  |      - auto / lite / full / safe
+  |      - coding / command / research / teaching / paper / ultra
+  |
+  +--> User-specific Dictionary
+  |      - tto keep
+  |      - tto forget
+  |      - tto dictionary
+  |
+  v
+Code-aware Parser
+  |
+  +--> Protect:
+  |      - fenced code blocks
+  |      - inline code
+  |      - shell commands
+  |      - paths / URLs
+  |      - versions / package names
+  |      - JSON / YAML / TOML / SQL / regex
+  |
+  v
+Safety Classifier
+  |
+  +--> Low risk  -> normal compression
+  +--> High risk -> safe compression
+                  preserve backup / dry-run / verify / rollback
+  |
+  v
+Adaptive Compression
+  |
+  +--> remove filler
+  +--> keep user dictionary terms
+  +--> fit budget when possible
+  |
+  v
+Preservation Checker
+  |
+  +--> verify constraints
+  +--> verify commands / paths / versions
+  +--> verify code/config blocks
+  |
+  v
+Target Adapter / Hook Output
+  |
+  +--> Codex hooks + AGENTS.md
+  +--> Claude Code settings hooks
+  +--> Gemini CLI extension
+  +--> OpenCode native plugin
+  +--> OpenClaw managed hook
+  +--> Hermes shell + plugin hooks
+  +--> Cursor/Aider/Cline/Roo portable rules
+  |
+  v
+Compact Thai Output
+  - สั้นลง
+  - ปลอดภัยขึ้น
+  - preserve technical details
+  - reproducible
+```
+
+Lifecycle ของ config-changing operation:
+
+```text
+tto install / uninstall / rollback
+  |
+  v
+Create backup
+  |
+  v
+Write target-specific config
+  |
+  v
+Run target-aware doctor
+  |
+  v
+If failed:
+  rollback --dry-run
+  rollback target
+```
+
+---
+
+## 28. Target-aware Health Check + Real Integration Validation
+
+Target-aware health check คือการตรวจเฉพาะ agent ที่ต้องการ ไม่ใช่ตรวจรวมแบบกว้างอย่างเดียว
+
+```bash
+tto doctor codex --pretty
+tto doctor claude --pretty
+tto doctor gemini --pretty
+tto doctor opencode --pretty
+tto doctor openclaw --pretty
+tto doctor hermes --pretty
+```
+
+### 28.1 สิ่งที่แต่ละ target ตรวจ
+
+| Target | Checks |
+|---|---|
+| Codex | `hooks.json`, `config.toml`, `codex_hooks`, hook command paths, hook simulations, optional `AGENTS.md` |
+| Claude Code | `settings.json`, hook script paths, hook availability |
+| Gemini CLI | extension metadata, commands, hooks, `settings.json` |
+| OpenCode | plugin file, `opencode.json`, hook exports |
+| OpenClaw | `HOOK.md`, `handler.ts`, `openclaw.json`, command events, simulator |
+| Hermes Agent | `config.yaml`, shell hooks, plugin manifest, Python plugin, risky pre-tool simulation |
+
+### 28.2 Real integration validation ในโปรเจกต์นี้หมายถึงอะไร
+
+```text
+File exists
+  + Config entry exists
+  + Runtime script syntax is valid
+  + Hook command points to correct script
+  + Local simulation returns expected safety behavior
+  + Backup/rollback scope is target-specific
+```
+
+ถ้าเครื่องไม่มี binary จริงของ OpenClaw หรือ Hermes, `doctor` ยังตรวจได้ระดับ file/config/simulation แต่ไม่ควร claim ว่าได้รัน live session จริง
+
+### 28.3 คำสั่งตรวจหลังติดตั้งทั้งหมด
+
+```bash
+tto install all
+tto install-agents
+tto doctor --pretty
+tto doctor codex --pretty
+tto doctor openclaw --pretty
+tto doctor hermes --pretty
+tto benchmark --pretty --strict --default-policy
+npm test
+```
+
+---
+
+## 29. Plugin Bundle สำหรับ Codex และ Claude
+
+นอกจากติดตั้งลง home config จริง ระบบยังมี plugin bundle ใน repo เพื่อใช้ publish/test ได้:
+
+```text
+.codex-plugin/
+├── plugin.json
+└── hooks/
+    ├── hooks.json
+    ├── tto-activate.js
+    ├── tto-config.js
+    ├── tto-mode-tracker.js
+    ├── tto-policy.js
+    ├── tto-posttool-summary.js
+    ├── tto-pretool-guard.js
+    ├── tto-safety-classifier.js
+    ├── tto-stop-summary.js
+    └── tto-token-estimator.js
+
+.claude-plugin/
+├── plugin.json
+├── marketplace.json
+└── hooks/
+    ├── tto-activate.js
+    ├── tto-config.js
+    ├── tto-mode-tracker.js
+    ├── tto-policy.js
+    ├── tto-posttool-summary.js
+    ├── tto-pretool-guard.js
+    ├── tto-safety-classifier.js
+    ├── tto-stop-summary.js
+    └── tto-token-estimator.js
+```
+
+Validation ที่ควรรัน:
+
+```bash
+node --check .codex-plugin/hooks/tto-pretool-guard.js
+node --check .claude-plugin/hooks/tto-pretool-guard.js
+printf '{"tool":"bash","command":"DROP TABLE users production secret"}' | node .codex-plugin/hooks/tto-pretool-guard.js
+printf '{"tool_name":"bash","tool_input":{"command":"DROP TABLE users production"}}' | node .claude-plugin/hooks/tto-pretool-guard.js
+```
+
+---
+
+## 30. Stress / Fuzz Test แนวทางแนะนำ
+
+ใช้เมื่อต้องการตรวจ regressions จำนวนมาก เช่น 100-500 เคสสุ่ม
+
+### 30.1 หมวดเคสที่ควรสุ่ม
+
+| หมวด | ตัวอย่าง |
+|---|---|
+| Thai filler | คำเกริ่นยาว, คำสุภาพซ้ำ, filler หลายชั้น |
+| Code-aware | fenced code, inline code, JSON, SQL, regex, TOML |
+| Safety | `DROP TABLE`, `rm -rf`, `git push --force`, production, secret |
+| Personalization | คำ keep ที่ซ้อนกัน, regex metacharacters, jargon |
+| Targets | codex, claude, gemini, opencode, openclaw, hermes |
+| Paths/URLs | `~/.codex/config.toml`, `https://...`, Windows path |
+| Versions | `Thai Token Optimizer v1.0`, `1.0.0`, package names |
+
+### 30.2 เกณฑ์ผ่าน
+
+```text
+preservation >= 100% สำหรับ hard constraints
+code blocks preserved
+commands preserved
+versions preserved
+safe-critical prompts do not over-compress
+unknown flags must fail
+rollback dry-run must not mutate files
+```
+
+### 30.3 Severity table สำหรับ bug candidate
+
+| Severity | เงื่อนไข |
+|---|---|
+| Critical | ทำ command/code/config/version หาย, rollback แตะผิด target, safety block ไม่ทำงาน |
+| High | doctor ผ่านผิดทั้งที่ config เสีย, install สร้าง duplicate keys, dictionary ทำ parser crash |
+| Medium | pretty UI แสดงค่าผิด, benchmark report ผิด, warning ไม่ชัด |
+| Low | typo, spacing, docs mismatch, output ไม่สวยแต่ไม่กระทบ behavior |
+
+---
+
+## 31. Generated Reports และไฟล์ที่ไม่ควร commit โดยไม่ตั้งใจ
+
+คำสั่ง benchmark บางโหมดอาจเขียน report:
+
+```text
+benchmarks/report.md
+benchmarks/regression_report.md
+```
+
+แนวทาง:
+
+- ถ้าเป็น report ที่ต้องเผยแพร่ ให้ commit อย่างตั้งใจ
+- ถ้าเกิดจากการทดสอบเฉพาะเครื่อง ให้ตรวจ `git status --short` ก่อน commit
+- `benchmarks/regression_report.md` อาจเปลี่ยนเฉพาะ timestamp จาก benchmark run
+
+ตรวจ:
+
+```bash
+git status --short
+git diff -- benchmarks/regression_report.md
+```
+
+---
+
+## 32. ข้อควรระวัง
 
 - ระบบนี้แก้ไฟล์ config ของหลาย tools ได้ ควรใช้ `tto backup all` ก่อน `install all` หรือ `uninstall all`
 - ใช้ `--dry-run` ก่อน rollback เสมอ
@@ -1955,10 +2472,10 @@ npm run ci
 
 ---
 
-## 27. คำตอบสั้นที่สุด
+## 33. คำตอบสั้นที่สุด
 
 **CLI UI** ของระบบคือคำสั่ง `tto ...` พร้อม output แบบ JSON/report/Pretty Terminal UI  
-**Agent/Hook UI** คือคำสั่งใน agent เช่น `token thai auto` ที่ทำให้ Codex/Claude/Gemini/OpenCode ตอบไทยสั้นขึ้นและปลอดภัยขึ้น
+**Agent/Hook UI** คือคำสั่งใน agent เช่น `token thai auto` ที่ทำให้ Codex/Claude/Gemini/OpenCode/OpenClaw/Hermes ตอบไทยสั้นขึ้นและปลอดภัยขึ้น
 
 ตัวอย่าง UI ที่สวยที่สุดตอนนี้:
 
@@ -1970,12 +2487,12 @@ tto ui
 ╭────────────────────────────────────────────────────────────────────────────╮
 │ ⚡ Thai Token Optimizer v1.0                              ○ OFF             │
 ├────────────────────────────────────────────────────────────────────────────┤
-│ Token-efficient Thai workflow for Codex / Claude / Gemini / OpenCode       │
+│ Token-efficient Thai workflow for Codex / Claude / Gemini / OpenCode / Op… │
 │                                                                            │
 │ Mode          auto            Profile   coding                             │
 │ Safety        strict          Version   1.0.0                              │
 │                                                                            │
-│ Doctor        WARN            Checks    9/17                               │
+│ Doctor        PASS            Checks    52/53                              │
 │ Saving        ██████████░░░░░░ 63%                                         │
 │                                                                            │
 │ Agents                                                                     │
@@ -1983,6 +2500,8 @@ tto ui
 │ ✓ Claude Code   settings hooks                                             │
 │ ✓ Gemini CLI    extension                                                  │
 │ ✓ OpenCode      native plugin                                              │
+│ ✓ OpenClaw      managed hook                                               │
+│ ✓ Hermes Agent  shell + plugin hooks                                       │
 │ ✓ Cursor/Aider/Cline/Roo rules                                             │
 │                                                                            │
 │ Quick Commands                                                             │
