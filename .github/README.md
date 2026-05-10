@@ -717,6 +717,10 @@ token thai auto
 ### ความน่าเชื่อถือ
 
 - `tto doctor`
+- `tto doctor codex`
+- `tto doctor claude`
+- `tto doctor gemini`
+- `tto doctor opencode`
 - `tto backup`
 - `tto backups`
 - `tto rollback`
@@ -1082,6 +1086,8 @@ tto rollback latest --no-prebackup
 
 ```bash
 tto doctor
+tto doctor codex
+tto doctor codex --pretty
 tto doctor --pretty
 tto doctor --ci
 ```
