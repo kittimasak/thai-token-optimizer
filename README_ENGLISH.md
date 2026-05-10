@@ -1597,6 +1597,75 @@ Main modules:
 
 ---
 
+## 🗺️ Text Diagram: End-to-End System Workflow
+
+This diagram summarizes the full execution path, from user input to safe, context-preserving compressed output.
+
+```text
+User / Agent
+  (Codex / Claude / Gemini CLI / OpenCode)
+            │
+            ▼
+Entry Points
+  - Chat triggers: token thai auto|lite|full|safe|off
+  - CLI commands: tto compress / keep / forget / doctor / backup
+            │
+            ▼
+State + Policy Layer
+  - state.json
+  - config.json
+  - dictionary.json (personalization)
+            │
+            ▼
+Hook Runtime (SessionStart / UserPromptSubmit / PreToolUse / PostToolUse / Stop)
+            │
+            ▼
+Safety Classifier
+  - detects destructive / db / prod / secret / auth-payment risks
+            │
+            ▼
+Compression Pipeline
+  1) Code-aware parser
+  2) User-specific dictionary protection
+  3) Filler/replacement compression
+  4) Constraint locker
+  5) Budget compressor
+  6) Preservation checker
+            │
+            ▼
+Optimized Output
+  - concise Thai
+  - preserved commands/code/paths/versions
+  - safety details retained when risky
+            │
+            ▼
+Backup / Rollback Safety Net
+  - backup manifests include dictionary.json + state/config files
+  - rollback restores target-scoped files
+```
+
+### Step-by-step explanation
+
+1. `Entry Points`
+Users interact through chat triggers or direct CLI commands; the system selects mode and policy for the task.
+
+2. `State + Policy`
+Runtime state and personalization (`dictionary.json`) are persisted so behavior stays consistent across sessions.
+
+3. `Hook Runtime`
+Hooks inject behavior at session start, prompt submission, pre-tool, post-tool, and final response stages.
+
+4. `Safety Classifier`
+Risky content triggers safe behavior so backup/rollback/verification details are not over-compressed away.
+
+5. `Compression Pipeline`
+Technical structures and user-specific terms are protected first; only compressible filler is reduced to save tokens.
+
+6. `Backup / Rollback`
+Config-changing workflows are backed up, and rollback can restore only the requested target scope.
+
+---
+
 ## 🧪 Development and testing
 
 Run tests:

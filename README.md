@@ -1597,6 +1597,75 @@ Modules หลัก:
 
 ---
 
+## 🗺️ Text Diagram: กระบวนการทำงานของระบบทั้งหมด
+
+แผนภาพนี้สรุปการไหลงานตั้งแต่ผู้ใช้สั่งงาน จนได้ผลลัพธ์การบีบอัดที่ปลอดภัยและคงความหมายสำคัญ
+
+```text
+User / Agent
+  (Codex / Claude / Gemini CLI / OpenCode)
+            │
+            ▼
+Entry Points
+  - Chat triggers: token thai auto|lite|full|safe|off
+  - CLI commands: tto compress / keep / forget / doctor / backup
+            │
+            ▼
+State + Policy Layer
+  - state.json
+  - config.json
+  - dictionary.json (personalization)
+            │
+            ▼
+Hook Runtime (SessionStart / UserPromptSubmit / PreToolUse / PostToolUse / Stop)
+            │
+            ▼
+Safety Classifier
+  - detects destructive / db / prod / secret / auth-payment risks
+            │
+            ▼
+Compression Pipeline
+  1) Code-aware parser
+  2) User-specific dictionary protection
+  3) Filler/replacement compression
+  4) Constraint locker
+  5) Budget compressor
+  6) Preservation checker
+            │
+            ▼
+Optimized Output
+  - concise Thai
+  - preserved commands/code/paths/versions
+  - safety details retained when risky
+            │
+            ▼
+Backup / Rollback Safety Net
+  - backup manifests include dictionary.json + state/config files
+  - rollback restores target-scoped files
+```
+
+### คำอธิบายทีละช่วง
+
+1. `Entry Points`
+ผู้ใช้สั่งผ่านแชต trigger หรือคำสั่ง CLI ปกติ ระบบจะเลือก mode และ policy ที่เหมาะกับงานนั้น
+
+2. `State + Policy`
+เก็บสถานะการทำงานและ personalization (`dictionary.json`) เพื่อให้ระบบเรียนรู้สไตล์รายบุคคลแบบต่อเนื่อง
+
+3. `Hook Runtime`
+inject พฤติกรรมตอนเริ่ม session, ก่อนใช้ tool, หลังใช้ tool และก่อนตอบ final เพื่อรักษาความสม่ำเสมอ
+
+4. `Safety Classifier`
+ถ้าเจอคำสั่งเสี่ยง ระบบจะบังคับแนวตอบแบบ safe โดยไม่ย่อจนเสียขั้นตอน backup/rollback/verify
+
+5. `Compression Pipeline`
+เริ่มจากปกป้องโครงสร้างเทคนิคและคำเฉพาะผู้ใช้ก่อน แล้วค่อยบีบอัดส่วนที่เป็น filler เพื่อลด token โดยไม่เสีย context
+
+6. `Backup / Rollback`
+ทุกงานแก้ config สำคัญมี backup รองรับ และ rollback สามารถ restore เฉพาะ target ที่ต้องการ
+
+---
+
 ## 🧪 Development and testing
 
 รัน tests:
