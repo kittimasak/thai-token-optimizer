@@ -5,7 +5,7 @@
   "private": false,
   "type": "commonjs",
   "scripts": {
-    "test": "node --test 'tests/test_*.js'",
+    "test": "node --test tests/test_*.js",
     "install:codex": "node bin/thai-token-optimizer.js install codex",
     "install:claude": "node bin/thai-token-optimizer.js install claude",
     "install:all": "node bin/thai-token-optimizer.js install all",
