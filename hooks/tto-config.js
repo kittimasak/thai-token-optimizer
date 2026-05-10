@@ -23,7 +23,35 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const HOME_DIR = process.env.TTO_HOME || process.env.THAI_TOKEN_OPTIMIZER_HOME || path.join(os.homedir(), '.thai-token-optimizer');
+function sanitizeSegment(v) {
+  return String(v || 'user').replace(/[^A-Za-z0-9_.-]/g, '_');
+}
+
+function canWriteDir(dir) {
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    const probe = path.join(dir, `.tto-write-probe-${process.pid}-${Date.now()}`);
+    fs.writeFileSync(probe, 'ok');
+    fs.rmSync(probe, { force: true });
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function resolveHomeDir() {
+  const explicit = process.env.TTO_HOME || process.env.THAI_TOKEN_OPTIMIZER_HOME;
+  if (explicit) return explicit;
+  const preferred = path.join(os.homedir(), '.thai-token-optimizer');
+  if (canWriteDir(preferred)) return preferred;
+  const fallbackRoot = process.env.TTO_FALLBACK_HOME || path.join(os.tmpdir(), 'thai-token-optimizer');
+  const fallback = path.join(fallbackRoot, sanitizeSegment(process.env.USER || process.env.LOGNAME));
+  if (canWriteDir(fallback)) return fallback;
+  // Last resort: keep preferred path even if not writable.
+  return preferred;
+}
+
+const HOME_DIR = resolveHomeDir();
 const STATE_PATH = path.join(HOME_DIR, 'state.json');
 const ERROR_LOG_PATH = path.join(HOME_DIR, 'error.log');
 const STATS_PATH = path.join(HOME_DIR, 'stats.jsonl');
@@ -114,5 +142,7 @@ module.exports = {
   setState,
   appendStats,
   logError,
-  normalizeState
+  normalizeState,
+  canWriteDir,
+  resolveHomeDir
 };

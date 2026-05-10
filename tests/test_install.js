@@ -24,11 +24,20 @@ const os = require('node:os');
 const fs = require('node:fs');
 
 const cli = path.resolve(__dirname, '..', 'bin', 'thai-token-optimizer.js');
+function isolatedEnv(patch = {}) {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'tto-test-home-'));
+  return {
+    ...process.env,
+    HOME: home,
+    TTO_HOME: path.join(home, '.thai-token-optimizer'),
+    ...patch
+  };
+}
 
 test('install writes Codex hooks and enables codex_hooks feature', () => {
   const codexHome = fs.mkdtempSync(path.join(os.tmpdir(), 'codex-home-'));
   const r = spawnSync(process.execPath, [cli, 'install'], {
-    env: { ...process.env, CODEX_HOME: codexHome },
+    env: isolatedEnv({ CODEX_HOME: codexHome }),
     encoding: 'utf8'
   });
   assert.equal(r.status, 0);
@@ -42,7 +51,7 @@ test('install writes Codex hooks and enables codex_hooks feature', () => {
 test('install writes Claude Code hooks into settings.json', () => {
   const claudeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-home-'));
   const r = spawnSync(process.execPath, [cli, 'install', 'claude'], {
-    env: { ...process.env, CLAUDE_HOME: claudeHome },
+    env: isolatedEnv({ CLAUDE_HOME: claudeHome }),
     encoding: 'utf8'
   });
   assert.equal(r.status, 0);

@@ -113,11 +113,44 @@ test('STATE_PATH respects TTO_HOME env var', () => {
   }
 });
 
-test('STATE_PATH defaults to ~/.thai-token-optimizer/state.json when TTO_HOME unset', () => {
+test('STATE_PATH uses default home when writable, otherwise uses fallback path', () => {
   delete process.env.TTO_HOME;
   delete process.env.THAI_TOKEN_OPTIMIZER_HOME;
+  delete process.env.TTO_FALLBACK_HOME;
   delete require.cache[require.resolve('../hooks/tto-config.js')];
-  const { STATE_PATH } = require('../hooks/tto-config.js');
-  const expected = path.join(os.homedir(), '.thai-token-optimizer', 'state.json');
-  assert.equal(STATE_PATH, expected);
+  const { STATE_PATH, canWriteDir } = require('../hooks/tto-config.js');
+  const preferred = path.join(os.homedir(), '.thai-token-optimizer', 'state.json');
+  if (canWriteDir(path.dirname(preferred))) {
+    assert.equal(STATE_PATH, preferred);
+  } else {
+    assert.ok(STATE_PATH.startsWith(path.join(os.tmpdir(), 'thai-token-optimizer')), `STATE_PATH (${STATE_PATH}) should use tmp fallback`);
+  }
+});
+
+test('STATE_PATH falls back to tmp path when default home is not writable', () => {
+  delete process.env.TTO_HOME;
+  delete process.env.THAI_TOKEN_OPTIMIZER_HOME;
+  const fallbackRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'tto-fallback-root-'));
+  process.env.TTO_FALLBACK_HOME = fallbackRoot;
+  const fsMod = require('node:fs');
+  const origMkdir = fsMod.mkdirSync;
+  const blocked = path.join(os.homedir(), '.thai-token-optimizer');
+  try {
+    fsMod.mkdirSync = function patchedMkdirSync(target, options) {
+      if (String(target).startsWith(blocked)) {
+        const err = new Error('operation not permitted');
+        err.code = 'EPERM';
+        throw err;
+      }
+      return origMkdir.call(this, target, options);
+    };
+    delete require.cache[require.resolve('../hooks/tto-config.js')];
+    const { HOME_DIR, STATE_PATH } = require('../hooks/tto-config.js');
+    assert.ok(HOME_DIR.startsWith(fallbackRoot), `HOME_DIR (${HOME_DIR}) should start with fallback root (${fallbackRoot})`);
+    assert.ok(STATE_PATH.startsWith(fallbackRoot), `STATE_PATH (${STATE_PATH}) should start with fallback root (${fallbackRoot})`);
+  } finally {
+    fsMod.mkdirSync = origMkdir;
+    delete process.env.TTO_FALLBACK_HOME;
+    fs.rmSync(fallbackRoot, { recursive: true, force: true });
+  }
 });
