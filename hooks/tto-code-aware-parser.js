@@ -47,7 +47,7 @@ function collectProtectedRanges(text) {
   if (dictionary.keep.length > 0) {
     const sortedKeep = [...dictionary.keep].sort((a, b) => b.length - a.length);
     const userWordsRe = new RegExp(sortedKeep.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g');
-    dynamicPatterns.unshift(userWordsRe);
+    dynamicPatterns.push(userWordsRe);
   }
 
   for (const pattern of dynamicPatterns) {

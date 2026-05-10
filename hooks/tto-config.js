@@ -78,11 +78,18 @@ function logError(msg) {
   }
 }
 
+let _dictionaryCache = null;
+
 function getDictionary() {
+  if (_dictionaryCache) return _dictionaryCache;
   try {
-    if (!fs.existsSync(DICTIONARY_PATH)) return { keep: [], version: 1 };
+    if (!fs.existsSync(DICTIONARY_PATH)) {
+      _dictionaryCache = { keep: [], version: 1 };
+      return _dictionaryCache;
+    }
     const data = JSON.parse(fs.readFileSync(DICTIONARY_PATH, 'utf8'));
-    return { keep: Array.isArray(data.keep) ? data.keep : [], version: 1 };
+    _dictionaryCache = { keep: Array.isArray(data.keep) ? data.keep : [], version: 1 };
+    return _dictionaryCache;
   } catch (e) {
     logError(`getDictionary: ${e.message}`);
     return { keep: [], version: 1 };
@@ -93,6 +100,7 @@ function setDictionary(data) {
   try {
     fs.mkdirSync(HOME_DIR, { recursive: true });
     fs.writeFileSync(DICTIONARY_PATH, JSON.stringify(data, null, 2) + '\n');
+    _dictionaryCache = data;
     return data;
   } catch (e) {
     logError(`setDictionary: ${e.message}`);
