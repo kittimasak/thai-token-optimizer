@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * ============================================================================
  * Thai Token Optimizer v1.0
@@ -17,7 +18,6 @@
  */
 
 
-#!/usr/bin/env node
 
 const { getState, logError } = require('./tto-config');
 

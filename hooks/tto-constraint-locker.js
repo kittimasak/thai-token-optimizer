@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * ============================================================================
  * Thai Token Optimizer v1.0
@@ -17,7 +18,6 @@
  */
 
 
-#!/usr/bin/env node
 
 const LOCK_PATTERNS = [
   /[^\n]*(?:ห้าม|ต้อง(?!การ)|เด็ดขาด|คงเดิม|ห้ามเปลี่ยน|ไม่เปลี่ยน|อย่าเปลี่ยน|เท่านั้น|must|must not|do not|never|keep|preserve)[^\n]*/gi,

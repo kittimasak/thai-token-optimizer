@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * ============================================================================
  * Thai Token Optimizer v1.0
@@ -17,7 +18,6 @@
  */
 
 
-#!/usr/bin/env node
 
 const { VALID_PROFILES, setState, getState } = require('./tto-config');
 const { getProfileRules } = require('./tto-policy');

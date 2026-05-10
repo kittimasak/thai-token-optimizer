@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * ============================================================================
  * Thai Token Optimizer v1.0
@@ -17,7 +18,6 @@
  */
 
 
-#!/usr/bin/env node
 
 const CATEGORIES = [
   {
@@ -52,12 +52,28 @@ const CATEGORIES = [
   }
 ];
 
+const WHITELIST_RE = [
+  /^git\s+(push|commit|pull|add|status|log|diff|show|branch|checkout|fetch|merge|rebase|remote|init|config)/i,
+  /^discord\s+(reply|fetch_messages)/i,
+  /^maw\s+(hey|peek)/i,
+  /^origin-send\.sh/i,
+  /^room\s+say/i,
+  /^npm\s+(install|test|run|start|list|info|view)/i,
+  /^ls\b/i, /^cat\b/i, /^grep\b/i, /^find\b/i, /^echo\b/i, /^mkdir\b/i, /^touch\b/i, /^cp\b/i, /^mv\b/i
+];
+
 function classifyText(text) {
-  const source = String(text || '');
+  const source = String(text || '').trim();
   const matches = [];
+  
+  const isWhitelisted = WHITELIST_RE.some(re => re.test(source));
+
   for (const category of CATEGORIES) {
     for (const pattern of category.patterns) {
       if (pattern.test(source)) {
+        // Skip medium severity matches if whitelisted
+        if (isWhitelisted && category.severity === 'medium') continue;
+        
         matches.push({ id: category.id, severity: category.severity, pattern: pattern.toString() });
         break;
       }

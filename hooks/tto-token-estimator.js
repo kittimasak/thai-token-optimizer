@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * ============================================================================
  * Thai Token Optimizer v1.0
@@ -17,7 +18,6 @@
  */
 
 
-#!/usr/bin/env node
 
 function countThaiChars(text) {
   const m = String(text || '').match(/[\u0E00-\u0E7F]/g);
