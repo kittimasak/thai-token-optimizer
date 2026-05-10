@@ -80,6 +80,19 @@ function logError(msg) {
 
 let _dictionaryCache = null;
 
+function normalizeDictionary(data = {}) {
+  const seen = new Set();
+  const keep = [];
+  const source = Array.isArray(data.keep) ? data.keep : [];
+  for (const item of source) {
+    const word = String(item || '').trim();
+    if (!word || seen.has(word)) continue;
+    seen.add(word);
+    keep.push(word);
+  }
+  return { keep, version: 1 };
+}
+
 function getDictionary() {
   if (_dictionaryCache) return _dictionaryCache;
   try {
@@ -88,7 +101,7 @@ function getDictionary() {
       return _dictionaryCache;
     }
     const data = JSON.parse(fs.readFileSync(DICTIONARY_PATH, 'utf8'));
-    _dictionaryCache = { keep: Array.isArray(data.keep) ? data.keep : [], version: 1 };
+    _dictionaryCache = normalizeDictionary(data);
     return _dictionaryCache;
   } catch (e) {
     logError(`getDictionary: ${e.message}`);
@@ -98,10 +111,11 @@ function getDictionary() {
 
 function setDictionary(data) {
   try {
+    const normalized = normalizeDictionary(data);
     fs.mkdirSync(HOME_DIR, { recursive: true });
-    fs.writeFileSync(DICTIONARY_PATH, JSON.stringify(data, null, 2) + '\n');
-    _dictionaryCache = data;
-    return data;
+    fs.writeFileSync(DICTIONARY_PATH, JSON.stringify(normalized, null, 2) + '\n');
+    _dictionaryCache = normalized;
+    return normalized;
   } catch (e) {
     logError(`setDictionary: ${e.message}`);
     return null;
@@ -174,6 +188,7 @@ module.exports = {
   setState,
   getDictionary,
   setDictionary,
+  normalizeDictionary,
   appendStats,
   logError,
   normalizeState,

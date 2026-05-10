@@ -22,7 +22,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { HOME_DIR } = require('./tto-config');
+const { HOME_DIR, DICTIONARY_PATH } = require('./tto-config');
 
 const VALID_TARGETS = Object.freeze(['codex', 'claude', 'gemini', 'opencode', 'cursor', 'aider', 'cline', 'roo', 'all']);
 
@@ -91,6 +91,7 @@ function targetFiles(target) {
   }
   files.push(...adapterPaths(target));
   files.push(path.join(HOME_DIR, 'state.json'));
+  files.push(DICTIONARY_PATH);
   return [...new Set(files)];
 }
 function makeBackup(target = 'all') {
