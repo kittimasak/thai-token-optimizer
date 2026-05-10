@@ -21,6 +21,7 @@
 
 const { transformCodeAware } = require('./tto-code-aware-parser');
 const { appendMissingConstraints } = require('./tto-constraint-locker');
+const { getDictionary } = require('./tto-config');
 
 const FILLER_PATTERNS = [
   [/(ได้เลยครับ|ได้เลยค่ะ|แน่นอนครับ|แน่นอนค่ะ|ขอบคุณครับ|ขอบคุณค่ะ)/g, ''],

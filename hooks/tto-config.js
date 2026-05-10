@@ -55,6 +55,7 @@ const HOME_DIR = resolveHomeDir();
 const STATE_PATH = path.join(HOME_DIR, 'state.json');
 const ERROR_LOG_PATH = path.join(HOME_DIR, 'error.log');
 const STATS_PATH = path.join(HOME_DIR, 'stats.jsonl');
+const DICTIONARY_PATH = path.join(HOME_DIR, 'dictionary.json');
 
 const DEFAULT_STATE = Object.freeze({
   enabled: false,
@@ -74,6 +75,28 @@ function logError(msg) {
     fs.appendFileSync(ERROR_LOG_PATH, `[${new Date().toISOString()}] ${msg}\n`);
   } catch (_) {
     // Logging is best-effort.
+  }
+}
+
+function getDictionary() {
+  try {
+    if (!fs.existsSync(DICTIONARY_PATH)) return { keep: [], version: 1 };
+    const data = JSON.parse(fs.readFileSync(DICTIONARY_PATH, 'utf8'));
+    return { keep: Array.isArray(data.keep) ? data.keep : [], version: 1 };
+  } catch (e) {
+    logError(`getDictionary: ${e.message}`);
+    return { keep: [], version: 1 };
+  }
+}
+
+function setDictionary(data) {
+  try {
+    fs.mkdirSync(HOME_DIR, { recursive: true });
+    fs.writeFileSync(DICTIONARY_PATH, JSON.stringify(data, null, 2) + '\n');
+    return data;
+  } catch (e) {
+    logError(`setDictionary: ${e.message}`);
+    return null;
   }
 }
 
@@ -134,12 +157,15 @@ module.exports = {
   STATE_PATH,
   ERROR_LOG_PATH,
   STATS_PATH,
+  DICTIONARY_PATH,
   DEFAULT_STATE,
   VALID_LEVELS,
   VALID_PROFILES,
   VALID_SAFETY_MODES,
   getState,
   setState,
+  getDictionary,
+  setDictionary,
   appendStats,
   logError,
   normalizeState,

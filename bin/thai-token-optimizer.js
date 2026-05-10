@@ -21,7 +21,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { getState, setState, STATE_PATH, STATS_PATH, HOME_DIR } = require('../hooks/tto-config');
+const { getState, setState, STATE_PATH, STATS_PATH, HOME_DIR, getDictionary, setDictionary } = require('../hooks/tto-config');
 const { estimateTokens, estimateSavings } = require('../hooks/tto-token-estimator');
 const { compressPrompt } = require('../hooks/tto-compressor');
 const { compressToBudget } = require('../hooks/tto-budget-compressor');
@@ -54,6 +54,9 @@ Commands:
   install <target|all>    Install hooks/adapters with backup
   uninstall <target|all>  Remove hooks/adapters with backup
   install-agents [codex]  Merge AGENTS.md into ~/.codex/AGENTS.md with backup
+  keep <word>             Add a word to personal dictionary (never compress)
+  forget <word>           Remove a word from personal dictionary
+  dictionary              List personal dictionary words
   estimate [--target codex|claude] [--exact] <text> Estimate tokens
   compress [--pretty] [--level auto|lite|full|safe] [--budget N] [--target codex|claude] [--check] [text|file]
   rewrite                 Alias of compress
@@ -295,6 +298,28 @@ function runRollback(args) {
 }
 
 function runProfile(args) { const name = (args[0] || '').toLowerCase(); if (!name || name === 'show') return console.log(JSON.stringify(describeProfile(), null, 2)); if (name === 'list') return console.log(JSON.stringify(listProfiles(), null, 2)); const st = setProfile(name); console.log(JSON.stringify({ profile: st.profile, statePath: STATE_PATH, rules: describeProfile(name) }, null, 2)); }
+function runDictionary() { console.log(JSON.stringify(getDictionary(), null, 2)); }
+function runKeep(args) {
+  const word = args.join(' ').trim();
+  if (!word) { console.error('Usage: tto keep <word>'); process.exit(1); }
+  const dict = getDictionary();
+  if (!dict.keep.includes(word)) {
+    dict.keep.push(word);
+    setDictionary(dict);
+  }
+  console.log(JSON.stringify({ added: word, dictionary: dict }, null, 2));
+}
+function runForget(args) {
+  const word = args.join(' ').trim();
+  if (!word) { console.error('Usage: tto forget <word>'); process.exit(1); }
+  const dict = getDictionary();
+  const index = dict.keep.indexOf(word);
+  if (index >= 0) {
+    dict.keep.splice(index, 1);
+    setDictionary(dict);
+  }
+  console.log(JSON.stringify({ removed: word, dictionary: dict }, null, 2));
+}
 function runConfig(args) { const sub = (args[0] || 'get').toLowerCase(); if (sub === 'path') return console.log(POLICY_PATH); if (sub === 'init') return console.log(ensurePolicy()); if (sub === 'get') return console.log(JSON.stringify(getPolicy(), null, 2)); if (sub === 'set') { if (!args[1] || args[2] === undefined) { console.error('Usage: tto config set <key> <value>'); process.exit(1); } return console.log(JSON.stringify(setPolicyPathValue(args[1], args[2]), null, 2)); } console.error('Usage: tto config get|set <key> <value>|path|init'); process.exit(1); }
 
 const cmd = (process.argv[2] || 'status').toLowerCase();
@@ -305,6 +330,9 @@ try {
   else if (cmd === 'full') { setState({ enabled: true, level: 'full' }); console.log(`${NAME} ${VERSION_LABEL}: ON full`); }
   else if (cmd === 'safe') { setState({ enabled: true, level: 'safe' }); console.log(`${NAME} ${VERSION_LABEL}: ON safe`); }
   else if (cmd === 'profile') runProfile(rest);
+  else if (cmd === 'keep') runKeep(rest);
+  else if (cmd === 'forget') runForget(rest);
+  else if (cmd === 'dictionary') runDictionary();
   else if (cmd === 'config') runConfig(rest);
   else if (cmd === 'off' || cmd === 'stop') { setState({ enabled: false }); console.log(`${NAME} ${VERSION_LABEL}: OFF`); }
   else if (cmd === 'status') {

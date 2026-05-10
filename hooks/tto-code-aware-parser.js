@@ -19,6 +19,8 @@
 
 
 
+const { getDictionary } = require('./tto-config');
+
 const PROTECTED_PATTERNS = [
   /```[\s\S]*?```/g,
   /`[^`\n]+`/g,
@@ -38,7 +40,17 @@ function overlaps(aStart, aEnd, ranges) {
 function collectProtectedRanges(text) {
   text = String(text || '');
   const ranges = [];
-  for (const pattern of PROTECTED_PATTERNS) {
+
+  // Adaptive Learning: Dynamically include user-specific words in protection
+  const dictionary = getDictionary();
+  const dynamicPatterns = [...PROTECTED_PATTERNS];
+  if (dictionary.keep.length > 0) {
+    const sortedKeep = [...dictionary.keep].sort((a, b) => b.length - a.length);
+    const userWordsRe = new RegExp(sortedKeep.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g');
+    dynamicPatterns.unshift(userWordsRe);
+  }
+
+  for (const pattern of dynamicPatterns) {
     pattern.lastIndex = 0;
     let m;
     while ((m = pattern.exec(text)) !== null) {
