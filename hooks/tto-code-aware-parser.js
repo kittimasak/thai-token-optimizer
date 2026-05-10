@@ -26,7 +26,7 @@ const PROTECTED_PATTERNS = [
   /`[^`\n]+`/g,
   /https?:\/\/[^\s)]+/g,
   /\b(?:[A-Za-z]:)?(?:\.?\.\/|~\/|\/)[A-Za-z0-9._@%+\-/]+/g,
-  /\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b(?:\s+[^\n]*)?/gi,
+  /\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b/gi,
   /\b[A-Z0-9_]{2,}\b/g,
   /\bv?\d+\.\d+(?:\.\d+)?(?:[-+][A-Za-z0-9.-]+)?\b/g,
   /\b[A-Za-z0-9_-]+\.(?:js|mjs|cjs|ts|tsx|jsx|json|yaml|yml|toml|env|md|py|php|sql|sh|bash|zsh|txt|zip)\b/g,
@@ -35,6 +35,23 @@ const PROTECTED_PATTERNS = [
 
 function overlaps(aStart, aEnd, ranges) {
   return ranges.some(r => aStart < r.end && aEnd > r.start);
+}
+
+function addProtectedRange(ranges, start, end, text) {
+  if (end <= start) return;
+  const overlapsWith = ranges.filter(r => start < r.end && end > r.start);
+  if (!overlapsWith.length) {
+    ranges.push({ start, end, text });
+    return;
+  }
+  const candidateLength = end - start;
+  const shouldReplace = overlapsWith.every(r => candidateLength > (r.end - r.start));
+  if (!shouldReplace) return;
+  for (const r of overlapsWith) {
+    const i = ranges.indexOf(r);
+    if (i >= 0) ranges.splice(i, 1);
+  }
+  ranges.push({ start, end, text });
 }
 
 function collectProtectedRanges(text) {
@@ -46,7 +63,7 @@ function collectProtectedRanges(text) {
   const dynamicPatterns = [...PROTECTED_PATTERNS];
   if (dictionary.keep.length > 0) {
     const sortedKeep = [...dictionary.keep].sort((a, b) => b.length - a.length);
-    const userWordsRe = new RegExp(sortedKeep.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g');
+    const userWordsRe = new RegExp(sortedKeep.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'gi');
     dynamicPatterns.push(userWordsRe);
   }
 
@@ -56,7 +73,7 @@ function collectProtectedRanges(text) {
     while ((m = pattern.exec(text)) !== null) {
       const start = m.index;
       const end = start + m[0].length;
-      if (end > start && !overlaps(start, end, ranges)) ranges.push({ start, end, text: m[0] });
+      addProtectedRange(ranges, start, end, m[0]);
       if (m[0].length === 0) pattern.lastIndex++;
     }
   }

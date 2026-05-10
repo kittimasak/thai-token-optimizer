@@ -303,22 +303,28 @@ function runKeep(args) {
   const word = args.join(' ').trim();
   if (!word) { console.error('Usage: tto keep <word>'); process.exit(1); }
   const dict = getDictionary();
-  if (!dict.keep.includes(word)) {
+  const lower = word.toLowerCase();
+  if (dict.keep.some(w => w.toLowerCase() === lower)) {
+    console.log(JSON.stringify({ note: 'word already exists', dictionary: dict }, null, 2));
+  } else {
     dict.keep.push(word);
     setDictionary(dict);
+    console.log(JSON.stringify({ added: word, dictionary: dict }, null, 2));
   }
-  console.log(JSON.stringify({ added: word, dictionary: dict }, null, 2));
 }
 function runForget(args) {
   const word = args.join(' ').trim();
   if (!word) { console.error('Usage: tto forget <word>'); process.exit(1); }
   const dict = getDictionary();
-  const index = dict.keep.indexOf(word);
+  const lower = word.toLowerCase();
+  const index = dict.keep.findIndex(w => w.toLowerCase() === lower);
   if (index >= 0) {
-    dict.keep.splice(index, 1);
+    const removed = dict.keep.splice(index, 1);
     setDictionary(dict);
+    console.log(JSON.stringify({ removed: removed[0], dictionary: dict }, null, 2));
+  } else {
+    console.log(JSON.stringify({ note: 'word not found', dictionary: dict }, null, 2));
   }
-  console.log(JSON.stringify({ removed: word, dictionary: dict }, null, 2));
 }
 function runConfig(args) { const sub = (args[0] || 'get').toLowerCase(); if (sub === 'path') return console.log(POLICY_PATH); if (sub === 'init') return console.log(ensurePolicy()); if (sub === 'get') return console.log(JSON.stringify(getPolicy(), null, 2)); if (sub === 'set') { if (!args[1] || args[2] === undefined) { console.error('Usage: tto config set <key> <value>'); process.exit(1); } return console.log(JSON.stringify(setPolicyPathValue(args[1], args[2]), null, 2)); } console.error('Usage: tto config get|set <key> <value>|path|init'); process.exit(1); }
 
