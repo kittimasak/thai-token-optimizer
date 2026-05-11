@@ -1196,3 +1196,16 @@ technical precision
 If there is conflict between shortness and correctness, choose correctness.
 
 If there is conflict between token reduction and safety, choose safety.
+
+---
+
+## 27. Research: MTP & Speculative Decoding
+
+แนวคิดของ **Multi-Token Prediction (MTP)** และ **Speculative Decoding** สามารถนำมาประยุกต์ใช้กับ **Thai Token Optimizer (TTO)** เพื่อเปลี่ยนผ่านจาก Rule-based ไปสู่ **Hybrid AI-driven**:
+
+- **TTO as a "Rule-based Speculator":** คาดการณ์ประโยคที่ถูกบีบอัดแล้วล่วงหน้า 3-5 tokens ขณะผู้ใช้พิมพ์ เพื่อทำ Auto-complete แบบ Real-time
+- **Training a TTO-Aware Draft Model:** เทรน Small Language Model (SLM) ด้วย Dataset ที่ผ่านการบีบอัดด้วย TTO เพื่อทำหน้าที่เป็น Draft Model ที่ Gen ข้อความไทยแบบ Compact
+- **Constraint-Aware Verification:** ใช้ `tto-preservation-checker.js` และ `tto-constraint-locker.js` เป็นส่วนหนึ่งของ Verification Step เพื่อตรวจสอบ Hard Constraints ก่อนตัดสินใจขั้นสุดท้าย
+- **Semantic Muting as Speculation:** ใช้ MTP ทำนายส่วนของคำอธิบายไทยที่ "ซ้ำซ้อน" กับโค้ด และสั่งหยุด Gen (Muting) เพื่อประหยัด token
+
+ประโยชน์: ลด Latency (เร็วขึ้น) และเพิ่ม High Fidelity (แม่นยำขึ้น)

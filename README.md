@@ -1919,6 +1919,26 @@ tto doctor --pretty
 
 ---
 
+## 🚀 Future Roadmap & Research: MTP & Speculative Decoding
+
+แนวคิดของ **Multi-Token Prediction (MTP)** และ **Speculative Decoding** สามารถนำมาประยุกต์ใช้กับ **Thai Token Optimizer (TTO)** เพื่อยกระดับ "ความเร็วในการประมวลผล" และ "ความแม่นยำในการบีบอัด" โดยเปลี่ยนผ่านจาก Rule-based ไปสู่ **Hybrid AI-driven**:
+
+### 1. ความเป็นไปได้ในการประยุกต์ใช้
+ใช้ TTO เป็น **"Draft Model" (Speculator)** สำหรับ AI Agent หรือใช้ MTP เพื่อช่วยให้ TTO บีบอัดข้อความได้ฉลาดขึ้นเหมือนมนุษย์
+
+### 2. Implementation Roadmap
+
+- **TTO as a "Rule-based Speculator":** พัฒนาตัวทำนายคำถัดไปที่ "สั้นลง" ขณะผู้ใช้พิมพ์ (Local UI Acceleration) เพื่อทำ Auto-complete ประโยคที่บีบอัดแล้วล่วงหน้า 3-5 tokens
+- **Training a TTO-Aware Draft Model:** เทรน Small Language Model (SLM) ด้วย Dataset ที่ผ่านการบีบอัดด้วย TTO เพื่อทำหน้าที่เป็น Draft Model ที่ Gen ข้อความไทยแบบ Compact แล้วส่งให้ Target Model ตรวจสอบความถูกต้อง
+- **Constraint-Aware Verification:** ใช้ `tto-preservation-checker.js` และ `tto-constraint-locker.js` เป็นส่วนหนึ่งของ Verification Step ใน MTP Architecture เพื่อตรวจสอบ Hard Constraints ก่อนตัดสินใจขั้นสุดท้าย
+- **Semantic Muting as Speculation:** ใช้ MTP ทำนายส่วนของคำอธิบายไทยที่ "ซ้ำซ้อน" กับโค้ด และสั่งหยุด Gen (Muting) เพื่อประหยัด token
+
+### 3. ประโยชน์ที่คาดว่าจะได้รับ
+- **Latency Reduction:** ลดเวลาการรอ AI เขียนภาษาไทยยาวๆ (Fast Gen via MTP + Short Text via TTO)
+- **High Fidelity:** การมี TTO Verifier ในลูปจะช่วยการันตี Technical Accuracy ของข้อความที่ถูกบีบอัด
+
+---
+
 ## 📁 Project structure
 
 ```text

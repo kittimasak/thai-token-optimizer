@@ -69,6 +69,7 @@ package version: 1.0.0
 - [27. Prohibited behavior](#27-prohibited-behavior)
 - [28. Example responses](#28-example-responses)
 - [29. Final rule](#29-final-rule)
+- [30. Research: MTP & Speculative Decoding](#30-research-mtp--speculative-decoding)
 
 ---
 
@@ -1165,3 +1166,23 @@ If there is conflict between compactness and hard constraints, preserve constrai
 **Compact Thai. Safe commands. Preserved meaning.**
 
 </div>
+
+---
+
+## 30. Research: MTP & Speculative Decoding
+
+แนวคิดของ **Multi-Token Prediction (MTP)** และ **Speculative Decoding** สามารถนำมาประยุกต์ใช้กับ **Thai Token Optimizer (TTO)** เพื่อเปลี่ยนผ่านจาก Rule-based ไปสู่ **Hybrid AI-driven**:
+
+### 30.1 ความเป็นไปได้ในการประยุกต์ใช้
+ใช้ TTO เป็น **"Draft Model" (Speculator)** สำหรับ AI Agent หรือใช้ MTP เพื่อช่วยให้ TTO บีบอัดข้อความได้ฉลาดขึ้นเหมือนมนุษย์
+
+### 30.2 Implementation Roadmap
+
+- **TTO as a "Rule-based Speculator":** คาดการณ์ประโยคที่ถูกบีบอัดแล้วล่วงหน้า 3-5 tokens ขณะผู้ใช้พิมพ์ เพื่อทำ Auto-complete แบบ Real-time
+- **Training a TTO-Aware Draft Model:** เทรน Small Language Model (SLM) ด้วย Dataset ที่ผ่านการบีบอัดด้วย TTO เพื่อทำหน้าที่เป็น Draft Model ที่ Gen ข้อความไทยแบบ Compact
+- **Constraint-Aware Verification:** ใช้ `tto-preservation-checker.js` และ `tto-constraint-locker.js` เป็นส่วนหนึ่งของ Verification Step เพื่อตรวจสอบ Hard Constraints ก่อนตัดสินใจขั้นสุดท้าย
+- **Semantic Muting as Speculation:** ใช้ MTP ทำนายส่วนของคำอธิบายไทยที่ "ซ้ำซ้อน" กับโค้ด และสั่งหยุด Gen (Muting) เพื่อประหยัด token
+
+### 30.3 ประโยชน์ที่คาดว่าจะได้รับ
+- **Latency Reduction:** ลดเวลาการรอ AI เขียนภาษาไทยยาวๆ (Fast Gen via MTP + Short Text via TTO)
+- **High Fidelity:** การมี TTO Verifier ในลูปจะช่วยการันตี Technical Accuracy ของข้อความที่ถูกบีบอัด
