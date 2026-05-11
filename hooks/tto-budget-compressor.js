@@ -24,6 +24,7 @@ const { estimateTokens, estimateSavings } = require('./tto-token-estimator');
 const { checkPreservation } = require('./tto-preservation-checker');
 const { appendMissingConstraints, extractConstraints } = require('./tto-constraint-locker');
 const { collectProtectedRanges } = require('./tto-code-aware-parser');
+const { classifyTask, TIERS } = require('./tto-profiles');
 
 const HARD_LINE_RE = /(ห้าม|ต้อง|เด็ดขาด|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|```|`|https?:\/\/|~\/|\.\/|\/|\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|codex_hooks\s*=\s*true)/i;
 
@@ -49,25 +50,58 @@ function appendMissingProtected(original, optimized) {
   return `${out}\n\n${suffix}`.trim();
 }
 
-function enforcePreservation(original, optimized) {
-  let out = appendMissingProtected(original, optimized);
-  out = appendMissingConstraints(original, out);
+function enforcePreservation(original, optimized, budget = 0) {
+  let out = optimized;
+  const currentTokens = estimateTokens(out).estimatedTokens;
+
+  // If we already exceed budget, do nothing more
+  if (budget > 0 && currentTokens >= budget) return out.trim();
+
+  // Try adding protected technical values
+  const withProtected = appendMissingProtected(original, out);
+  const protectedTokens = estimateTokens(withProtected).estimatedTokens;
+  if (!budget || protectedTokens <= budget) {
+    out = withProtected;
+  }
+
+  // Try adding constraints
+  const withConstraints = appendMissingConstraints(original, out);
+  const constraintTokens = estimateTokens(withConstraints).estimatedTokens;
+  if (!budget || constraintTokens <= budget) {
+    out = withConstraints;
+  }
+  
   return out.trim();
 }
 
-function safeLineScore(line) {
+function safeLineScore(line, tier = TIERS.ROUTINE) {
   // Higher score = safer/more valuable to keep.
   let score = 0;
   if (HARD_LINE_RE.test(line)) score += 1000;
+  
+  // Tier-based weighting
+  if (tier === TIERS.CRITICAL) score += 500;
+  if (tier === TIERS.INFORMATIONAL) score -= 100;
+
   if (/error|exception|stack|trace|production|rollback|backup|security|secret|token|password/i.test(line)) score += 200;
   if (/semantic preservation|tokenizer|benchmark|regression gate/i.test(line)) score += 100;
   score += Math.min(40, String(line).length / 8);
   return score;
 }
 
-function trimPlainLine(line, maxChars) {
+function trimPlainLine(line, maxChars, tier = TIERS.ROUTINE) {
   const s = String(line || '').trim();
   if (!s || s.length <= maxChars || HARD_LINE_RE.test(s)) return s;
+  
+  // Aggressive trimming for Informational tier
+  const ratio = tier === TIERS.INFORMATIONAL ? 0.4 : 0.65;
+  const targetLen = Math.max(30, Math.floor(s.length * ratio));
+  
+  if (tier === TIERS.INFORMATIONAL) {
+    // Ultra-lite: just keep keywords or first few words
+    return s.split(/\s+/).slice(0, 5).join(' ') + '...';
+  }
+
   const words = s.split(/\s+/);
   let out = '';
   for (const w of words) {
@@ -78,22 +112,25 @@ function trimPlainLine(line, maxChars) {
   return out || s.slice(0, maxChars).trim();
 }
 
-function trimToBudget(text, budget, target = 'generic', original = text) {
+function trimToBudget(text, budget, target = 'generic', original = text, tier = TIERS.ROUTINE) {
   let out = String(text || '').trim();
-  if (!budget || budget <= 0) return enforcePreservation(original, out);
-  if (estimateTokens(out, target).estimatedTokens <= budget) return enforcePreservation(original, out);
+  if (!budget || budget <= 0) return enforcePreservation(original, out, budget);
+  if (estimateTokens(out, target).estimatedTokens <= budget) return enforcePreservation(original, out, budget);
 
-  // Work at line level first; this avoids the previous bug where sentence splitting
-  // split `v1.0` into `v1. 0` and cut inline commands in half.
   let lines = out.split(/\n+/).map(x => x.trim()).filter(Boolean);
 
-  // Remove lowest-value non-hard lines until budget is reached or only protected lines remain.
-  while (lines.length > 1 && estimateTokens(lines.join('\n'), target).estimatedTokens > budget) {
+  // Tier 1 (Critical) is very reluctant to remove lines unless budget is tight
+  let minLines = (tier === TIERS.CRITICAL && (!budget || budget > 50)) ? Math.max(1, lines.length - 1) : 1;
+  
+  // If budget is extremely tight, force minLines to 1
+  if (budget > 0 && budget < 40) minLines = 1;
+
+  while (lines.length > minLines && estimateTokens(lines.join('\n'), target).estimatedTokens > budget) {
     let removeIdx = -1;
     let lowest = Infinity;
     for (let i = 0; i < lines.length; i++) {
       if (HARD_LINE_RE.test(lines[i])) continue;
-      const score = safeLineScore(lines[i]);
+      const score = safeLineScore(lines[i], tier);
       if (score < lowest) { lowest = score; removeIdx = i; }
     }
     if (removeIdx < 0) break;
@@ -101,36 +138,85 @@ function trimToBudget(text, budget, target = 'generic', original = text) {
   }
 
   out = lines.join('\n').trim();
-  if (estimateTokens(out, target).estimatedTokens <= budget) return enforcePreservation(original, out);
+  if (estimateTokens(out, target).estimatedTokens <= budget) return enforcePreservation(original, out, budget);
 
-  // If still over budget, shorten only non-hard plain lines. Protected lines are kept intact.
+  // Shorten non-hard plain lines
   lines = out.split(/\n+/).map(x => x.trim()).filter(Boolean);
   for (let i = 0; i < lines.length && estimateTokens(lines.join('\n'), target).estimatedTokens > budget; i++) {
     if (HARD_LINE_RE.test(lines[i])) continue;
-    lines[i] = trimPlainLine(lines[i], Math.max(40, Math.floor(lines[i].length * 0.65)));
+    // For very tight budget, be even more aggressive (0.3 ratio)
+    const ratio = budget < 40 ? 0.3 : (tier === TIERS.INFORMATIONAL ? 0.4 : 0.65);
+    lines[i] = trimPlainLine(lines[i], Math.max(20, Math.floor(lines[i].length * ratio)), tier);
   }
   out = lines.join('\n').trim();
 
-  // Final preservation pass may exceed budget. That is intentional: correctness beats budget.
-  return enforcePreservation(original, out);
+  // Final emergency pass: remove lines even if they have hard keywords if still over budget
+  while (budget > 0 && lines.length > 1 && estimateTokens(lines.join('\n'), target).estimatedTokens > budget) {
+    lines.pop(); // Remove from end
+  }
+  
+  // Even if only 1 line left, if it's over budget, we MUST trim it
+  if (budget > 0 && lines.length === 1 && estimateTokens(lines[0], target).estimatedTokens > budget) {
+    lines[0] = lines[0].slice(0, Math.floor(lines[0].length * (budget / estimateTokens(lines[0], target).estimatedTokens))).trim();
+  }
+  
+  out = lines.join('\n').trim();
+
+  return enforcePreservation(original, out, budget);
 }
 
 function compressToBudget(text, options = {}) {
   const budget = Number(options.budget || 0);
   const target = options.target || 'generic';
-  const levels = options.level && options.level !== 'auto' ? [options.level] : ['lite', 'auto', 'full'];
+  const agentName = options.agentName || null;
+  const contextUsage = Number(options.contextUsage || 0); // 0.0 to 1.0
+
+  // 1. Determine Tier
+  let tier = classifyTask(agentName, text);
+
+  // 2. Dynamic Ceiling: Force Informational/Ultra-lite if context usage > 70%
+  if (contextUsage > 0.7) {
+    tier = TIERS.INFORMATIONAL;
+  }
+
+  // 3. Select Compression Level based on Tier
+  let levels;
+  if (tier === TIERS.CRITICAL) {
+    levels = ['lite', 'safe'];
+  } else if (tier === TIERS.INFORMATIONAL) {
+    levels = ['ultra', 'full']; 
+  } else {
+    levels = options.level && options.level !== 'auto' ? [options.level] : ['lite', 'auto', 'full'];
+  }
+
   const original = String(text || '').trim();
   let best = original;
+  
   for (const level of levels) {
-    const candidate = enforcePreservation(original, compressPrompt(original, { ...options, level }));
+    const candidate = enforcePreservation(original, compressPrompt(original, { ...options, level, lockConstraints: false }), budget);
     best = candidate;
     if (!budget || estimateTokens(candidate, target).estimatedTokens <= budget) break;
   }
-  if (budget && estimateTokens(best, target).estimatedTokens > budget) best = trimToBudget(best, budget, target, original);
-  best = enforcePreservation(original, best);
+
+  
+  if (budget && estimateTokens(best, target).estimatedTokens > budget) {
+    best = trimToBudget(best, budget, target, original, tier);
+  }
+  
+  best = enforcePreservation(original, best, budget);
   const savings = estimateSavings(original, best, target);
   const preservation = checkPreservation(original, best);
-  return { optimized: best, savings, preservation, budget, target, overBudget: budget > 0 && savings.after.estimatedTokens > budget };
+  
+  return { 
+    optimized: best, 
+    savings, 
+    preservation, 
+    budget, 
+    target, 
+    tier,
+    contextUsage,
+    overBudget: budget > 0 && savings.after.estimatedTokens > budget 
+  };
 }
 
 module.exports = { compressToBudget, trimToBudget, enforcePreservation, appendMissingProtected };

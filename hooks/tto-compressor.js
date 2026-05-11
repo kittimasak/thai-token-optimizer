@@ -51,6 +51,16 @@ const REPLACEMENTS = [
   ['อธิบายขั้นตอน', 'อธิบาย']
 ];
 
+const ULTRA_REPLACEMENTS = [
+  ['แสดงให้ดูหน่อยว่า', 'โชว์'],
+  ['ช่วยวิเคราะห์ให้หน่อยว่า', 'วิเคราะห์'],
+  ['มีความเป็นไปได้ว่า', 'อาจ'],
+  ['ในสถานการณ์ปัจจุบัน', 'ตอนนี้'],
+  ['ตามมาตรฐานสากล', 'ตามมาตรฐาน'],
+  ['อย่างไรก็ตาม', 'แต่'],
+  ['นอกจากนี้', 'อีกทั้ง']
+];
+
 function stripCodeFences(text) {
   return String(text || '').replace(/```[\s\S]*?```/g, m => m);
 }
@@ -58,9 +68,12 @@ function stripCodeFences(text) {
 function compressSegment(segment, level = 'auto') {
   let out = segment;
   for (const [from, to] of REPLACEMENTS) out = out.split(from).join(to);
+  if (level === 'ultra') {
+    for (const [from, to] of ULTRA_REPLACEMENTS) out = out.split(from).join(to);
+  }
   for (const [pattern, repl] of FILLER_PATTERNS) out = out.replace(pattern, repl);
   out = out.replace(/\s+([,.;:!?])/g, '$1').replace(/[ \t]+\n/g, '\n');
-  if (level === 'full' || level === 'auto') {
+  if (level === 'full' || level === 'auto' || level === 'ultra') {
     out = out
       .replace(/ช่วยอธิบาย/g, 'อธิบาย')
       .replace(/ช่วยเขียน/g, 'เขียน')
@@ -71,9 +84,17 @@ function compressSegment(segment, level = 'auto') {
       .replace(/มีอะไรบ้าง/g, 'มีอะไร')
       .replace(/ควรทำอย่างไร/g, 'ทำอย่างไร');
   }
-  if (level === 'safe') {
-    out = out.replace(/\s+/g, ' ').trim();
-  } else if (level === 'lite') {
+  
+  if (level === 'ultra') {
+    // Aggressive Thai particle removal
+    out = out
+      .replace(/(ที่|ซึ่ง|อัน)(?=\s)/g, '')
+      .replace(/เหล่านั้น/g, 'พวกนั้น')
+      .replace(/จำนวนมาก/g, 'เยอะ')
+      .replace(/เล็กน้อย/g, 'นิดหน่อย');
+  }
+
+  if (level === 'safe' || level === 'lite') {
     out = out.replace(/\s+/g, ' ').trim();
   } else {
     out = out.replace(/[ \t]{2,}/g, ' ').trim();

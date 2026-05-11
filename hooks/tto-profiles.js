@@ -22,6 +22,49 @@
 const { VALID_PROFILES, setState, getState } = require('./tto-config');
 const { getProfileRules } = require('./tto-policy');
 
+const TIERS = {
+  CRITICAL: 1, // High-fidelity: Minimal compression
+  ROUTINE: 2,  // Standard: TTO Normal
+  INFORMATIONAL: 3 // Ultra-lite: Aggressive compression
+};
+
+const AGENT_TIERS = {
+  'security_expert': TIERS.CRITICAL,
+  'db_admin': TIERS.CRITICAL,
+  'codebase_investigator': TIERS.INFORMATIONAL,
+  'generalist': TIERS.ROUTINE,
+  'cli_help': TIERS.INFORMATIONAL
+};
+
+const TASK_KEYWORDS = {
+  [TIERS.CRITICAL]: ['auth', 'security', 'secret', 'password', 'migrate', 'migration', 'deploy', 'production', 'rollback', 'backup', 'payment', 'database', 'db'],
+  [TIERS.INFORMATIONAL]: ['research', 'doc', 'explain', 'understand', 'list', 'show', 'find', 'search', 'readme', 'summary', 'สรุป']
+};
+
+function classifyTask(agentName, text = '') {
+  const content = String(text).toLowerCase();
+  const agentTier = agentName ? AGENT_TIERS[agentName] : null;
+
+  // 1. If agent is Informational, stay Informational (Specialized Role)
+  if (agentTier === TIERS.INFORMATIONAL) return TIERS.INFORMATIONAL;
+
+  // 2. If agent is Critical, stay Critical
+  if (agentTier === TIERS.CRITICAL) return TIERS.CRITICAL;
+
+  // 3. If Routine agent (or unknown), check for Critical keywords
+  for (const word of TASK_KEYWORDS[TIERS.CRITICAL]) {
+    if (content.includes(word)) return TIERS.CRITICAL;
+  }
+
+  // 4. Check for Informational keywords
+  for (const word of TASK_KEYWORDS[TIERS.INFORMATIONAL]) {
+    if (content.includes(word)) return TIERS.INFORMATIONAL;
+  }
+
+  // 5. Default to Routine
+  return TIERS.ROUTINE;
+}
+
 function listProfiles() {
   return Array.from(VALID_PROFILES).map(name => ({ name, ...getProfileRules(name) }));
 }
@@ -34,4 +77,4 @@ function describeProfile(profile) {
   const p = profile || state.profile || 'coding';
   return { profile: p, ...getProfileRules(p) };
 }
-module.exports = { listProfiles, setProfile, describeProfile };
+module.exports = { listProfiles, setProfile, describeProfile, classifyTask, TIERS };
