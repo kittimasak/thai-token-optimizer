@@ -39,13 +39,14 @@ test('Codex Thai triggers enable and disable Thai Token Optimizer', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'tto-codex-'));
   let r = runTracker('token thai lite', home);
   assert.equal(r.status, 0);
-  assert.match(r.stdout, /THAI TOKEN OPTIMIZER ACTIVE/);
+  assert.equal(r.stdout.trim(), '{"continue":true}');
   const state = JSON.parse(fs.readFileSync(path.join(home, 'state.json'), 'utf8'));
   assert.equal(state.enabled, true);
   assert.equal(state.level, 'lite');
 
   r = runTracker('หยุดลด token', home);
   assert.equal(r.status, 0);
+  assert.equal(r.stdout.trim(), '');
   const state2 = JSON.parse(fs.readFileSync(path.join(home, 'state.json'), 'utf8'));
   assert.equal(state2.enabled, false);
 });
