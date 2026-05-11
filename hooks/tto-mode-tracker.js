@@ -37,15 +37,18 @@ function parseTrigger(prompt) {
   if (slashMatch) {
     const arg = (slashMatch[1] || '').toLowerCase();
     if (['auto', 'lite', 'full', 'safe'].includes(arg)) return { enabled: true, level: arg };
+    if (arg === 'spec' || arg === 'speculative') return { enabled: true, speculative: true };
+    if (arg === 'nospec') return { speculative: false };
     if (arg === 'stop' || arg === 'off') return { enabled: false };
     if (arg === '') return { enabled: true, level: 'full' };
     return null;
   }
 
-  const ttoMatch = lower.match(/^(?:token thai|thai token|thai compact|tto)\s+(on|start|enable|auto|lite|full|safe|off|stop|disable)$/);
+  const ttoMatch = lower.match(/^(?:token thai|thai token|thai compact|tto)\s+(on|start|enable|auto|lite|full|safe|off|stop|disable|spec|speculative)$/);
   if (ttoMatch) {
     const arg = ttoMatch[1];
     if (['off', 'stop', 'disable'].includes(arg)) return { enabled: false };
+    if (arg === 'spec' || arg === 'speculative') return { enabled: true, speculative: true };
     if (arg === 'on' || arg === 'start' || arg === 'enable') return { enabled: true, level: 'full' };
     return { enabled: true, level: arg };
   }
@@ -55,6 +58,9 @@ function parseTrigger(prompt) {
 
   for (const phrase of disableThai) if (trimmed === phrase) return { enabled: false };
   for (const phrase of enableThai) if (trimmed === phrase) return { enabled: true, level: 'full' };
+
+  if (trimmed === 'เปิดโหมดคาดการณ์' || trimmed === 'เปิด speculation') return { enabled: true, speculative: true };
+  if (trimmed === 'ปิดโหมดคาดการณ์' || trimmed === 'ปิด speculation') return { speculative: false };
 
   if (trimmed === 'ลด token ไทย auto' || trimmed === 'ลด token ไทย อัตโนมัติ') return { enabled: true, level: 'auto' };
   if (trimmed === 'ลด token ไทย lite' || trimmed === 'ลด token ไทย เบา') return { enabled: true, level: 'lite' };
@@ -84,11 +90,13 @@ function emitActiveReminder(state, prompt, safety) {
     ? `Safety classifier: ${safety.categories.join(', ')} → use ${effectiveLevel}, keep warnings/order/backups.`
     : `Safety classifier: clear → use ${effectiveLevel}.`;
 
+  const specLine = state.speculative ? ' [MTP Speculative Decoding Mode Active]' : '';
+
   process.stdout.write(JSON.stringify({
     hookSpecificOutput: {
       hookEventName: 'UserPromptSubmit',
       additionalContext:
-        `THAI TOKEN OPTIMIZER ACTIVE v1.0. Config level=${state.level}; profile=${state.profile || policy.defaultProfile}; effective level=${effectiveLevel}. ` +
+        `THAI TOKEN OPTIMIZER ACTIVE v1.0.${specLine} Config level=${state.level}; profile=${state.profile || policy.defaultProfile}; effective level=${effectiveLevel}. ` +
         `${safetyLine} ` +
         `Profile rule: ${getProfileRules(state.profile || policy.defaultProfile).response}. ` +
         'ตอบไทยกระชับ. Keep technical English terms, exact identifiers, paths, errors. ' +

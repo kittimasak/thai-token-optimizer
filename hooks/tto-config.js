@@ -62,6 +62,7 @@ const DEFAULT_STATE = Object.freeze({
   level: 'auto',
   profile: 'coding',
   safetyMode: 'strict',
+  speculative: false,
   version: 1
 });
 
@@ -128,6 +129,7 @@ function normalizeState(parsed = {}) {
     level: VALID_LEVELS.has(parsed.level) ? parsed.level : DEFAULT_STATE.level,
     profile: VALID_PROFILES.has(parsed.profile) ? parsed.profile : DEFAULT_STATE.profile,
     safetyMode: VALID_SAFETY_MODES.has(parsed.safetyMode) ? parsed.safetyMode : DEFAULT_STATE.safetyMode,
+    speculative: typeof parsed.speculative === 'boolean' ? parsed.speculative : DEFAULT_STATE.speculative,
     version: typeof parsed.version === 'number' ? parsed.version : DEFAULT_STATE.version,
     lastChanged: parsed.lastChanged || undefined,
     lastSafetyCategory: parsed.lastSafetyCategory || undefined,
