@@ -57,7 +57,7 @@ It is useful when Thai prompts and Thai responses become too long, too repetitiv
 ## ✨ Key idea
 
 ```text
-ลด token ได้ แต่ห้ามลดความถูกต้อง ความปลอดภัย หรือเงื่อนไขสำคัญ
+[Thai text] token [Thai text] [Thai text]do not[Thai text]must [Thai text] [Thai text]
 ```
 
 Thai Token Optimizer is not just “short Thai”.
@@ -260,7 +260,7 @@ token thai auto
 or:
 
 ```text
-ลด token ไทย
+reduce thai tokens
 ```
 
 ---
@@ -494,7 +494,7 @@ token thai auto
 or:
 
 ```text
-ลด token ไทย
+reduce thai tokens
 ```
 
 Disable from inside the AI tool:
@@ -591,7 +591,7 @@ The OpenClaw adapter follows OpenClaw's managed hook model: the hook is discover
 
 **OpenClaw Integration Highlights:**
 - **Managed Lifecycle**: Supports `gateway:startup`, `agent:bootstrap`, and `command:*` events to inject compact Thai guidance seamlessly.
-- **Enhanced Thai Safety**: The risk detection system now supports Thai keywords (e.g., "ลบไฟล์ทั้งหมด", "โปรดักชัน", "ฐานข้อมูล"), allowing for accurate safe-mode switching even when prompted in Thai.
+- **Enhanced Thai Safety**: The risk detection system now supports Thai keywords (e.g., "[Thai text]", "[Thai text]", "[Thai text]"), allowing for accurate safe-mode switching even when prompted in Thai.
 - **Automated Validation**: Includes a built-in simulator to verify hook behavior without needing to run the full OpenClaw binary.
 
 #### Hermes Agent
@@ -629,7 +629,7 @@ tto install roo
 
 ```bash
 tto compress --pretty --level auto --budget 80 --target codex --check \
-"ช่วยอธิบายรายละเอียดเกี่ยวกับการติดตั้ง Thai Token Optimizer v1.0 โดยห้ามเปลี่ยน package version 1.0.0"
+"[Thai text] Thai Token Optimizer v1.0 [Thai text]do not[Thai text] package version 1.0.0"
 ```
 
 ### 16. Test safety classifier
@@ -760,7 +760,7 @@ Priority order:
 - `--budget` token target
 - `--check` semantic preservation
 - Code-aware compression
-- Constraint lock for words such as `ต้อง`, `ห้าม`, `เด็ดขาด`, `v1.0`, `1.0.0`
+- Constraint lock for words such as `must`, `do not`, `strictly`, `v1.0`, `1.0.0`
 - Adaptive Compression Learning with `tto keep`, `tto forget`, and `tto dictionary`
 - User-specific Dictionary for jargon and writing style that must be preserved
 
@@ -1132,18 +1132,18 @@ tto uninstall all
 ### Token estimation
 
 ```bash
-tto estimate "ข้อความภาษาไทย"
-tto estimate --target codex "ข้อความภาษาไทย"
-tto estimate --target claude "ข้อความภาษาไทย"
-tto estimate --target gemini "ข้อความภาษาไทย"
-tto estimate --exact --target codex "ข้อความภาษาไทย"
+tto estimate "Thai text"
+tto estimate --target codex "Thai text"
+tto estimate --target claude "Thai text"
+tto estimate --target gemini "Thai text"
+tto estimate --exact --target codex "Thai text"
 ```
 
 ### Prompt compression
 
 ```bash
-tto compress "ช่วยอธิบายแนวทางการพัฒนาระบบอย่างละเอียด"
-tto rewrite "ช่วยอธิบายแนวทางการพัฒนาระบบอย่างละเอียด"
+tto compress "please explain the system development approach in detail"
+tto rewrite "please explain the system development approach in detail"
 tto compress --level auto prompt.txt
 tto compress --level full prompt.txt
 cat prompt.txt | tto compress --level auto
@@ -1152,10 +1152,10 @@ cat prompt.txt | tto compress --level auto
 ### Personalization
 
 ```bash
-tto keep "รบกวนช่วย"
+tto keep "please help"
 tto keep "API_KEY(foo)[bar]*"
 tto dictionary
-tto forget "รบกวนช่วย"
+tto forget "please help"
 ```
 
 ### Budget compression
@@ -1163,7 +1163,7 @@ tto forget "รบกวนช่วย"
 ```bash
 tto compress --budget 500 --target codex prompt.txt
 tto compress --level auto --budget 500 --target claude --check prompt.txt
-tto compress --exact --budget 300 --target codex "ข้อความ..."
+tto compress --exact --budget 300 --target codex "[Thai text]..."
 ```
 
 ### Semantic preservation
@@ -1227,10 +1227,10 @@ Use inside Codex, Claude Code, Gemini CLI, OpenCode, OpenClaw, Hermes Agent, or 
 | `token thai safe` | Enable safe mode |
 | `token thai off` | Disable optimizer |
 | `thai compact on` | Enable full mode |
-| `ลด token ไทย` | Enable full mode |
-| `ลด token ไทย auto` | Enable auto mode |
-| `หยุดลด token` | Disable optimizer |
-| `พูดปกติ` | Disable optimizer |
+| `reduce thai tokens` | Enable full mode |
+| `reduce thai tokens auto` | Enable auto mode |
+| `stop thai token reduction` | Disable optimizer |
+| `normal response mode` | Disable optimizer |
 
 Plain text triggers are recommended for Codex because Codex may reserve slash commands.
 
@@ -1242,7 +1242,7 @@ Example:
 
 ```bash
 tto compress --pretty --level auto --budget 80 --target codex --check \
-"ช่วยอธิบายรายละเอียดเกี่ยวกับการติดตั้ง Thai Token Optimizer v1.0 โดยห้ามเปลี่ยน package version 1.0.0"
+"[Thai text] Thai Token Optimizer v1.0 [Thai text]do not[Thai text] package version 1.0.0"
 ```
 
 Example output:
@@ -1294,8 +1294,8 @@ Use personalization when a word or phrase looks like filler to a generic compres
 Examples:
 
 ```bash
-tto keep "รบกวนช่วย"
-tto keep "ระบบเทพ"
+tto keep "please help"
+tto keep "[Thai text]"
 tto keep "API_KEY(foo)[bar]*"
 ```
 
@@ -1312,14 +1312,14 @@ After this, the compressor protects those terms during `tto compress` and `tto r
 Example workflow:
 
 ```bash
-tto compress --level auto "รบกวนช่วยอธิบายขั้นตอนแบบละเอียดครับ"
-tto keep "รบกวนช่วย"
-tto compress --level auto "รบกวนช่วยอธิบายขั้นตอนแบบละเอียดครับ"
-tto forget "รบกวนช่วย"
+tto compress --level auto "please help[Thai text]"
+tto keep "please help"
+tto compress --level auto "please help[Thai text]"
+tto forget "please help"
 tto dictionary
 ```
 
-Before `keep`, the phrase `รบกวนช่วย` may be treated as filler.  
+Before `keep`, the phrase `please help` may be treated as filler.  
 After `keep`, it is preserved as part of the user's style.
 
 ### Persistent storage
@@ -1333,7 +1333,7 @@ The dictionary is stored locally at:
 If `TTO_HOME` or `THAI_TOKEN_OPTIMIZER_HOME` is set, the dictionary is stored under that directory:
 
 ```bash
-TTO_HOME=/tmp/tto-home tto keep "ระบบเทพ"
+TTO_HOME=/tmp/tto-home tto keep "[Thai text]"
 ```
 
 File format:
@@ -1341,8 +1341,8 @@ File format:
 ```json
 {
   "keep": [
-    "รบกวนช่วย",
-    "ระบบเทพ",
+    "please help",
+    "[Thai text]",
     "API_KEY(foo)[bar]*"
   ],
   "version": 1
@@ -1379,11 +1379,11 @@ Thai Token Optimizer escapes dictionary entries before building dynamic RegExp p
 Overlapping entries are handled safely:
 
 ```bash
-tto keep "ระบบ"
-tto keep "ระบบเทพ"
+tto keep "[Thai text]"
+tto keep "[Thai text]"
 ```
 
-Longer entries are prioritized so `ระบบเทพ` can be protected as a full phrase before shorter terms like `ระบบ`.
+Longer entries are prioritized so `[Thai text]` can be protected as a full phrase before shorter terms like `[Thai text]`.
 
 ### Backup and rollback
 
@@ -1402,7 +1402,7 @@ After rollback, the personal dictionary is restored to the snapshot state togeth
 - Learning is explicit: the user teaches terms with `tto keep`
 - The tool does not yet infer important terms automatically from behavior
 - The dictionary is local per machine and per `TTO_HOME`
-- Very broad entries such as `ระบบ` may reduce compression opportunities because they are always protected
+- Very broad entries such as `[Thai text]` may reduce compression opportunities because they are always protected
 
 ---
 
