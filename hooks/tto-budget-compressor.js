@@ -156,11 +156,57 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
   return enforcePreservation(original, out, budget);
 }
 
+function speculateCandidates(original, options = {}) {
+  const budget = Number(options.budget || 0);
+  const target = options.target || 'generic';
+  const allLevels = ['lite', 'auto', 'full', 'ultra'];
+  const candidates = [];
+
+  for (const level of allLevels) {
+    const optimized = enforcePreservation(original, compressPrompt(original, { ...options, level, lockConstraints: false }), budget);
+    const savings = estimateSavings(original, optimized, target);
+    const preservation = checkPreservation(original, optimized);
+    candidates.push({ optimized, savings, preservation, level });
+  }
+
+  // 1. Prioritize 100% preservation that fits budget
+  const perfectFits = candidates.filter(c => c.preservation.preservationPercent === 100 && (!budget || c.savings.after.estimatedTokens <= budget));
+  if (perfectFits.length > 0) {
+    return perfectFits.sort((a, b) => b.savings.savedTokens - a.savings.savedTokens)[0];
+  }
+
+  // 2. Fallback to any that fits budget with highest preservation
+  const fits = candidates.filter(c => !budget || c.savings.after.estimatedTokens <= budget);
+  if (fits.length > 0) {
+    return fits.sort((a, b) => b.preservation.preservationPercent - a.preservation.preservationPercent || b.savings.savedTokens - a.savings.savedTokens)[0];
+  }
+
+  // 3. Ultimate fallback: best preservation regardless of budget
+  return candidates.sort((a, b) => b.preservation.preservationPercent - a.preservation.preservationPercent)[0];
+}
+
 function compressToBudget(text, options = {}) {
   const budget = Number(options.budget || 0);
   const target = options.target || 'generic';
   const agentName = options.agentName || null;
   const contextUsage = Number(options.contextUsage || 0); // 0.0 to 1.0
+  const speculative = options.speculative || false;
+
+  const original = String(text || '').trim();
+
+  if (speculative) {
+    const best = speculateCandidates(original, options);
+    return {
+      optimized: best.optimized,
+      savings: best.savings,
+      preservation: best.preservation,
+      budget,
+      target,
+      speculative: true,
+      level: best.level,
+      overBudget: budget > 0 && best.savings.after.estimatedTokens > budget
+    };
+  }
 
   // 1. Determine Tier
   let tier = classifyTask(agentName, text);
@@ -180,9 +226,6 @@ function compressToBudget(text, options = {}) {
     levels = options.level && options.level !== 'auto' ? [options.level] : ['lite', 'auto', 'full'];
   }
 
-  const original = String(text || '').trim();
-  let best = original;
-  
   for (const level of levels) {
     const candidate = enforcePreservation(original, compressPrompt(original, { ...options, level, lockConstraints: false }), budget);
     best = candidate;

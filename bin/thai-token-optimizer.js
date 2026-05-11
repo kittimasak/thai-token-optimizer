@@ -58,7 +58,7 @@ Commands:
   forget <word>           Remove a word from personal dictionary
   dictionary              List personal dictionary words
   estimate [--target codex|claude] [--exact] <text> Estimate tokens
-  compress [--pretty] [--level auto|lite|full|safe] [--budget N] [--target codex|claude] [--check] [text|file]
+  compress [--pretty] [--level auto|lite|full|safe] [--budget N] [--target codex|claude] [--check] [--speculative] [text|file]
   rewrite                 Alias of compress
   preserve <originalFile> <optimizedFile> Check semantic preservation
   classify [--pretty] <text> Run safety classifier
@@ -219,30 +219,32 @@ function validateKnownOptions(args, spec) {
   }
 }
 function runCompress(args) {
-  validateKnownOptions(args, { valueOptions: ['--level', '--target', '--budget'], flags: ['--check', '--exact', '--pretty'] });
+  validateKnownOptions(args, { valueOptions: ['--level', '--target', '--budget'], flags: ['--check', '--exact', '--pretty', '--speculative'] });
   const level = parseOption(args, '--level', 'auto');
   const target = parseOption(args, '--target', 'generic');
   const budgetRaw = parseOption(args, '--budget', '0');
   const exact = hasFlag(args, '--exact') || getPolicy().exactTokenizer;
   const pretty = hasFlag(args, '--pretty');
+  const speculative = hasFlag(args, '--speculative');
   const budget = Number(budgetRaw || 0);
   let cleanArgs = argsWithoutOption(args, '--level');
   cleanArgs = argsWithoutOption(cleanArgs, '--target');
   cleanArgs = argsWithoutOption(cleanArgs, '--budget');
-  cleanArgs = argsWithoutFlags(cleanArgs, ['--exact', '--pretty']);
+  cleanArgs = argsWithoutFlags(cleanArgs, ['--exact', '--pretty', '--speculative']);
   const check = hasFlag(cleanArgs, '--check');
   cleanArgs = argsWithoutFlags(cleanArgs, ['--check']);
   const text = textFromArgsOrFile(cleanArgs);
-  const result = budget > 0 ? compressToBudget(text, { level, target, budget }) : { optimized: compressPrompt(text, { level }), savings: null, preservation: null };
+  const result = budget > 0 || speculative ? compressToBudget(text, { level, target, budget, speculative }) : { optimized: compressPrompt(text, { level }), savings: null, preservation: null };
   const optimized = result.optimized;
   const stats = result.savings || estimateSavings(text, optimized, target, { exact });
   const preservation = result.preservation || checkPreservation(text, optimized);
   if (pretty) {
-    console.log(renderCompress({ target, level, budget, stats, preservation, optimized }));
+    console.log(renderCompress({ target, level: result.level || level, budget, stats, preservation, optimized, speculative: result.speculative }));
   } else {
     console.log(optimized);
     console.error(`\n${NAME} ${VERSION_LABEL}: saved ~${stats.savedTokens} tokens (${stats.savingPercent}%)`);
     if (budget > 0) console.error(`Budget: ${budget}; after: ${stats.after.estimatedTokens}; target: ${target}`);
+    if (speculative) console.error(`Mode: Speculative (Candidate: ${result.level})`);
     if (check) console.error(`Preservation: ${preservation.preservationPercent}% (${preservation.risk}); missing: ${preservation.missingCount}`);
   }
 }

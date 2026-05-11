@@ -127,7 +127,7 @@ function renderDoctor(result = {}) {
   }
   return box('🩺 Thai Token Optimizer Doctor', body, { width: 82 });
 }
-function renderCompress({ target = 'generic', level = 'auto', budget = 0, stats = {}, preservation = {}, optimized = '' } = {}) {
+function renderCompress({ target = 'generic', level = 'auto', budget = 0, stats = {}, preservation = {}, optimized = '', speculative = false } = {}) {
   const before = stats.before?.estimatedTokens ?? 0;
   const after = stats.after?.estimatedTokens ?? 0;
   const saved = stats.savedTokens ?? Math.max(0, before - after);
@@ -136,7 +136,7 @@ function renderCompress({ target = 'generic', level = 'auto', budget = 0, stats 
   const risk = preservation.risk || 'low';
   const body = [
     `Target        ${target}`,
-    `Mode          ${level}`,
+    `Mode          ${level}${speculative ? ' (SPECULATIVE)' : ''}`,
     `Budget        ${budget > 0 ? `${budget} tokens` : 'not set'}`,
     '',
     `Before        ${before} tokens`,
