@@ -52,24 +52,12 @@ function appendMissingProtected(original, optimized) {
 
 function enforcePreservation(original, optimized, budget = 0) {
   let out = optimized;
-  const currentTokens = estimateTokens(out).estimatedTokens;
-
-  // If we already exceed budget, do nothing more
-  if (budget > 0 && currentTokens >= budget) return out.trim();
 
   // Try adding protected technical values
-  const withProtected = appendMissingProtected(original, out);
-  const protectedTokens = estimateTokens(withProtected).estimatedTokens;
-  if (!budget || protectedTokens <= budget) {
-    out = withProtected;
-  }
+  out = appendMissingProtected(original, out);
 
   // Try adding constraints
-  const withConstraints = appendMissingConstraints(original, out);
-  const constraintTokens = estimateTokens(withConstraints).estimatedTokens;
-  if (!budget || constraintTokens <= budget) {
-    out = withConstraints;
-  }
+  out = appendMissingConstraints(original, out);
   
   return out.trim();
 }
@@ -156,8 +144,11 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
   }
   
   // Even if only 1 line left, if it's over budget, we MUST trim it
+  // UNLESS it's a hard line (commands, constraints, versions) - Mandate v1.0
   if (budget > 0 && lines.length === 1 && estimateTokens(lines[0], target).estimatedTokens > budget) {
-    lines[0] = lines[0].slice(0, Math.floor(lines[0].length * (budget / estimateTokens(lines[0], target).estimatedTokens))).trim();
+    if (!HARD_LINE_RE.test(lines[0])) {
+      lines[0] = lines[0].slice(0, Math.floor(lines[0].length * (budget / estimateTokens(lines[0], target).estimatedTokens))).trim();
+    }
   }
   
   out = lines.join('\n').trim();

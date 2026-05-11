@@ -19,6 +19,8 @@
 
 
 
+const { extractSymbols } = require('./tto-semantic-analyzer');
+
 const LOCK_PATTERNS = [
   /[^\n]*(?:ห้าม|ต้อง(?!การ)|เด็ดขาด|คงเดิม|ห้ามเปลี่ยน|ไม่เปลี่ยน|อย่าเปลี่ยน|เท่านั้น|must|must not|do not|never|keep|preserve)[^\n]*/gi,
   /[^\n]*(?:version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b)[^\n]*/gi,
@@ -44,20 +46,33 @@ function extractConstraints(text) {
   return constraints;
 }
 
-function containsConstraint(output, constraint) {
+function containsConstraint(output, constraint, original = '') {
   const out = String(output || '');
   if (out.includes(constraint)) return true;
-  const technicalTerms = constraint.match(/[A-Za-z][A-Za-z0-9_.-]*(?:\s+[A-Za-z][A-Za-z0-9_.-]*)?/g) || [];
-  if (/คงคำว่า|keep|preserve/i.test(constraint) && technicalTerms.length) {
-    return technicalTerms.every(k => out.toLowerCase().includes(k.toLowerCase()));
+
+  // Semantic Awareness: If technical terms are in the code, the constraint might be satisfied
+  const symbols = extractSymbols(original);
+  
+  const technicalTerms = constraint.match(/[A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)*/g) || [];
+  if (technicalTerms.length > 0) {
+    // If all technical terms in the constraint are present in EITHER the output OR the code symbols
+    const allPresent = technicalTerms.every(t => out.includes(t) || symbols.includes(t));
+    
+    // If it's just a technical description without 'must/not', and all terms are in code, it's satisfied
+    const isHardConstraint = /(ห้าม|ต้อง|เด็ดขาด|เวอร์ชัน|version|v\d+)/i.test(constraint);
+    if (!isHardConstraint && allPresent) return true;
+    
+    // For hard constraints, we still need the keywords (must/not) to be in the output
+    const keywords = constraint.match(/(ห้าม|ต้อง|เด็ดขาด|version|v\d+)/gi) || [];
+    if (isHardConstraint && allPresent && keywords.every(k => out.includes(k))) return true;
   }
-  const keywords = constraint.match(/(?:v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|ห้าม|ต้อง(?!การ)|เด็ดขาด|ไม่เปลี่ยน|คงเดิม|version|เวอร์ชัน|must|never|do not)/gi) || [];
-  return keywords.length > 0 && keywords.every(k => out.toLowerCase().includes(k.toLowerCase()));
+
+  return false;
 }
 
 function appendMissingConstraints(original, optimized) {
   const constraints = extractConstraints(original);
-  const missing = constraints.filter(c => !containsConstraint(optimized, c));
+  const missing = constraints.filter(c => !containsConstraint(optimized, c, original));
   if (missing.length === 0) return String(optimized || '').trim();
   const suffix = ['ข้อกำหนดคงเดิม:', ...missing.map(c => `- ${c}`)].join('\n');
   return `${String(optimized || '').trim()}\n\n${suffix}`.trim();

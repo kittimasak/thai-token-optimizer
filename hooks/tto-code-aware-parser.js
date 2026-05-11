@@ -20,6 +20,7 @@
 
 
 const { getDictionary } = require('./tto-config');
+const { extractSymbols, pruneRedundantThai, isSelfDocumenting } = require('./tto-semantic-analyzer');
 
 const PROTECTED_PATTERNS = [
   /```[\s\S]*?```/g,
@@ -113,4 +114,68 @@ function transformCodeAware(text, transform) {
   return restoreSegments(transformed, protectedData.protectedValues);
 }
 
-module.exports = { PROTECTED_PATTERNS, collectProtectedRanges, protectSegments, restoreSegments, transformCodeAware };
+/**
+ * Semantic-aware transformation: Extracts symbols from protected code blocks
+ * and uses them to prune redundancy in the Thai text during transformation.
+ */
+function transformSemanticAware(text, transform) {
+  const ranges = collectProtectedRanges(text);
+  const symbols = new Set();
+  
+  // 1. Gather all symbols from code blocks
+  for (const r of ranges) {
+    if (r.text.startsWith('```') || r.text.startsWith('`')) {
+      const code = r.text.replace(/^```[a-z]*\n?|```$/g, '').replace(/^`|`$/g, '');
+      const s = extractSymbols(code);
+      s.forEach(sym => symbols.add(sym));
+    }
+  }
+  const symbolList = Array.from(symbols);
+
+  // 2. Perform transformation with symbol-awareness
+  let out = '';
+  let cursor = 0;
+  const protectedValues = [];
+
+  for (const r of ranges) {
+    if (r.start < cursor) continue;
+    
+    // Transform Thai text before the code block
+    let segment = text.slice(cursor, r.start);
+    // Semantic Pruning: Remove redundancy before general compression
+    segment = pruneRedundantThai(segment, symbolList);
+    
+    const transformedSegment = transform(segment);
+    out += transformedSegment;
+    
+    const token = `⟦TTO_PROTECT_${protectedValues.length}⟧`;
+    
+    // Check for Self-Documenting code and mute if necessary
+    let technicalContent = r.text;
+    if (isSelfDocumenting(r.text.replace(/^```[a-z]*\n?|```$/g, '').replace(/^`|`$/g, ''), segment)) {
+        // If code is self-documenting, we can omit the transformed segment
+        // effectively muting the redundant Thai description.
+        out = out.slice(0, out.length - transformedSegment.length);
+    }
+
+    protectedValues.push(technicalContent);
+    out += token;
+    cursor = r.end;
+  }
+  
+  // Transform remaining Thai text
+  let lastSegment = text.slice(cursor);
+  lastSegment = pruneRedundantThai(lastSegment, symbolList);
+  out += transform(lastSegment);
+
+  return restoreSegments(out, protectedValues);
+}
+
+module.exports = { 
+  PROTECTED_PATTERNS, 
+  collectProtectedRanges, 
+  protectSegments, 
+  restoreSegments, 
+  transformCodeAware,
+  transformSemanticAware
+};

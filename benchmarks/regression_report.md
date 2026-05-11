@@ -1,5 +1,5 @@
 # Thai Token Optimizer v1.0 Strict Regression Report
-Generated: 2026-05-10T09:55:52.482Z
+Generated: 2026-05-11T10:05:49.520Z
 Samples: 8
 Average estimated saving: 10.8%
 Minimum preservation: 100%

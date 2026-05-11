@@ -19,7 +19,7 @@
 
 
 
-const { transformCodeAware } = require('./tto-code-aware-parser');
+const { transformSemanticAware } = require('./tto-code-aware-parser');
 const { appendMissingConstraints } = require('./tto-constraint-locker');
 const { getDictionary } = require('./tto-config');
 
@@ -95,9 +95,9 @@ function compressSegment(segment, level = 'auto') {
   }
 
   if (level === 'safe' || level === 'lite') {
-    out = out.replace(/\s+/g, ' ').trim();
+    out = out.replace(/\s+/g, ' ');
   } else {
-    out = out.replace(/[ \t]{2,}/g, ' ').trim();
+    out = out.replace(/[ \t]{2,}/g, ' ');
   }
   return out;
 }
@@ -105,7 +105,7 @@ function compressSegment(segment, level = 'auto') {
 function compressPrompt(text, options = {}) {
   const level = options.level || 'auto';
   const original = String(text || '');
-  const compressed = transformCodeAware(original, seg => compressSegment(seg, level));
+  const compressed = transformSemanticAware(original, seg => compressSegment(seg, level));
   const normalized = compressed.replace(/\n{3,}/g, '\n\n').trim();
   return options.lockConstraints === false ? normalized : appendMissingConstraints(original, normalized);
 }
