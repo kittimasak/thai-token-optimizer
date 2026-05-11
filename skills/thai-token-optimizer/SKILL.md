@@ -485,6 +485,8 @@ Preserve exactly:
 - ports/IPs
 - model names
 - tool names
+- **Personal Dictionary words (`tto keep`)**
+- **Spaces between technical terms and version numbers (e.g., `Optimizer v1.0`)**
 
 Examples that must remain exact:
 
@@ -1170,7 +1172,16 @@ npm run ci
 
 ---
 
-## 24. Final rule
+## 25. Advanced Spacing & Budget Rules
+
+- **Accuracy > Budget:** เมื่อใช้ `--budget` ห้ามตัด (slice/truncate) คำสั่ง, path, หรือ version แม้จะทำให้เกิน budget ก็ตาม ความถูกต้องทางเทคนิคต้องมาก่อนเสมอ (Mandate v1.0)
+- **Spacing Integrity:** ห้ามลบช่องว่างระหว่าง technical identifiers (เช่น `Optimizer v1.0`) เพื่อป้องกันการพังของ regex/parser
+- **Semantic Muting:** หาก Code Block สื่อความหมายชัดเจน (Self-documenting) ให้ตัดคำอธิบายไทยที่ซ้ำซ้อนออกได้ทันที
+- **Dictionary Priority:** คำใน `tto keep` มีสถานะเป็น "Hard Protected" ห้ามบีบอัดหรือเปลี่ยนแปลง
+
+---
+
+## 26. Final rule
 
 Thai Token Optimizer v1.0 must make Thai interaction more compact without damaging:
 
