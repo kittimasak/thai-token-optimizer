@@ -62,7 +62,7 @@ Commands:
   rewrite                 Alias of compress
   preserve <originalFile> <optimizedFile> Check semantic preservation
   classify [--pretty] <text> Run safety classifier
-  benchmark [--pretty] [--strict] [--default-policy] Run benchmark
+  benchmark [--pretty] [--strict] [--default-policy] [--mtp] Run benchmark
 
 Pretty UI:
   tto ui
@@ -71,7 +71,7 @@ Pretty UI:
   tto doctor codex --pretty
   tto compress --pretty --budget 500 prompt.txt
   tto classify --pretty "DROP TABLE users production"
-  tto benchmark --pretty --strict --default-policy
+  tto benchmark --pretty --strict --default-policy --mtp
 
 Aliases:
   tto auto
@@ -225,7 +225,7 @@ function runCompress(args) {
   const budgetRaw = parseOption(args, '--budget', '0');
   const exact = hasFlag(args, '--exact') || getPolicy().exactTokenizer;
   const pretty = hasFlag(args, '--pretty');
-  const speculative = hasFlag(args, '--speculative');
+  const speculative = hasFlag(args, '--speculative') || getState().speculative;
   const budget = Number(budgetRaw || 0);
   let cleanArgs = argsWithoutOption(args, '--level');
   cleanArgs = argsWithoutOption(cleanArgs, '--target');
@@ -244,7 +244,7 @@ function runCompress(args) {
     console.log(optimized);
     console.error(`\n${NAME} ${VERSION_LABEL}: saved ~${stats.savedTokens} tokens (${stats.savingPercent}%)`);
     if (budget > 0) console.error(`Budget: ${budget}; after: ${stats.after.estimatedTokens}; target: ${target}`);
-    if (speculative) console.error(`Mode: Speculative (Candidate: ${result.level})`);
+    if (result.speculative) console.error(`Mode: Speculative (Candidate: ${result.level})`);
     if (check) console.error(`Preservation: ${preservation.preservationPercent}% (${preservation.risk}); missing: ${preservation.missingCount}`);
   }
 }
@@ -269,10 +269,15 @@ function runDoctorCommand(args = []) {
   process.exitCode = result.ok ? 0 : 1;
 }
 function runBenchmark(args=[]) {
-  validateKnownOptions(args, { flags: ['--strict', '--default-policy', '--pretty'] });
+  validateKnownOptions(args, { flags: ['--strict', '--default-policy', '--pretty', '--mtp'] });
   const root = path.resolve(__dirname, '..');
   const benchScript = path.join(root, 'benchmarks', 'run_benchmark.js');
-  const r = require(benchScript).runBenchmark({ strict: hasFlag(args, '--strict'), defaultPolicy: hasFlag(args, '--default-policy'), silent: hasFlag(args, '--pretty') });
+  const r = require(benchScript).runBenchmark({
+    strict: hasFlag(args, '--strict'),
+    defaultPolicy: hasFlag(args, '--default-policy'),
+    mtp: hasFlag(args, '--mtp'),
+    silent: hasFlag(args, '--pretty')
+  });
   if (hasFlag(args, '--pretty')) console.log(renderBenchmark(r));
   if (r && r.strict && !r.strict.ok) process.exitCode = 1;
 }

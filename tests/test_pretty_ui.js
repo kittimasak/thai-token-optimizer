@@ -72,4 +72,9 @@ test('pretty compress, classify, doctor, and benchmark render visual UI', () => 
   assert.equal(benchmark.status, 0);
   assert.match(benchmark.stdout, /Thai Token Optimizer Benchmark/);
   assert.match(benchmark.stdout, /Strict Gate/);
+
+  const mtpBenchmark = run(['benchmark', '--pretty', '--strict', '--default-policy', '--mtp'], env);
+  assert.equal(mtpBenchmark.status, 0);
+  assert.match(mtpBenchmark.stdout, /MTP Compare/);
+  assert.match(mtpBenchmark.stdout, /Spec Hits/);
 });

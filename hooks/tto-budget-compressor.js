@@ -194,21 +194,7 @@ function compressToBudget(text, options = {}) {
 
   const original = String(text || '').trim();
 
-  if (speculative) {
-    const best = speculateCandidates(original, options);
-    return {
-      optimized: best.optimized,
-      savings: best.savings,
-      preservation: best.preservation,
-      budget,
-      target,
-      speculative: true,
-      level: best.level,
-      overBudget: budget > 0 && best.savings.after.estimatedTokens > budget
-    };
-  }
-
-  // 1. Determine Tier
+  // 1. Determine Tier (Classification first for safety)
   let tier = classifyTask(agentName, text);
 
   // 2. Dynamic Ceiling: Force Informational/Ultra-lite if context usage > 70%
@@ -216,7 +202,22 @@ function compressToBudget(text, options = {}) {
     tier = TIERS.INFORMATIONAL;
   }
 
-  // 3. Select Compression Level based on Tier
+  // 3. Speculative Mode (Only if NOT safety-critical)
+  if (speculative && tier !== TIERS.CRITICAL) {
+    const bestCandidate = speculateCandidates(original, options);
+    return {
+      optimized: bestCandidate.optimized,
+      savings: bestCandidate.savings,
+      preservation: bestCandidate.preservation,
+      budget,
+      target,
+      speculative: true,
+      level: bestCandidate.level,
+      overBudget: budget > 0 && bestCandidate.savings.after.estimatedTokens > budget
+    };
+  }
+
+  // 4. Select Compression Level based on Tier (Normal Logic)
   let levels;
   if (tier === TIERS.CRITICAL) {
     levels = ['lite', 'safe'];
@@ -226,6 +227,7 @@ function compressToBudget(text, options = {}) {
     levels = options.level && options.level !== 'auto' ? [options.level] : ['lite', 'auto', 'full'];
   }
 
+  let best = original;
   for (const level of levels) {
     const candidate = enforcePreservation(original, compressPrompt(original, { ...options, level, lockConstraints: false }), budget);
     best = candidate;

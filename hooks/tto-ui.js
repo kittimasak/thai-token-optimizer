@@ -156,6 +156,7 @@ function renderCompress({ target = 'generic', level = 'auto', budget = 0, stats 
 function renderBenchmark(result = {}) {
   const rows = result.rows || [];
   const strict = result.strict || null;
+  const mtp = result.mtp || null;
   const avg = strict?.avgSaving ?? average(rows.map(r => r.savingPercent));
   const minPres = strict?.minPreservation ?? min(rows.map(r => r.preservation?.preservationPercent ?? 100), 100);
   const body = [
@@ -163,6 +164,14 @@ function renderBenchmark(result = {}) {
     `Average Save  ${bar(avg, 20)} ${padLeft(`${round1(avg)}%`, 6)}`,
     `Preservation  ${bar(minPres, 20)} ${padLeft(`${round1(minPres)}%`, 6)}`,
     `Strict Gate   ${strict ? (strict.ok ? 'PASS' : 'FAIL') : 'N/A'}`,
+    ...(mtp ? [
+      '',
+      `MTP Compare  ON`,
+      `Normal ms    ${mtp.normal?.elapsedMs ?? 0}`,
+      `Spec ms      ${mtp.speculative?.elapsedMs ?? 0}`,
+      `Delta ms     ${mtp.delta?.elapsedMs ?? 0}`,
+      `Spec Hits    ${mtp.speculative?.specModeCount ?? 0}/${rows.length || 0}`
+    ] : []),
     '',
     'Cases',
     ...rows.slice(0, 10).map(r => `${padRight(r.id, 24)} ${padLeft(r.savingPercent + '%', 7)}  preserve ${r.preservation?.preservationPercent ?? 100}%`)
