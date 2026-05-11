@@ -85,25 +85,7 @@ function emitActiveReminder(state, prompt, safety) {
   const est = estimateTokens(prompt, 'codex/claude', { exact: policy.exactTokenizer });
   appendStats({ event: 'UserPromptSubmit', estimatedPromptTokens: est.estimatedTokens, level: state.level, effectiveLevel, safetyCategories: safety.categories });
   setState({ lastSafetyCategory: safety.categories[0] || undefined });
-
-  const safetyLine = safety.shouldRelaxCompression
-    ? `Safety classifier: ${safety.categories.join(', ')} → use ${effectiveLevel}, keep warnings/order/backups.`
-    : `Safety classifier: clear → use ${effectiveLevel}.`;
-
-  const specLine = state.speculative ? ' [MTP Speculative Decoding Mode Active]' : '';
-
-  process.stdout.write(JSON.stringify({
-    hookSpecificOutput: {
-      hookEventName: 'UserPromptSubmit',
-      additionalContext:
-        `THAI TOKEN OPTIMIZER ACTIVE v1.0.${specLine} Config level=${state.level}; profile=${state.profile || policy.defaultProfile}; effective level=${effectiveLevel}. ` +
-        `${safetyLine} ` +
-        `Profile rule: ${getProfileRules(state.profile || policy.defaultProfile).response}. ` +
-        'ตอบไทยกระชับ. Keep technical English terms, exact identifiers, paths, errors. ' +
-        'Drop polite particles/filler/hedging. Code first when fixing code. ' +
-        'For destructive/security/database/production/auth/payment tasks: normal explicit safety detail, no over-compression.'
-    }
-  }));
+  process.stdout.write(JSON.stringify({ continue: true }));
 }
 
 let input = '';

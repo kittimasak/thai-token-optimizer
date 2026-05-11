@@ -19,23 +19,15 @@
 
 
 
-const { getState, logError } = require('./tto-config');
+const { logError } = require('./tto-config');
 
-let input = '';
-process.stdin.on('data', c => input += c);
-process.stdin.on('end', () => {
-  try {
-    const state = getState();
-    if (!state.enabled) process.exit(0);
-    process.stdout.write(JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: 'Stop',
-        additionalContext:
-          'THAI TOKEN OPTIMIZER v1.0 FINAL: final answer must be compact Thai. Include completed items, test result, output artifact path/link if any, and caveats only if needed.'
-      }
-    }));
-  } catch (e) {
-    logError(`stop-summary: ${e.message}`);
-  }
-  process.exit(0);
-});
+function emitSafeStopPayload() {
+  process.stdout.write(JSON.stringify({ continue: true }));
+}
+
+try {
+  emitSafeStopPayload();
+} catch (e) {
+  logError(`stop-summary: ${e.message}`);
+  emitSafeStopPayload();
+}
