@@ -64,10 +64,11 @@ package version: 1.0.0
 - [22. Documentation behavior](#22-documentation-behavior)
 - [23. Testing and audit behavior](#23-testing-and-audit-behavior)
 - [24. Error handling](#24-error-handling)
-- [25. Pull request checklist](#25-pull-request-checklist)
-- [26. Prohibited behavior](#26-prohibited-behavior)
-- [27. Example responses](#27-example-responses)
-- [28. Final rule](#28-final-rule)
+- [25. Advanced Spacing & Budget Rules](#25-advanced-spacing--budget-rules)
+- [26. Pull request checklist](#26-pull-request-checklist)
+- [27. Prohibited behavior](#27-prohibited-behavior)
+- [28. Example responses](#28-example-responses)
+- [29. Final rule](#29-final-rule)
 
 ---
 
@@ -424,6 +425,8 @@ Never alter or compress critical technical content incorrectly.
 - ports/IPs
 - model names
 - tool names
+- **Personal Dictionary words (`tto keep`)**
+- **Spaces between technical terms and version numbers (e.g., `Optimizer v1.0`)**
 
 ### Examples that must remain exact
 
@@ -458,7 +461,13 @@ package version: 1.0.0
 
 ---
 
-## 10. Semantic preservation
+## 10. Constraint lock
+
+AI agents must respect hard constraints even under tight budgets.
+
+---
+
+## 11. Semantic preservation
 
 Compression is successful only if meaning remains intact.
 
@@ -483,7 +492,7 @@ If compression loses a critical element, use a longer answer.
 
 ---
 
-## 11. Code-aware compression
+## 12. Code-aware compression
 
 When summarizing or compressing code-related content:
 
@@ -508,7 +517,7 @@ When proposing patches:
 
 ---
 
-## 12. Safety override
+## 13. Safety override
 
 Trigger safe mode if the prompt includes or implies:
 
@@ -532,7 +541,7 @@ Safe response must include:
 
 ---
 
-## 13. Tool-specific behavior
+## 14. Tool-specific behavior
 
 Thai Token Optimizer supports or guides these tools:
 
@@ -638,7 +647,7 @@ Preserve:
 
 ---
 
-## 14. CLI UI behavior
+## 15. CLI UI behavior
 
 Thai Token Optimizer has a CLI-first UI.
 
@@ -687,7 +696,7 @@ Use default JSON/text output for automation.
 
 ---
 
-## 15. Agent/Hook UI behavior
+## 16. Agent/Hook UI behavior
 
 Agent/Hook UI is the behavior users see inside Codex, Claude Code, Gemini CLI, OpenCode, and compatible tools.
 
@@ -718,7 +727,7 @@ After activation, agent responses should become:
 
 ---
 
-## 16. Backup, rollback, and uninstall rules
+## 17. Backup, rollback, and uninstall rules
 
 For any config-changing operation, prefer backup first.
 
@@ -771,7 +780,7 @@ tto uninstall all
 
 ---
 
-## 17. Benchmark and CI behavior
+## 18. Benchmark and CI behavior
 
 Use benchmark to prove token optimization quality.
 
@@ -805,7 +814,7 @@ Do not rely on local user config in CI unless explicitly requested.
 
 ---
 
-## 18. Token estimation and exact mode
+## 19. Token estimation and exact mode
 
 Default token estimation may be heuristic.
 
@@ -826,7 +835,7 @@ Rules:
 
 ---
 
-## 19. Prompt compression rules
+## 20. Prompt compression rules
 
 When compressing Thai prompts:
 
@@ -855,7 +864,7 @@ When compressing Thai prompts:
 
 ---
 
-## 20. Doctor and troubleshooting behavior
+## 21. Doctor and troubleshooting behavior
 
 For installation/debugging issues, recommend:
 
@@ -883,7 +892,7 @@ Do not give vague advice like “ลองติดตั้งใหม่” w
 
 ---
 
-## 21. Documentation behavior
+## 22. Documentation behavior
 
 When writing docs for this project:
 
@@ -926,7 +935,7 @@ FAQ
 
 ---
 
-## 22. Testing and audit behavior
+## 23. Testing and audit behavior
 
 When asked to test or audit, run or recommend:
 
@@ -971,7 +980,7 @@ When reporting results, separate:
 
 ---
 
-## 23. Error handling
+## 24. Error handling
 
 When something fails:
 
@@ -1000,7 +1009,49 @@ npm run ci
 
 ---
 
-## 24. Example responses
+## 25. Advanced Spacing & Budget Rules
+
+- **Accuracy > Budget:** เมื่อใช้ `--budget` ห้ามตัด (slice/truncate) คำสั่ง, path, หรือ version แม้จะทำให้เกิน budget ก็ตาม ความถูกต้องทางเทคนิคต้องมาก่อนเสมอ (Mandate v1.0)
+- **Spacing Integrity:** ห้ามลบช่องว่างระหว่าง technical identifiers (เช่น `Optimizer v1.0`) เพื่อป้องกันการพังของ regex/parser
+- **Semantic Muting:** หาก Code Block สื่อความหมายชัดเจน (Self-documenting) ให้ตัดคำอธิบายไทยที่ซ้ำซ้อนออกได้ทันที
+- **Dictionary Priority:** คำใน `tto keep` มีสถานะเป็น "Hard Protected" ห้ามบีบอัดหรือเปลี่ยนแปลง
+
+---
+
+## 26. Pull request checklist
+
+Before submitting a PR for this project:
+
+- [ ] `npm test` passes
+- [ ] `npm run ci` passes
+- [ ] `tto doctor` passes
+- [ ] `tto benchmark --strict` passes
+- [ ] package version remains `1.0.0`
+- [ ] technical terminology remains exact
+- [ ] safety behavior remains intact
+- [ ] backup/rollback works for new config changes
+
+---
+
+## 27. Prohibited behavior
+
+Do not:
+
+- Reintroduce old project names.
+- Remove backup/rollback instructions from risky operations.
+- Compress away constraints.
+- Mutate paths, commands, config keys, or versions.
+- Claim all tests passed without running or seeing results.
+- Claim exact tokenizer behavior when using heuristic fallback.
+- Restore all targets when user requested one target.
+- Uninstall all targets when user requested one target.
+- Write destructive one-liners without safeguards.
+- Ignore user-provided negative instructions.
+- Over-compress educational or safety-critical explanations.
+
+---
+
+## 28. Example responses
 
 ### Simple mode activation
 
@@ -1093,7 +1144,7 @@ SELECT COUNT(*) FROM users;
 
 ---
 
-## 25. Final rule
+## 29. Final rule
 
 Thai Token Optimizer v1.0 must make Thai interaction more compact without damaging:
 
