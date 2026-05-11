@@ -167,10 +167,11 @@ function renderBenchmark(result = {}) {
     ...(mtp ? [
       '',
       `MTP Compare  ON`,
-      `Normal ms    ${mtp.normal?.elapsedMs ?? 0}`,
-      `Spec ms      ${mtp.speculative?.elapsedMs ?? 0}`,
-      `Delta ms     ${mtp.delta?.elapsedMs ?? 0}`,
-      `Spec Hits    ${mtp.speculative?.specModeCount ?? 0}/${rows.length || 0}`
+      `Normal ms    ${mtp.normalLatency?.mean ?? mtp.normal?.elapsedMs ?? 0} (p95 ${mtp.normalLatency?.p95 ?? 0})`,
+      `Spec ms      ${mtp.speculativeLatency?.mean ?? mtp.speculative?.elapsedMs ?? 0} (p95 ${mtp.speculativeLatency?.p95 ?? 0})`,
+      `Delta ms     ${mtp.slowdownMeanMs ?? mtp.delta?.elapsedMs ?? 0}`,
+      `Spec Hits    ${mtp.speculative?.specModeCount ?? 0}/${rows.length || 0} (${mtp.specHitRatePercent ?? 0}%)`,
+      `MTP Gate     ${mtp.gateOk ? 'PASS' : 'FAIL'}`
     ] : []),
     '',
     'Cases',

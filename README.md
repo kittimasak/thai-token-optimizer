@@ -1489,6 +1489,7 @@ tto doctor --ci
 
 ```bash
 tto benchmark --pretty --strict --default-policy
+tto benchmark --pretty --strict --default-policy --mtp
 ```
 
 ตัวอย่าง:
@@ -1518,6 +1519,28 @@ Strict benchmark ตรวจ:
 - constraint preservation
 - safety behavior
 - version preservation
+
+MTP/Speculative benchmark (`--mtp`) เพิ่ม:
+
+- repeated harness (N runs + warmup)
+- latency stats (`mean`, `p50`, `p95`, `stddev`)
+- spec hit rate
+- MTP gate สำหรับ quality/performance
+
+### Speculative precedence
+
+สำหรับ `tto compress`:
+
+```text
+--no-speculative  >  --speculative  >  state.speculative
+```
+
+ตัวอย่าง:
+
+```bash
+tto compress --no-speculative --check "..."
+tto compress --speculative --diagnostics --check "..."
+```
 
 ---
 

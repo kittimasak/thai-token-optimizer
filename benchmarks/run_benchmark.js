@@ -31,6 +31,14 @@ function loadJsonl(file) {
   return fs.readFileSync(file, 'utf8').split(/\n+/).filter(Boolean).map(line => JSON.parse(line));
 }
 function pct(n) { return Math.round(n * 10) / 10; }
+function statsOf(values = []) {
+  const xs = values.filter(v => Number.isFinite(Number(v))).map(Number).sort((a, b) => a - b);
+  if (!xs.length) return { mean: 0, p50: 0, p95: 0, stddev: 0 };
+  const mean = xs.reduce((a, b) => a + b, 0) / xs.length;
+  const p = q => xs[Math.min(xs.length - 1, Math.max(0, Math.ceil((q / 100) * xs.length) - 1))];
+  const variance = xs.reduce((a, x) => a + ((x - mean) ** 2), 0) / xs.length;
+  return { mean: pct(mean), p50: pct(p(50)), p95: pct(p(95)), stddev: pct(Math.sqrt(variance)) };
+}
 function hasCodeBlockLoss(original, optimized) {
   const fences = (original.match(/```/g) || []).length;
   if (!fences) return false;
@@ -40,8 +48,10 @@ function hasCodeBlockLoss(original, optimized) {
 function measureSpeculative(cases, policy) {
   const budget = 80;
   const target = 'codex';
+  const repeats = Math.max(1, Number(policy.benchmarkStrict?.mtpRepeats || 10));
+  const warmup = Math.max(0, Number(policy.benchmarkStrict?.mtpWarmupRuns || 2));
 
-  function run(speculative) {
+  function runOnce(speculative) {
     const rows = [];
     const started = process.hrtime.bigint();
     for (const item of cases) {
@@ -77,13 +87,48 @@ function measureSpeculative(cases, policy) {
     };
   }
 
-  const normal = run(false);
-  const spec = run(true);
+  for (let i = 0; i < warmup; i++) {
+    runOnce(false);
+    runOnce(true);
+  }
+
+  const normalRuns = [];
+  const speculativeRuns = [];
+  for (let i = 0; i < repeats; i++) {
+    normalRuns.push(runOnce(false));
+    speculativeRuns.push(runOnce(true));
+  }
+  const normal = normalRuns[normalRuns.length - 1];
+  const spec = speculativeRuns[speculativeRuns.length - 1];
+  const normalLatency = statsOf(normalRuns.map(r => r.elapsedMs));
+  const specLatency = statsOf(speculativeRuns.map(r => r.elapsedMs));
+  const specHitRatePercent = pct((spec.specModeCount / Math.max(1, cases.length)) * 100);
+
+  const gate = {
+    mtpMinAveragePreservationPercent: Number(policy.benchmarkStrict?.mtpMinAveragePreservationPercent ?? 100),
+    mtpMinSpecHitRatePercent: Number(policy.benchmarkStrict?.mtpMinSpecHitRatePercent ?? 60),
+    mtpMaxAverageSlowdownMs: Number(policy.benchmarkStrict?.mtpMaxAverageSlowdownMs ?? 20)
+  };
+  const qualityOk = spec.avgPreserve >= gate.mtpMinAveragePreservationPercent;
+  const hitRateOk = specHitRatePercent >= gate.mtpMinSpecHitRatePercent;
+  const slowdownMeanMs = pct(specLatency.mean - normalLatency.mean);
+  const performanceOk = slowdownMeanMs <= gate.mtpMaxAverageSlowdownMs;
+  const gateOk = qualityOk && hitRateOk && performanceOk;
+
   return {
     budget,
     target,
+    repeats,
+    warmup,
     normal,
     speculative: spec,
+    normalLatency,
+    speculativeLatency: specLatency,
+    specHitRatePercent,
+    slowdownMeanMs,
+    gate,
+    gateOk,
+    gateChecks: { qualityOk, hitRateOk, performanceOk },
     delta: {
       elapsedMs: pct(spec.elapsedMs - normal.elapsedMs),
       avgSaved: pct(spec.avgSaved - normal.avgSaved),
@@ -141,9 +186,12 @@ function runBenchmark(options = {}) {
     mtpResult ? '## MTP / Speculative Comparison' : '',
     mtpResult ? '' : '',
     mtpResult ? `Budget: ${mtpResult.budget} | Target: ${mtpResult.target}` : '',
-    mtpResult ? `Normal elapsed: ${mtpResult.normal.elapsedMs} ms` : '',
-    mtpResult ? `Speculative elapsed: ${mtpResult.speculative.elapsedMs} ms` : '',
-    mtpResult ? `Elapsed delta (spec-normal): ${mtpResult.delta.elapsedMs} ms` : '',
+    mtpResult ? `Runs: ${mtpResult.repeats} (warmup: ${mtpResult.warmup})` : '',
+    mtpResult ? `Normal latency (mean/p50/p95/stddev): ${mtpResult.normalLatency.mean}/${mtpResult.normalLatency.p50}/${mtpResult.normalLatency.p95}/${mtpResult.normalLatency.stddev} ms` : '',
+    mtpResult ? `Spec latency   (mean/p50/p95/stddev): ${mtpResult.speculativeLatency.mean}/${mtpResult.speculativeLatency.p50}/${mtpResult.speculativeLatency.p95}/${mtpResult.speculativeLatency.stddev} ms` : '',
+    mtpResult ? `Slowdown mean (spec-normal): ${mtpResult.slowdownMeanMs} ms` : '',
+    mtpResult ? `Spec hit rate: ${mtpResult.specHitRatePercent}%` : '',
+    mtpResult ? `MTP gate: ${mtpResult.gateOk ? 'PASS' : 'FAIL'}` : '',
     mtpResult ? '' : '',
     mtpResult ? '| Mode | Avg Saved | Avg After | Avg Preserve | Over Budget | Spec Mode Hits |' : '',
     mtpResult ? '|---|---:|---:|---:|---:|---:|' : '',

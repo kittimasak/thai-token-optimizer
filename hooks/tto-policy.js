@@ -37,7 +37,10 @@ const DEFAULT_POLICY = Object.freeze({
     minAverageSavingPercent: 10,
     minTechnicalTermPreservationPercent: 95,
     requireConstraintPreservationPercent: 100,
-    requireCodeBlockPreservationPercent: 100
+    requireCodeBlockPreservationPercent: 100,
+    mtpMinAveragePreservationPercent: 100,
+    mtpMinSpecHitRatePercent: 60,
+    mtpMaxAverageSlowdownMs: 20
   },
   adapters: {
     codex: true,

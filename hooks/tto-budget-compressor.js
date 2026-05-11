@@ -161,28 +161,41 @@ function speculateCandidates(original, options = {}) {
   const target = options.target || 'generic';
   const allLevels = ['lite', 'auto', 'full', 'ultra'];
   const candidates = [];
+  const diagnostics = [];
 
   for (const level of allLevels) {
     const optimized = enforcePreservation(original, compressPrompt(original, { ...options, level, lockConstraints: false }), budget);
     const savings = estimateSavings(original, optimized, target);
     const preservation = checkPreservation(original, optimized);
-    candidates.push({ optimized, savings, preservation, level });
+    const row = { optimized, savings, preservation, level };
+    candidates.push(row);
+    diagnostics.push({
+      level,
+      savedTokens: savings.savedTokens,
+      savingPercent: savings.savingPercent,
+      afterTokens: savings.after.estimatedTokens,
+      preservationPercent: preservation.preservationPercent,
+      fitsBudget: !budget || savings.after.estimatedTokens <= budget
+    });
   }
 
   // 1. Prioritize 100% preservation that fits budget
   const perfectFits = candidates.filter(c => c.preservation.preservationPercent === 100 && (!budget || c.savings.after.estimatedTokens <= budget));
   if (perfectFits.length > 0) {
-    return perfectFits.sort((a, b) => b.savings.savedTokens - a.savings.savedTokens)[0];
+    const selected = perfectFits.sort((a, b) => b.savings.savedTokens - a.savings.savedTokens)[0];
+    return { selected, diagnostics, selectedReason: 'perfect_preservation_and_budget_fit' };
   }
 
   // 2. Fallback to any that fits budget with highest preservation
   const fits = candidates.filter(c => !budget || c.savings.after.estimatedTokens <= budget);
   if (fits.length > 0) {
-    return fits.sort((a, b) => b.preservation.preservationPercent - a.preservation.preservationPercent || b.savings.savedTokens - a.savings.savedTokens)[0];
+    const selected = fits.sort((a, b) => b.preservation.preservationPercent - a.preservation.preservationPercent || b.savings.savedTokens - a.savings.savedTokens)[0];
+    return { selected, diagnostics, selectedReason: 'best_preservation_within_budget' };
   }
 
   // 3. Ultimate fallback: best preservation regardless of budget
-  return candidates.sort((a, b) => b.preservation.preservationPercent - a.preservation.preservationPercent)[0];
+  const selected = candidates.sort((a, b) => b.preservation.preservationPercent - a.preservation.preservationPercent)[0];
+  return { selected, diagnostics, selectedReason: 'best_preservation_fallback' };
 }
 
 function compressToBudget(text, options = {}) {
@@ -191,6 +204,7 @@ function compressToBudget(text, options = {}) {
   const agentName = options.agentName || null;
   const contextUsage = Number(options.contextUsage || 0); // 0.0 to 1.0
   const speculative = options.speculative || false;
+  const diagnosticsEnabled = Boolean(options.diagnostics);
 
   const original = String(text || '').trim();
 
@@ -205,15 +219,22 @@ function compressToBudget(text, options = {}) {
   // 3. Speculative Mode (Only if NOT safety-critical)
   if (speculative && tier !== TIERS.CRITICAL) {
     const bestCandidate = speculateCandidates(original, options);
+    const selected = bestCandidate.selected;
     return {
-      optimized: bestCandidate.optimized,
-      savings: bestCandidate.savings,
-      preservation: bestCandidate.preservation,
+      optimized: selected.optimized,
+      savings: selected.savings,
+      preservation: selected.preservation,
       budget,
       target,
       speculative: true,
-      level: bestCandidate.level,
-      overBudget: budget > 0 && bestCandidate.savings.after.estimatedTokens > budget
+      level: selected.level,
+      overBudget: budget > 0 && selected.savings.after.estimatedTokens > budget,
+      diagnostics: diagnosticsEnabled ? {
+        type: 'speculative_candidates',
+        selectedLevel: selected.level,
+        selectedReason: bestCandidate.selectedReason,
+        candidates: bestCandidate.diagnostics
+      } : undefined
     };
   }
 
@@ -251,8 +272,14 @@ function compressToBudget(text, options = {}) {
     target, 
     tier,
     contextUsage,
-    overBudget: budget > 0 && savings.after.estimatedTokens > budget 
+    overBudget: budget > 0 && savings.after.estimatedTokens > budget,
+    diagnostics: diagnosticsEnabled ? {
+      type: 'non_speculative',
+      selectedLevel: levels[0],
+      selectedReason: 'normal_tier_path',
+      candidates: []
+    } : undefined
   };
 }
 
-module.exports = { compressToBudget, trimToBudget, enforcePreservation, appendMissingProtected };
+module.exports = { compressToBudget, trimToBudget, enforcePreservation, appendMissingProtected, speculateCandidates };

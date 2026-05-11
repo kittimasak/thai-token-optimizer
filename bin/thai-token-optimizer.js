@@ -58,7 +58,7 @@ Commands:
   forget <word>           Remove a word from personal dictionary
   dictionary              List personal dictionary words
   estimate [--target codex|claude] [--exact] <text> Estimate tokens
-  compress [--pretty] [--level auto|lite|full|safe] [--budget N] [--target codex|claude] [--check] [--speculative] [text|file]
+  compress [--pretty] [--level auto|lite|full|safe] [--budget N] [--target codex|claude] [--check] [--speculative|--no-speculative] [--diagnostics] [text|file]
   rewrite                 Alias of compress
   preserve <originalFile> <optimizedFile> Check semantic preservation
   classify [--pretty] <text> Run safety classifier
@@ -219,32 +219,41 @@ function validateKnownOptions(args, spec) {
   }
 }
 function runCompress(args) {
-  validateKnownOptions(args, { valueOptions: ['--level', '--target', '--budget'], flags: ['--check', '--exact', '--pretty', '--speculative'] });
+  validateKnownOptions(args, { valueOptions: ['--level', '--target', '--budget'], flags: ['--check', '--exact', '--pretty', '--speculative', '--no-speculative', '--diagnostics'] });
   const level = parseOption(args, '--level', 'auto');
   const target = parseOption(args, '--target', 'generic');
   const budgetRaw = parseOption(args, '--budget', '0');
   const exact = hasFlag(args, '--exact') || getPolicy().exactTokenizer;
   const pretty = hasFlag(args, '--pretty');
-  const speculative = hasFlag(args, '--speculative') || getState().speculative;
+  const diagnostics = hasFlag(args, '--diagnostics');
+  const stateSpeculative = Boolean(getState().speculative);
+  const forceSpec = hasFlag(args, '--speculative');
+  const forceNoSpec = hasFlag(args, '--no-speculative');
+  const speculative = forceNoSpec ? false : (forceSpec || stateSpeculative);
   const budget = Number(budgetRaw || 0);
   let cleanArgs = argsWithoutOption(args, '--level');
   cleanArgs = argsWithoutOption(cleanArgs, '--target');
   cleanArgs = argsWithoutOption(cleanArgs, '--budget');
-  cleanArgs = argsWithoutFlags(cleanArgs, ['--exact', '--pretty', '--speculative']);
+  cleanArgs = argsWithoutFlags(cleanArgs, ['--exact', '--pretty', '--speculative', '--no-speculative', '--diagnostics']);
   const check = hasFlag(cleanArgs, '--check');
   cleanArgs = argsWithoutFlags(cleanArgs, ['--check']);
   const text = textFromArgsOrFile(cleanArgs);
-  const result = budget > 0 || speculative ? compressToBudget(text, { level, target, budget, speculative }) : { optimized: compressPrompt(text, { level }), savings: null, preservation: null };
+  const result = budget > 0 || speculative
+    ? compressToBudget(text, { level, target, budget, speculative, diagnostics })
+    : { optimized: compressPrompt(text, { level }), savings: null, preservation: null };
   const optimized = result.optimized;
   const stats = result.savings || estimateSavings(text, optimized, target, { exact });
   const preservation = result.preservation || checkPreservation(text, optimized);
   if (pretty) {
     console.log(renderCompress({ target, level: result.level || level, budget, stats, preservation, optimized, speculative: result.speculative }));
+    if (diagnostics && result.diagnostics) console.log('\n' + JSON.stringify(result.diagnostics, null, 2));
   } else {
     console.log(optimized);
     console.error(`\n${NAME} ${VERSION_LABEL}: saved ~${stats.savedTokens} tokens (${stats.savingPercent}%)`);
     if (budget > 0) console.error(`Budget: ${budget}; after: ${stats.after.estimatedTokens}; target: ${target}`);
     if (result.speculative) console.error(`Mode: Speculative (Candidate: ${result.level})`);
+    if (forceNoSpec) console.error('Mode: Forced non-speculative (--no-speculative)');
+    if (diagnostics && result.diagnostics) console.error('Diagnostics:\n' + JSON.stringify(result.diagnostics, null, 2));
     if (check) console.error(`Preservation: ${preservation.preservationPercent}% (${preservation.risk}); missing: ${preservation.missingCount}`);
   }
 }
@@ -280,6 +289,7 @@ function runBenchmark(args=[]) {
   });
   if (hasFlag(args, '--pretty')) console.log(renderBenchmark(r));
   if (r && r.strict && !r.strict.ok) process.exitCode = 1;
+  if (hasFlag(args, '--mtp') && r && r.mtp && !r.mtp.gateOk) process.exitCode = 1;
 }
 function runBackup(args) { const target = normalizeTarget(args[0] || 'all'); const mf = makeBackup(target); console.log(JSON.stringify({ backup: mf.id, target: mf.target, files: mf.files.length, root: path.join(HOME_DIR, 'backups') }, null, 2)); }
 function runBackups() { console.log(JSON.stringify(listBackups().map(b => ({ id: b.id, target: b.target, createdAt: b.createdAt, files: b.files.length })), null, 2)); }

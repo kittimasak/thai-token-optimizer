@@ -110,3 +110,19 @@ jobs:
             }
           }
           NODE
+
+      - name: MTP performance/quality gate
+        run: |
+          node - <<'NODE'
+          const { runBenchmark } = require('./benchmarks/run_benchmark.js');
+          const result = runBenchmark({ strict: true, defaultPolicy: true, mtp: true, silent: true });
+          if (!result.strict?.ok) {
+            console.error('Strict benchmark gate failed');
+            process.exit(1);
+          }
+          if (!result.mtp?.gateOk) {
+            console.error('MTP gate failed:', JSON.stringify(result.mtp, null, 2));
+            process.exit(1);
+          }
+          console.log('MTP gate PASS');
+          NODE

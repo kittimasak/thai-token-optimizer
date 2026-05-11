@@ -20,6 +20,14 @@ function run(args, env = {}) {
   });
 }
 
+function runTracker(prompt, env = {}) {
+  return spawnSync('node', [path.join(__dirname, '..', 'hooks', 'tto-mode-tracker.js')], {
+    env: { ...process.env, ...env },
+    input: JSON.stringify({ prompt }),
+    encoding: 'utf8'
+  });
+}
+
 test('speculative compression logic picks candidate with best preservation', () => {
   const { compressToBudget } = require('../hooks/tto-budget-compressor');
   const input = 'ช่วยอธิบายการติดตั้ง Thai Token Optimizer v1.0 โดยห้ามเปลี่ยนเวอร์ชัน 1.0.0';
@@ -49,6 +57,31 @@ test('CLI --speculative with --pretty shows badge', () => {
   
   assert.equal(res.status, 0);
   assert.match(res.stdout, /\(SPECULATIVE\)/);
+});
+
+test('CLI --no-speculative overrides speculative state flag', () => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'tto-nospec-'));
+  const env = { HOME: home, TTO_HOME: path.join(home, '.tto') };
+  try {
+    const tr = runTracker('/tto speculative', env);
+    assert.equal(tr.status, 0, tr.stderr);
+
+    const res = run(['compress', '--no-speculative', 'ทดสอบปิด speculative'], env);
+    assert.equal(res.status, 0);
+    assert.match(res.stderr, /Forced non-speculative/);
+    assert.doesNotMatch(res.stderr, /Mode: Speculative/);
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('CLI diagnostics prints candidate selection details', () => {
+  const input = 'ช่วยอธิบาย Thai Token Optimizer v1.0 โดยคงคำสั่ง tto doctor --pretty';
+  const res = run(['compress', '--speculative', '--diagnostics', input]);
+  assert.equal(res.status, 0);
+  assert.match(res.stderr, /Diagnostics:/);
+  assert.match(res.stderr, /speculative_candidates/);
+  assert.match(res.stderr, /selectedReason/);
 });
 
 test('Tracker triggers speculative mode from slash command', () => {

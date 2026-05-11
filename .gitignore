@@ -10,3 +10,6 @@ coverage/
 
 # Local state/cache
 .thai-token-optimizer/
+
+# Benchmark reports (generated artifacts)
+benchmarks/report.md

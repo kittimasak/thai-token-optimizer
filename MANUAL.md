@@ -746,6 +746,17 @@ tto compress --pretty --level auto --budget 80 --target codex --check "ช่ว
 | `--target claude` | ประมาณ token สำหรับ Claude |
 | `--exact` | ใช้ exact tokenizer ถ้ามี |
 | `--check` | ตรวจ semantic preservation |
+| `--speculative` | บังคับเปิด Speculative Decoding สำหรับคำสั่งนี้ |
+| `--no-speculative` | บังคับปิด Speculative Decoding สำหรับคำสั่งนี้ (override state) |
+| `--diagnostics` | แสดง candidate diagnostics และ selected reason |
+
+Precedence ของ speculative:
+
+```text
+1) --no-speculative  (highest)
+2) --speculative
+3) state.speculative (from tracker/state.json)
+```
 
 ### 10.9 Unknown flag behavior
 
@@ -2449,9 +2460,10 @@ benchmarks/regression_report.md
 
 แนวทาง:
 
-- ถ้าเป็น report ที่ต้องเผยแพร่ ให้ commit อย่างตั้งใจ
+- `benchmarks/report.md` เป็น generated local report และถูก ignore ใน `.gitignore`
+- `benchmarks/regression_report.md` เป็น strict canonical report (tracked) ใช้เทียบ regression
+- ถ้าจะ commit `benchmarks/regression_report.md` ให้ทำเฉพาะรอบที่ตั้งใจอัปเดต baseline
 - ถ้าเกิดจากการทดสอบเฉพาะเครื่อง ให้ตรวจ `git status --short` ก่อน commit
-- `benchmarks/regression_report.md` อาจเปลี่ยนเฉพาะ timestamp จาก benchmark run
 
 ตรวจ:
 
