@@ -40,7 +40,8 @@ const DEFAULT_POLICY = Object.freeze({
     requireCodeBlockPreservationPercent: 100,
     mtpMinAveragePreservationPercent: 100,
     mtpMinSpecHitRatePercent: 60,
-    mtpMaxAverageSlowdownMs: 20
+    mtpMaxAverageSlowdownMs: 20,
+    mtpEnhancedMinGainPercent: 5
   },
   adapters: {
     codex: true,

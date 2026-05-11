@@ -27,6 +27,8 @@ test('benchmark --strict --default-policy --mtp returns MTP section and gate sta
   assert.match(out.stdout, /MTP gate:/);
   assert.match(out.stdout, /Normal latency/);
   assert.match(out.stdout, /Spec latency/);
+  assert.match(out.stdout, /Enhanced gain on mtp_corpus:/);
+  assert.match(out.stdout, /Enhanced Corpus Gate/);
 });
 
 test('benchmark --pretty --strict --default-policy --mtp renders MTP metrics in UI', () => {
@@ -37,4 +39,3 @@ test('benchmark --pretty --strict --default-policy --mtp renders MTP metrics in 
   assert.match(out.stdout, /Spec Hits/);
   assert.match(out.stdout, /MTP Gate/);
 });
-

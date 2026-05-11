@@ -61,6 +61,65 @@ const ULTRA_REPLACEMENTS = [
   ['นอกจากนี้', 'อีกทั้ง']
 ];
 
+function normalizeSemanticKey(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[“”"']/g, '')
+    .replace(/[(){}\[\],.;:!?/\\|]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function semanticDedup(text) {
+  const blocks = String(text || '').split(/\n{2,}/);
+  const seenBlock = new Set();
+  const dedupBlocks = [];
+
+  for (const block of blocks) {
+    const lines = block.split('\n').map(x => x.trim()).filter(Boolean);
+    const seenLine = new Set();
+    const keptLines = [];
+    for (const line of lines) {
+      const key = normalizeSemanticKey(line);
+      if (!key) continue;
+      if (seenLine.has(key)) continue;
+      seenLine.add(key);
+      keptLines.push(line);
+    }
+    const merged = keptLines.join('\n').trim();
+    const bKey = normalizeSemanticKey(merged);
+    if (!merged || !bKey) continue;
+    if (seenBlock.has(bKey)) continue;
+    seenBlock.add(bKey);
+    dedupBlocks.push(merged);
+  }
+
+  return dedupBlocks.join('\n\n').trim();
+}
+
+function selectiveWindowCompress(text, level = 'auto') {
+  const lines = String(text || '').split('\n');
+  const out = [];
+  for (const rawLine of lines) {
+    const s = rawLine.trim();
+    if (!s) { out.push(''); continue; }
+    const highValue = /(```|`|https?:\/\/|~\/|\.\/|\/|version|เวอร์ชัน|v\d+\.\d+|\b\d+\.\d+\.\d+\b|\b(?:node|npm|pnpm|git|docker|tto|codex|claude)\b|error|stack|trace|rollback|backup|constraint|h้าม|ต้อง)/i.test(s);
+    if (highValue) {
+      out.push(s);
+      continue;
+    }
+    const compactLevel = level === 'safe' ? 'lite' : (level === 'lite' ? 'lite' : 'ultra');
+    let compacted = compressSegment(s, compactLevel);
+    // Aggressive trim for low-value narrative lines (context-window selective compression)
+    if (compactLevel === 'ultra' && compacted.length > 48) {
+      const words = compacted.split(/\s+/).filter(Boolean);
+      if (words.length > 8) compacted = words.slice(0, 8).join(' ') + '...';
+    }
+    out.push(compacted);
+  }
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
 function stripCodeFences(text) {
   return String(text || '').replace(/```[\s\S]*?```/g, m => m);
 }
@@ -106,7 +165,9 @@ function compressPrompt(text, options = {}) {
   const level = options.level || 'auto';
   const original = String(text || '');
   const compressed = transformSemanticAware(original, seg => compressSegment(seg, level));
-  const normalized = compressed.replace(/\n{3,}/g, '\n\n').trim();
+  let normalized = compressed.replace(/\n{3,}/g, '\n\n').trim();
+  if (options.semanticDedup !== false) normalized = semanticDedup(normalized);
+  if (options.selectiveWindow) normalized = selectiveWindowCompress(normalized, level);
   return options.lockConstraints === false ? normalized : appendMissingConstraints(original, normalized);
 }
 
@@ -129,4 +190,12 @@ if (require.main === module) {
   process.stdin.on('end', () => process.stdout.write(compressPrompt(Buffer.concat(chunks).toString('utf8')) + '\n'));
 }
 
-module.exports = { compressPrompt, stripCodeFences, compressSegment, formatCompressionReport };
+module.exports = {
+  compressPrompt,
+  stripCodeFences,
+  compressSegment,
+  formatCompressionReport,
+  semanticDedup,
+  selectiveWindowCompress,
+  normalizeSemanticKey
+};

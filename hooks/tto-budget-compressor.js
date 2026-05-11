@@ -138,9 +138,31 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
   }
   out = lines.join('\n').trim();
 
-  // Final emergency pass: remove lines even if they have hard keywords if still over budget
+  // Global budget optimizer (utility per token) before emergency removal.
+  if (budget > 0 && estimateTokens(lines.join('\n'), target).estimatedTokens > budget) {
+    const items = lines.map((line, idx) => {
+      const tokens = Math.max(1, estimateTokens(line, target).estimatedTokens);
+      const utility = safeLineScore(line, tier);
+      const hard = HARD_LINE_RE.test(line);
+      return { idx, line, tokens, utility, hard, ratio: utility / tokens };
+    });
+    const mandatory = items.filter(i => i.hard);
+    const optional = items.filter(i => !i.hard).sort((a, b) => b.ratio - a.ratio);
+    const selected = [...mandatory];
+    let used = mandatory.reduce((s, i) => s + i.tokens, 0);
+    for (const item of optional) {
+      if (used + item.tokens <= budget) {
+        selected.push(item);
+        used += item.tokens;
+      }
+    }
+    const selectedIdx = new Set(selected.map(i => i.idx));
+    lines = lines.filter((_, idx) => selectedIdx.has(idx));
+  }
+
+  // Final emergency pass
   while (budget > 0 && lines.length > 1 && estimateTokens(lines.join('\n'), target).estimatedTokens > budget) {
-    lines.pop(); // Remove from end
+    lines.pop();
   }
   
   // Even if only 1 line left, if it's over budget, we MUST trim it
@@ -160,41 +182,69 @@ function speculateCandidates(original, options = {}) {
   const budget = Number(options.budget || 0);
   const target = options.target || 'generic';
   const allLevels = ['lite', 'auto', 'full', 'ultra'];
+  const families = [
+    { name: 'baseline', opts: {} },
+    { name: 'semantic_dedup', opts: { semanticDedup: true } },
+    { name: 'selective_window', opts: { selectiveWindow: true } },
+    { name: 'dedup_plus_selective', opts: { semanticDedup: true, selectiveWindow: true } }
+  ];
   const candidates = [];
   const diagnostics = [];
+  const familyPriority = {
+    dedup_plus_selective: 4,
+    selective_window: 3,
+    semantic_dedup: 2,
+    baseline: 1
+  };
+  const compareCandidates = (a, b) => {
+    const preserveDelta = b.preservation.preservationPercent - a.preservation.preservationPercent;
+    if (preserveDelta !== 0) return preserveDelta;
+    const familyDelta = (familyPriority[b.family] || 0) - (familyPriority[a.family] || 0);
+    if (familyDelta !== 0) return familyDelta;
+    const savedDelta = b.savings.savedTokens - a.savings.savedTokens;
+    if (savedDelta !== 0) return savedDelta;
+    return a.savings.after.estimatedTokens - b.savings.after.estimatedTokens;
+  };
 
-  for (const level of allLevels) {
-    const optimized = enforcePreservation(original, compressPrompt(original, { ...options, level, lockConstraints: false }), budget);
-    const savings = estimateSavings(original, optimized, target);
-    const preservation = checkPreservation(original, optimized);
-    const row = { optimized, savings, preservation, level };
-    candidates.push(row);
-    diagnostics.push({
-      level,
-      savedTokens: savings.savedTokens,
-      savingPercent: savings.savingPercent,
-      afterTokens: savings.after.estimatedTokens,
-      preservationPercent: preservation.preservationPercent,
-      fitsBudget: !budget || savings.after.estimatedTokens <= budget
-    });
+  for (const family of families) {
+    for (const level of allLevels) {
+      const optimized = enforcePreservation(
+        original,
+        compressPrompt(original, { ...options, ...family.opts, level, lockConstraints: false }),
+        budget
+      );
+      const savings = estimateSavings(original, optimized, target);
+      const preservation = checkPreservation(original, optimized);
+      const row = { optimized, savings, preservation, level, family: family.name };
+      candidates.push(row);
+      diagnostics.push({
+        family: family.name,
+        level,
+        savedTokens: savings.savedTokens,
+        savingPercent: savings.savingPercent,
+        afterTokens: savings.after.estimatedTokens,
+        preservationPercent: preservation.preservationPercent,
+        fitsBudget: !budget || savings.after.estimatedTokens <= budget
+      });
+    }
   }
 
   // 1. Prioritize 100% preservation that fits budget
   const perfectFits = candidates.filter(c => c.preservation.preservationPercent === 100 && (!budget || c.savings.after.estimatedTokens <= budget));
   if (perfectFits.length > 0) {
-    const selected = perfectFits.sort((a, b) => b.savings.savedTokens - a.savings.savedTokens)[0];
+    const selected = perfectFits.sort(compareCandidates)[0];
     return { selected, diagnostics, selectedReason: 'perfect_preservation_and_budget_fit' };
   }
 
   // 2. Fallback to any that fits budget with highest preservation
   const fits = candidates.filter(c => !budget || c.savings.after.estimatedTokens <= budget);
   if (fits.length > 0) {
-    const selected = fits.sort((a, b) => b.preservation.preservationPercent - a.preservation.preservationPercent || b.savings.savedTokens - a.savings.savedTokens)[0];
+    const selected = fits.sort(compareCandidates)[0];
     return { selected, diagnostics, selectedReason: 'best_preservation_within_budget' };
   }
 
   // 3. Ultimate fallback: best preservation regardless of budget
-  const selected = candidates.sort((a, b) => b.preservation.preservationPercent - a.preservation.preservationPercent)[0];
+  const selected = candidates.sort(compareCandidates)[0];
   return { selected, diagnostics, selectedReason: 'best_preservation_fallback' };
 }
 
@@ -232,6 +282,7 @@ function compressToBudget(text, options = {}) {
       diagnostics: diagnosticsEnabled ? {
         type: 'speculative_candidates',
         selectedLevel: selected.level,
+        selectedFamily: selected.family,
         selectedReason: bestCandidate.selectedReason,
         candidates: bestCandidate.diagnostics
       } : undefined

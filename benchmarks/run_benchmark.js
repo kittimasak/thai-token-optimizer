@@ -139,6 +139,47 @@ function measureSpeculative(cases, policy) {
   };
 }
 
+function measureEnhancedCorpus(policy) {
+  const corpusPath = path.join(__dirname, 'mtp_corpus.jsonl');
+  const corpus = loadJsonl(corpusPath);
+  const target = 'codex';
+  const budget = 120;
+  const rows = corpus.map(item => {
+    const baseline = compressToBudget(item.text, { level: 'auto', target, budget, speculative: false });
+    const enhanced = compressToBudget(item.text, { level: 'auto', target, budget, speculative: true });
+    return {
+      id: item.id,
+      baselineSaved: baseline.savings.savedTokens,
+      enhancedSaved: enhanced.savings.savedTokens,
+      baselinePreserve: baseline.preservation.preservationPercent,
+      enhancedPreserve: enhanced.preservation.preservationPercent
+    };
+  });
+  const avg = (key) => pct(rows.reduce((sum, r) => sum + Number(r[key] || 0), 0) / Math.max(1, rows.length));
+  const baselineAvgSaved = avg('baselineSaved');
+  const enhancedAvgSaved = avg('enhancedSaved');
+  const gainPercent = baselineAvgSaved <= 0
+    ? (enhancedAvgSaved > 0 ? 100 : 0)
+    : pct(((enhancedAvgSaved - baselineAvgSaved) / baselineAvgSaved) * 100);
+  const minRequired = Number(policy.benchmarkStrict?.mtpEnhancedMinGainPercent ?? 5);
+  const preservationParityOk = rows.every(r => r.enhancedPreserve >= r.baselinePreserve);
+  const gainOk = gainPercent >= minRequired;
+  return {
+    corpusPath,
+    samples: rows.length,
+    budget,
+    target,
+    baselineAvgSaved,
+    enhancedAvgSaved,
+    gainPercent,
+    minRequiredGainPercent: minRequired,
+    preservationParityOk,
+    gateOk: gainOk && preservationParityOk,
+    gateChecks: { gainOk, preservationParityOk },
+    rows
+  };
+}
+
 function runBenchmark(options = {}) {
   const root = path.resolve(__dirname, '..');
   const strict = Boolean(options.strict);
@@ -169,6 +210,14 @@ function runBenchmark(options = {}) {
     gates: { ...gates, minAverageSavingPercent }
   } : null;
   const mtpResult = mtp ? measureSpeculative(cases, policy) : null;
+  const enhancedCorpus = mtp ? measureEnhancedCorpus(policy) : null;
+  if (mtpResult && enhancedCorpus) {
+    mtpResult.gate.mtpEnhancedMinGainPercent = enhancedCorpus.minRequiredGainPercent;
+    mtpResult.gateChecks.enhancedGainOk = enhancedCorpus.gateChecks.gainOk;
+    mtpResult.gateChecks.enhancedPreservationParityOk = enhancedCorpus.gateChecks.preservationParityOk;
+    mtpResult.gateOk = mtpResult.gateOk && enhancedCorpus.gateOk;
+    mtpResult.enhancedCorpus = enhancedCorpus;
+  }
   const md = [
     strict ? '# Thai Token Optimizer v1.0 Strict Regression Report' : '# Thai Token Optimizer v1.0 Benchmark Report',
     '',
@@ -191,6 +240,7 @@ function runBenchmark(options = {}) {
     mtpResult ? `Spec latency   (mean/p50/p95/stddev): ${mtpResult.speculativeLatency.mean}/${mtpResult.speculativeLatency.p50}/${mtpResult.speculativeLatency.p95}/${mtpResult.speculativeLatency.stddev} ms` : '',
     mtpResult ? `Slowdown mean (spec-normal): ${mtpResult.slowdownMeanMs} ms` : '',
     mtpResult ? `Spec hit rate: ${mtpResult.specHitRatePercent}%` : '',
+    mtpResult?.enhancedCorpus ? `Enhanced gain on mtp_corpus: ${mtpResult.enhancedCorpus.gainPercent}% (required >= ${mtpResult.enhancedCorpus.minRequiredGainPercent}%)` : '',
     mtpResult ? `MTP gate: ${mtpResult.gateOk ? 'PASS' : 'FAIL'}` : '',
     mtpResult ? '' : '',
     mtpResult ? '| Mode | Avg Saved | Avg After | Avg Preserve | Over Budget | Spec Mode Hits |' : '',
@@ -201,6 +251,20 @@ function runBenchmark(options = {}) {
     mtpResult ? '| ID | Mode | Saved | After | Preserve | Over Budget |' : '',
     mtpResult ? '|---|---|---:|---:|---:|---|' : '',
     ...(mtpResult ? mtpResult.speculative.rows.map(r => `| ${r.id} | ${r.mode} | ${r.saved} | ${r.after} | ${r.preserve}% | ${r.overBudget ? 'yes' : 'no'} |`) : []),
+    mtpResult?.enhancedCorpus ? '' : '',
+    mtpResult?.enhancedCorpus ? '## Enhanced Corpus Gate (long repetitive narrative + mixed technical blocks)' : '',
+    mtpResult?.enhancedCorpus ? '' : '',
+    mtpResult?.enhancedCorpus ? `Corpus: ${path.relative(root, mtpResult.enhancedCorpus.corpusPath)}` : '',
+    mtpResult?.enhancedCorpus ? `Samples: ${mtpResult.enhancedCorpus.samples} | Budget: ${mtpResult.enhancedCorpus.budget} | Target: ${mtpResult.enhancedCorpus.target}` : '',
+    mtpResult?.enhancedCorpus ? `Baseline avg saved: ${mtpResult.enhancedCorpus.baselineAvgSaved}` : '',
+    mtpResult?.enhancedCorpus ? `Enhanced avg saved: ${mtpResult.enhancedCorpus.enhancedAvgSaved}` : '',
+    mtpResult?.enhancedCorpus ? `Gain: ${mtpResult.enhancedCorpus.gainPercent}% (required >= ${mtpResult.enhancedCorpus.minRequiredGainPercent}%)` : '',
+    mtpResult?.enhancedCorpus ? `Preservation parity: ${mtpResult.enhancedCorpus.gateChecks.preservationParityOk ? 'PASS' : 'FAIL'}` : '',
+    mtpResult?.enhancedCorpus ? `Enhanced corpus gate: ${mtpResult.enhancedCorpus.gateOk ? 'PASS' : 'FAIL'}` : '',
+    mtpResult?.enhancedCorpus ? '' : '',
+    mtpResult?.enhancedCorpus ? '| ID | Baseline Saved | Enhanced Saved | Baseline Preserve | Enhanced Preserve |' : '',
+    mtpResult?.enhancedCorpus ? '|---|---:|---:|---:|---:|' : '',
+    ...(mtpResult?.enhancedCorpus ? mtpResult.enhancedCorpus.rows.map(r => `| ${r.id} | ${r.baselineSaved} | ${r.enhancedSaved} | ${r.baselinePreserve}% | ${r.enhancedPreserve}% |`) : []),
     '',
     '## Notes',
     '',
