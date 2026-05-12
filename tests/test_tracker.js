@@ -55,7 +55,7 @@ test('tracker exits 0 with empty stdout when state disabled and no trigger', () 
   }
 });
 
-test('tracker emits hookSpecificOutput JSON when optimizer enabled', () => {
+test('tracker emits minimal JSON when optimizer enabled', () => {
   const home = makeTempHome();
   try {
     fs.writeFileSync(path.join(home, 'state.json'),
@@ -63,9 +63,7 @@ test('tracker emits hookSpecificOutput JSON when optimizer enabled', () => {
     const result = runTracker('regular prompt', { TTO_HOME: home });
     assert.equal(result.status, 0);
     const parsed = JSON.parse(result.stdout);
-    assert.equal(parsed.hookSpecificOutput.hookEventName, 'UserPromptSubmit');
-    assert.match(parsed.hookSpecificOutput.additionalContext, /THAI TOKEN OPTIMIZER ACTIVE/);
-    assert.match(parsed.hookSpecificOutput.additionalContext, /full/);
+    assert.deepEqual(parsed, { continue: true });
   } finally {
     fs.rmSync(home, { recursive: true, force: true });
   }
