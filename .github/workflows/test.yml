@@ -22,6 +22,6 @@ jobs:
           cache: npm
       - run: npm install --include=optional
       - name: Run tests (bounded)
-        run: timeout 25m npm test
+        run: timeout 55m npm run test:ci
       - run: node bin/thai-token-optimizer.js benchmark --strict --default-policy
       - run: test "$(node -p "require('./package.json').version")" = "1.0.0"

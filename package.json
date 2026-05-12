@@ -6,6 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "test": "node --test tests/test_*.js",
+    "test:ci": "node --test --test-concurrency=1 tests/test_*.js",
     "install:codex": "node bin/thai-token-optimizer.js install codex",
     "install:claude": "node bin/thai-token-optimizer.js install claude",
     "install:all": "node bin/thai-token-optimizer.js install all",
@@ -21,7 +22,7 @@
     "benchmark": "node bin/thai-token-optimizer.js benchmark",
     "benchmark:strict": "node bin/thai-token-optimizer.js benchmark --strict",
     "doctor": "node bin/thai-token-optimizer.js doctor",
-    "ci": "npm test && node bin/thai-token-optimizer.js benchmark --strict --default-policy && node bin/thai-token-optimizer.js doctor --ci"
+    "ci": "npm run test:ci && node bin/thai-token-optimizer.js benchmark --strict --default-policy && node bin/thai-token-optimizer.js doctor --ci"
   },
   "engines": {
     "node": ">=18.0.0"
