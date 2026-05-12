@@ -88,20 +88,28 @@ function emitActiveReminder(state, prompt, safety) {
   process.stdout.write(JSON.stringify({ continue: true }));
 }
 
-let input = '';
-process.stdin.on('data', chunk => { input += chunk; });
-process.stdin.on('end', () => {
-  try {
-    const data = JSON.parse(input || '{}');
-    const prompt = (data.prompt || data.message || '').toString();
-    const trigger = parseTrigger(prompt);
-    if (trigger) setState(trigger);
-    const state = getState();
-    if (state.enabled) emitActiveReminder(state, prompt, classifyText(prompt));
-  } catch (e) {
-    logError(`mode-tracker: ${e.message}`);
-  }
-  process.exit(0);
-});
+function runFromStdin() {
+if (require.main === module) {
+  let input = '';
+  process.stdin.on('data', chunk => { input += chunk; });
+  process.stdin.on('end', () => {
+    try {
+      const data = JSON.parse(input || '{}');
+      const prompt = (data.prompt || data.message || '').toString();
+      const trigger = parseTrigger(prompt);
+      if (trigger) setState(trigger);
+      const state = getState();
+      if (state.enabled) emitActiveReminder(state, prompt, classifyText(prompt));
+    } catch (e) {
+      logError(`mode-tracker: ${e.message}`);
+    }
+    process.exit(0);
+  });
+}
+}
+
+if (require.main === module) {
+  runFromStdin();
+}
 
 module.exports = { stripCodeFences, parseTrigger, chooseEffectiveLevel };
