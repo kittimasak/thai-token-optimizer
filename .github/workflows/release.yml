@@ -9,14 +9,17 @@ on:
 jobs:
   release-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
       - run: npm install --include=optional
-      - run: npm test
+      - run: timeout 25m npm test
       - run: node bin/thai-token-optimizer.js benchmark --strict --default-policy
       - run: node bin/thai-token-optimizer.js config get
       - run: test "$(node -p "require('./package.json').version")" = "1.0.0"
