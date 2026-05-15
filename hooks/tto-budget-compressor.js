@@ -26,7 +26,7 @@ const { appendMissingConstraints, extractConstraints } = require('./tto-constrai
 const { collectProtectedRanges } = require('./tto-code-aware-parser');
 const { classifyTask, TIERS } = require('./tto-profiles');
 
-const HARD_LINE_RE = /(^\s*\|.*\|\s*$|^\s*[A-Za-z0-9_.-]+[ \t]*:[ \t]*$|ห้าม|ต้อง|เด็ดขาด|must|must not|do not|never|keep|preserve|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|```|`|https?:\/\/|~\/|\.\/|\b[A-Za-z]:\\|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module|EADDRINUSE)\b|\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|codex_hooks\s*=\s*true)/i;
+const HARD_LINE_RE = /(^\s*\|.*\|\s*$|^\s*[A-Za-z0-9_.-]+[ \t]*:[ \t]*$|(?:\s|^)(ห้าม|ต้อง|เด็ดขาด)(?:\s|$)|must|must not|do not|never|\bkeep\b|\bpreserve\b|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|```|`|https?:\/\/|~\/|\.\/|\b[A-Za-z]:\\|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module|EADDRINUSE)\b|\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|codex_hooks\s*=\s*true)/i;
 const STRUCTURE_SENSITIVE_LINE_RE = /^(\s+["']?[A-Za-z0-9_.-]+["']?\s*[:=]|\s+[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\s*at\s+|.*\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b)/i;
 
 function normalizeBudgetLine(line) {
@@ -52,7 +52,16 @@ function appendMissingProtected(original, optimized) {
   let out = String(optimized || '').trim();
   const missing = unique(protectedValues(original)).filter(v => !out.includes(v) && !out.includes(String(v).trim()));
   if (!missing.length) return out;
-  const suffix = ['รายการเทคนิคคงเดิม:', ...missing.map(v => `- ${v}`)].join('\n');
+  
+  // Smart Limiting: Only show up to 5 remnants to avoid budget overflow
+  const displayMissing = missing.slice(0, 5);
+  const remnantCount = missing.length - displayMissing.length;
+  const suffix = [
+    'รายการเทคนิคคงเดิม:', 
+    ...displayMissing.map(v => `- ${v}`),
+    remnantCount > 0 ? `- ... และอีก ${remnantCount} รายการ` : null
+  ].filter(Boolean).join('\n');
+  
   return `${out}\n\n${suffix}`.trim();
 }
 
@@ -73,9 +82,12 @@ function safeLineScore(line, tier = TIERS.ROUTINE, idx = -1, total = 0) {
   let score = 0;
   if (HARD_LINE_RE.test(line)) score += 1000;
   
+  // Semantic Anchor awareness: Keep headers like "BLOCK A:" or "STEP 1:"
+  if (/^[A-Z0-9_\/ ]+:/.test(line)) score += 1500;
+
   // Head/Tail priority for SMT continuity (Equal high priority)
-  if (idx === 0) score += 500;
-  if (idx === total - 1 && total > 1) score += 500;
+  if (idx === 0) score += 2000; 
+  if (idx === total - 1 && total > 1) score += 1500;
 
   // Tier-based weighting
   if (tier === TIERS.CRITICAL) score += 500;
@@ -93,7 +105,7 @@ function trimPlainLine(line, maxChars, tier = TIERS.ROUTINE) {
   
   // Smart Middle-Truncation (SMT) for technical/prose continuity
   if (s.length > 30 && maxChars >= 20) {
-    const headLen = Math.floor(maxChars * 0.25);
+    const headLen = Math.floor(maxChars * 0.4);
     const tailLen = Math.floor(maxChars * 0.4);
     const middlePlaceholder = ' ... ';
     
@@ -210,23 +222,44 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
       selected.push(optional[0]);
     }
 
+    // Context Anchor: Ensure the first line (Purpose) is kept if we keep multiple lines
+    if (selected.length >= 1) {
+      if (!selected.some(i => i.idx === 0)) {
+        selected.unshift(items[0]); // Force to the front
+      }
+    }
+    
+    // Also ensure the LAST line is kept if possible
+    if (selected.length > 1 && !selected.some(i => i.idx === items.length - 1)) {
+      selected.push(items[items.length - 1]);
+    }
+
     const selectedIdx = new Set(selected.map(i => i.idx));
-    lines = lines.filter((_, idx) => selectedIdx.has(idx));
+    const keptItems = items.filter(item => selectedIdx.has(item.idx));
+    
+    // 2. Final emergency pass
+    let emergencyLines = [...keptItems];
+    while (budget > 0 && emergencyLines.length > 2 && estimateTokens(emergencyLines.map(l => l.line).join('\n'), target).estimatedTokens > budget) {
+      let removeIdx = -1;
+      let lowest = Infinity;
+      // Don't remove first or last if we have > 2 lines
+      for (let i = 1; i < emergencyLines.length - 1; i++) {
+        if (emergencyLines[i].hard) continue;
+        if (emergencyLines[i].utility < lowest) { lowest = emergencyLines[i].utility; removeIdx = i; }
+      }
+      if (removeIdx < 0) break;
+      emergencyLines.splice(removeIdx, 1);
+    }
+    
+    // Last resort: if still over budget with 2 lines, try to remove the one with lower utility
+    if (budget > 0 && emergencyLines.length === 2 && estimateTokens(emergencyLines.map(l => l.line).join('\n'), target).estimatedTokens > budget) {
+      if (emergencyLines[0].utility < emergencyLines[1].utility && !emergencyLines[0].hard) emergencyLines.shift();
+      else if (!emergencyLines[1].hard) emergencyLines.pop();
+    }
+    
+    lines = emergencyLines.map(l => l.line);
   }
 
-  // Final emergency pass
-  while (budget > 0 && lines.length > 1 && estimateTokens(lines.join('\n'), target).estimatedTokens > budget) {
-    let removeIdx = -1;
-    let lowest = Infinity;
-    for (let i = 0; i < lines.length; i++) {
-      if (HARD_LINE_RE.test(lines[i])) continue;
-      const score = safeLineScore(lines[i], tier, i, lines.length);
-      if (score < lowest) { lowest = score; removeIdx = i; }
-    }
-    if (removeIdx < 0) break;
-    lines.splice(removeIdx, 1);
-  }
-  
   // Even if only 1 line left, if it's over budget, we MUST trim it
   // UNLESS it's a hard line (commands, constraints, versions) - Mandate v2.0
   if (budget > 0 && lines.length === 1 && estimateTokens(lines[0], target).estimatedTokens > budget) {
@@ -244,6 +277,13 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
   }
   
   out = lines.join('\n').trim();
+
+  // FINAL ANCHOR GUARANTEE: Ensure the very first significant line is ALWAYS present
+  const originalFirst = original.split('\n').filter(l => l.trim().length > 5)[0] || '';
+  if (originalFirst && !out.includes(originalFirst.slice(0, 15))) {
+    const head = trimPlainLine(originalFirst, 40, tier);
+    out = `${head}\n${out}`;
+  }
 
   return enforcePreservation(original, out, budget);
 }
@@ -267,6 +307,10 @@ function speculateCandidates(original, options = {}) {
     baseline: 1
   };
   const compareCandidates = (a, b) => {
+    // 0. Prioritize Head Preservation (Purpose)
+    const headDelta = (b.headBonus || 0) - (a.headBonus || 0);
+    if (headDelta !== 0) return headDelta;
+
     const preserveDelta = b.preservation.preservationPercent - a.preservation.preservationPercent;
     if (preserveDelta !== 0) return preserveDelta;
     const familyDelta = (familyPriority[b.family] || 0) - (familyPriority[a.family] || 0);
@@ -288,10 +332,15 @@ function speculateCandidates(original, options = {}) {
       if (budget > 0 && estimateTokens(optimized, target).estimatedTokens > budget) {
         optimized = trimToBudget(optimized, budget, target, original, classifyTask(options.agentName, original));
       }
+      
+      const preservation = checkPreservation(original, optimized);
+      // HARD REQUIREMENT: Must keep first significant line to be considered a good candidate
+      const firstLine = original.split('\n')[0].trim();
+      const keepsFirst = optimized.includes(firstLine.slice(0, 10));
+      const headBonus = keepsFirst ? 100 : 0;
 
       const savings = estimateSavings(original, optimized, target);
-      const preservation = checkPreservation(original, optimized);
-      const row = { optimized, savings, preservation, level, family: family.name };
+      const row = { optimized, savings, preservation, level, family: family.name, headBonus };
       candidates.push(row);
       diagnostics.push({
         family: family.name,
