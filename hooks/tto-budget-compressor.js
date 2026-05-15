@@ -26,7 +26,7 @@ const { appendMissingConstraints, extractConstraints } = require('./tto-constrai
 const { collectProtectedRanges } = require('./tto-code-aware-parser');
 const { classifyTask, TIERS } = require('./tto-profiles');
 
-const HARD_LINE_RE = /(^\s*\|.*\|\s*$|^\s*[A-Za-z0-9_.-]+[ \t]*:[ \t]*$|(?:\s|^)(ห้าม|ต้อง|เด็ดขาด)(?:\s|$)|must|must not|do not|never|\bkeep\b|\bpreserve\b|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|```|`|https?:\/\/|~\/|\.\/|\b[A-Za-z]:\\|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module|EADDRINUSE)\b|\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|codex_hooks\s*=\s*true)/i;
+const HARD_LINE_RE = /(^\s*\|.*\|\s*$|^\s*[A-Za-z0-9_.-]+[ \t]*:[ \t]*$|(?:\s|^)(ห้าม|ต้อง|เด็ดขาด)(?:\s|$)|must|must not|do not|never|\bkeep\b|\bpreserve\b|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|```|`|https?:\/\/|~\/|\.\/|\b[A-Za-z]:\\|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module|EADDRINUSE)\b|\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|codex_hooks\s*=\s*true|sequence detected|รันซ้ำ|พบซ้ำ|ย่อรายละเอียด|PURPOSE|RESULT|SUMMARY|จุดประสงค์|สรุป|เป้าหมาย)/i;
 const STRUCTURE_SENSITIVE_LINE_RE = /^(\s+["']?[A-Za-z0-9_.-]+["']?\s*[:=]|\s+[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\s*at\s+|.*\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b)/i;
 
 function normalizeBudgetLine(line) {
@@ -50,11 +50,31 @@ function protectedValues(text) {
 
 function appendMissingProtected(original, optimized) {
   let out = String(optimized || '').trim();
-  const missing = unique(protectedValues(original)).filter(v => !out.includes(v) && !out.includes(String(v).trim()));
+  
+  // If the optimized output already contains a sequence summary, 
+  // we assume individual repetitive technical values are intentionally summarized.
+  const hasSequenceSummary = /sequence detected|รันซ้ำ|พบซ้ำ/.test(out);
+  
+  const missing = unique(protectedValues(original)).filter(v => {
+    if (out.includes(v) || out.includes(String(v).trim())) return false;
+    // SMT awareness: if it's a long technical value that was middle-truncated
+    if (v.length > 20 && v.includes('...')) {
+      const parts = v.split('...');
+      if (parts.length >= 2 && out.includes(parts[0].trim()) && out.includes(parts[parts.length-1].trim())) return false;
+    }
+    // If we have any summary, be extremely selective about adding remnants
+    if (hasSequenceSummary) {
+      if (v.includes('module_') || v.includes('0x') || /^[a-z0-9_.-]+\.[a-z]{2,4}$/i.test(v) || /^\d+$/.test(v)) return false;
+    }
+    
+    return true;
+  });
   if (!missing.length) return out;
   
-  // Smart Limiting: Only show up to 5 remnants to avoid budget overflow
-  const displayMissing = missing.slice(0, 5);
+  // Smart Limiting: Only show up to 3 remnants if a summary exists
+  if (hasSequenceSummary && missing.length > 10) return out;
+  const displayLimit = hasSequenceSummary ? 3 : 5;
+  const displayMissing = missing.slice(0, displayLimit);
   const remnantCount = missing.length - displayMissing.length;
   const suffix = [
     'รายการเทคนิคคงเดิม:', 
@@ -67,13 +87,40 @@ function appendMissingProtected(original, optimized) {
 
 function enforcePreservation(original, optimized, budget = 0) {
   let out = optimized;
+  const targetTokens = budget > 0 ? budget : 2000; // Default threshold
 
-  // Try adding protected technical values
+  // Try adding protected technical values, but be budget-aware
   out = appendMissingProtected(original, out);
 
-  // Try adding constraints
-  out = appendMissingConstraints(original, out);
+  // Try adding constraints - SMT aware
+  const constraints = unique(extractConstraints(original)).filter(c => {
+    if (out.includes(c) || out.includes(c.trim())) return false;
+    // If it's a long constraint that was middle-truncated
+    if (c.length > 30) {
+      const head = c.slice(0, 15).trim();
+      const tail = c.slice(-15).trim();
+      if (out.includes(head) && out.includes(tail)) return false;
+    }
+    return true;
+  });
+
+  if (constraints.length > 0) {
+    const currentTokens = estimateTokens(out).estimatedTokens;
+    // Always add constraints if budget allows or if they are few
+    if (budget <= 0 || currentTokens < budget || constraints.length < 3) {
+      const suffix = ['ข้อกำหนดคงเดิม:', ...constraints.map(v => `- ${v}`)].join('\n');
+      out = `${out}\n\n${suffix}`.trim();
+    }
+  }
   
+  // Final safety: If we are still over budget after adding remnants, 
+  // and we have many remnants, we must prioritize the budget.
+  const finalTokens = estimateTokens(out).estimatedTokens;
+  if (budget > 0 && finalTokens > budget + 20 && out.includes('รายการเทคนิคคงเดิม')) {
+    // Strip the remnants to fit budget
+    out = out.split('\n\nรายการเทคนิคคงเดิม')[0].trim();
+  }
+
   return out.trim();
 }
 
@@ -81,13 +128,23 @@ function safeLineScore(line, tier = TIERS.ROUTINE, idx = -1, total = 0) {
   // Higher score = safer/more valuable to keep.
   let score = 0;
   if (HARD_LINE_RE.test(line)) score += 1000;
-  
+
   // Semantic Anchor awareness: Keep headers like "BLOCK A:" or "STEP 1:"
-  if (/^[A-Z0-9_\/ ]+:/.test(line)) score += 1500;
+  if (/^[A-Z0-9_\/ ]+:/.test(line)) score += 2000;
+
+  // ALD Summary Score: Summaries are EXTREMELY high value as they represent many lines.
+  // They must be kept to prevent preservation bloat from adding back all individual lines.
+  if (/sequence detected|รันซ้ำ|พบซ้ำ|ย่อรายละเอียด/.test(line)) score += 5000;
+
+  // ALD Remnant Score: Technical lists are valuable but prunable if long
+
+  if (/^รายการเทคนิคคงเดิม:/.test(line)) score -= 500;
+  if (/^-\s/.test(line)) score -= 1000; // Drastic reduction for list items
 
   // Head/Tail priority for SMT continuity (Equal high priority)
-  if (idx === 0) score += 2000; 
-  if (idx === total - 1 && total > 1) score += 1500;
+
+  if (idx === 0) score += 3000; 
+  if (idx === total - 1 && total > 1) score += 2500;
 
   // Tier-based weighting
   if (tier === TIERS.CRITICAL) score += 500;

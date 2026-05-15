@@ -79,24 +79,27 @@ function normalizeSemanticKey(text) {
   // If the line is only structural/punctuation, return empty to trigger exact match in aggressiveLogDedup
   if (/^[(){}\[\]\s,.;:!?/\\|!@#$%^&*+=<>~`_-]+$/.test(raw)) return '';
   
-  let masked = raw
-    .toLowerCase()
-    .replace(/[“”"']/g, '')
+  let masked = raw.toLowerCase().replace(/[“”"']/g, '');
+
+  // 1. Mask patterns that depend on structural characters (dashes, colons, dots)
+  masked = masked
+    .replace(/\b\d{4}-\d{2}-\d{2}t\d{2}:\d{2}:\d{2}[.\d]*z?\b/g, '[time]') // ISO Time
+    .replace(/\b\d{2}:\d{2}:\d{2}[.\d]*\b/g, '[time]') // HH:MM:SS
+    .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/g, '[uuid]')
+    .replace(/\b\d+(\.\d+)?(ms|s|mb|kb|gb|b|%)\b/g, '[val]$2'); // Units with decimal
+
+  // 2. Structural normalization to create clear word boundaries for everything else
+  masked = masked.replace(/[(){}\[\]\s,.;:/\\|@#$%^&*+=<>~`_-]/g, ' ');
+
+  // 3. Mask remaining patterns on normalized text
+  masked = masked
     // Ignore Thai Particles/Fillers in Key
     .replace(/(นะครับ|นะคะ|ครับ|ค่ะ|คะ|นะ|หน่อย|ด้วย|จริง ๆ|จริงๆ|ทำการ|สามารถ)/g, '')
-    // Dynamic Masking: Timestamps, Hex, Units (Preserving units)
-    .replace(/\b\d{2}:\d{2}:\d{2}[.\d]*\b/g, '[time]') 
     .replace(/\b0x[a-f0-9]+\b/g, '[hex]')
-    .replace(/\b\d+(\.\d+)?(ms|s|mb|kb|gb|b|%)\b/g, '[val]$2')
-    // Additional Masking: ISO Time, UUID, IP, File
-    .replace(/\b\d{4}-\d{2}-\d{2}t\d{2}:\d{2}:\d{2}[.\d]*z?\b/g, '[time]')
-    .replace(/\b\d{4}-\d{2}-\d{2}\b/g, '[date]')
-    .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/g, '[uuid]')
-    .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[ip]')
-    .replace(/\b[a-z0-9_.-]+\.[a-z]{2,4}\b/g, '[file]')
+    .replace(/\b\d{4} \d{2} \d{2}\b/g, '[date]')
+    .replace(/\b\d{1,3} \d{1,3} \d{1,3} \d{1,3}\b/g, '[ip]')
+    .replace(/\b[a-z0-9_.-]+ [a-z]{2,4}\b/g, '[file]')
     .replace(/\b\d+\b/g, '[n]')
-    // Structural normalization
-    .replace(/[(){}\s,.;:/\\|@#$%^&*+=<>~`_-]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -104,7 +107,7 @@ function normalizeSemanticKey(text) {
 }
 
 const HARD_WORD_RE = /(```|`|https?:\/\/|~\/|\.\/|\/|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|\b(?:node|npm|pnpm|git|docker|tto|codex|claude)\b|codex_hooks)/i;
-const STRUCTURE_SENSITIVE_RE = /^(\s*["']?(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level)[A-Za-z0-9_.-]+["']?\s*[:=]|\s*(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level)[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\s*at\s+|.*\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b|\s*(?:git|rm|npm|pnpm|yarn|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|tto|thai-token-optimizer)\b|\s*(?:DROP|TRUNCATE|DELETE|UPDATE|ALTER|INSERT)\b)/i;
+const STRUCTURE_SENSITIVE_RE = /^(\s*["']?(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status)[A-Za-z0-9_.-]+["']?\s*[:=]|\s*(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status)[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\s*at\s+[a-z0-9_<>]+\s*\(|.*\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b|\s*(?:git|rm|npm|pnpm|yarn|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|tto|thai-token-optimizer)\b|\s*(?:DROP|TRUNCATE|DELETE|UPDATE|ALTER|INSERT)\b)/i;
 
 function collapseRepeatedPhrases(line) {
   const words = String(line || '').trim().split(/\s+/).filter(Boolean);
@@ -189,8 +192,10 @@ function aggressiveLogDedup(lines, level = 'auto') {
     }
 
     // 1.5 Sequence Detection (Multi-line Pattern)
-    let seqSizeMatched = 0;
-    let seqCount = 0;
+    let bestSeqSize = 0;
+    let bestSeqCount = 0;
+    let maxReduction = 0;
+
     for (let size = 2; size <= 5; size++) {
       if (i + size * 2 > lines.length) continue;
       
@@ -219,24 +224,27 @@ function aggressiveLogDedup(lines, level = 'auto') {
       }
 
       if (matchCount >= 2) {
-        seqSizeMatched = size;
-        seqCount = matchCount;
-        break;
+        const reduction = size * matchCount;
+        if (reduction > maxReduction) {
+          maxReduction = reduction;
+          bestSeqSize = size;
+          bestSeqCount = matchCount;
+        }
       }
     }
 
-    if (seqSizeMatched > 0) {
-      const seqLines = lines.slice(i, i + seqSizeMatched);
+    if (bestSeqSize > 0) {
+      const seqLines = lines.slice(i, i + bestSeqSize);
       const labels = seqLines.map(l => {
-        const clean = l.replace(/^\[[time|date|val|uuid|hex|ip|file|n]+\]\s*/i, '').replace(/\.{2,}/g, '').trim();
-        const m = clean.match(/^\[?([A-Z0-9/_-]+)\]?/i);
-        if (m && m[1].length > 4) return m[1];
+        const clean = l.replace(/^\[[time|date|val|uuid|hex|ip|file|n|val]+\]\s*/i, '').replace(/\.{2,}/g, '').trim();
+        const m = clean.match(/^\[?([A-Z0-9/_-]{3,})\]?/i);
+        if (m) return m[1];
         const words = clean.split(/[:\s]/).filter(Boolean);
         if (words.length >= 2 && words[0].length >= 3) return words.slice(0, 2).join(' ');
         return words[0] || 'seq';
       }).join('/');
-      out.push(`[${labels}] sequence detected ${seqCount} times`);
-      i += seqCount * seqSizeMatched;
+      out.push(`[${labels}] sequence detected ${bestSeqCount} times`);
+      i += bestSeqCount * bestSeqSize;
       continue;
     }
 
