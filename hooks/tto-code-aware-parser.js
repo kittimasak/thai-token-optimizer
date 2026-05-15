@@ -30,6 +30,7 @@ const PROTECTED_PATTERNS = [
   /\b[A-Za-z]:\\[A-Za-z0-9._@%+\-\\]+/g,
   /\b(?:[A-Za-z]:)?(?:\.?\.\/|~\/|\/)[A-Za-z0-9._@%+\-/]+/g,
   /\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b/gi,
+  /\b(?:payment gateway|security vulnerabilities|deep learning|face recognition|rest api|micro batching|data warehouse|logic continuity)\b/gi,
   /\b[A-Z0-9_]{2,128}\b/g,
   /\bv?\d+\.\d+(?:\.\d+)?(?:[-+][A-Za-z0-9.-]+)?\b/g,
   /\b[A-Za-z0-9_-]+\.(?:js|mjs|cjs|ts|tsx|jsx|json|yaml|yml|toml|env|md|py|php|sql|sh|bash|zsh|txt|zip)\b/g,

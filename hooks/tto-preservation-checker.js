@@ -29,6 +29,7 @@ const IMPORTANT_PATTERNS = {
   versions: /\bv?\d+\.\d+(?:\.\d+)?(?:[-+][A-Za-z0-9.-]+)?\b/g,
   numbers: /\b\d+(?:\.\d+)?%?\b/g,
   env: /\b[A-Z][A-Z0-9_]{2,}\b/g,
+  techPhrases: /\b(?:payment gateway|security vulnerabilities|deep learning|face recognition|rest api|micro batching|data warehouse|logic continuity)\b/gi,
   commands: /\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|kubectl|curl|python3?|pip3?|php|mysql|psql|codex|claude|tto|thai-token-optimizer)\b(?:\s+[A-Za-z0-9_./:@#=+\-]+){0,6}/gi
 };
 

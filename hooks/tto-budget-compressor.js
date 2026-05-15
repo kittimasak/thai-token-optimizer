@@ -116,8 +116,8 @@ function enforcePreservation(original, optimized, budget = 0) {
   // Final safety: If we are still over budget after adding remnants, 
   // and we have many remnants, we must prioritize the budget.
   const finalTokens = estimateTokens(out).estimatedTokens;
-  if (budget > 0 && finalTokens > budget + 20 && out.includes('รายการเทคนิคคงเดิม')) {
-    // Strip the remnants to fit budget
+  if (budget > 0 && finalTokens > budget + 50 && out.includes('รายการเทคนิคคงเดิม')) {
+    // Strip the remnants only if budget is severely exceeded
     out = out.split('\n\nรายการเทคนิคคงเดิม')[0].trim();
   }
 
@@ -162,8 +162,8 @@ function trimPlainLine(line, maxChars, tier = TIERS.ROUTINE) {
   
   // Smart Middle-Truncation (SMT) for technical/prose continuity
   if (s.length > 30 && maxChars >= 20) {
-    const headLen = Math.floor(maxChars * 0.4);
-    const tailLen = Math.floor(maxChars * 0.4);
+    const headLen = Math.floor(maxChars * 0.3);
+    const tailLen = Math.floor(maxChars * 0.3);
     const middlePlaceholder = ' ... ';
     
     // Only apply if it actually saves significant space and leaves meaningful head/tail
@@ -230,12 +230,15 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
 
   // Shorten non-hard plain lines
   lines = out.split(/\n+/).map(normalizeBudgetLine).filter(Boolean);
+  const totalTokens = estimateTokens(out, target).estimatedTokens;
+  const budgetRatio = budget / totalTokens;
+
   for (let i = 0; i < lines.length && estimateTokens(lines.join('\n'), target).estimatedTokens > budget; i++) {
     const isHard = HARD_LINE_RE.test(lines[i]);
     if (isHard) continue;
     const currentLen = lines[i].length;
-    const ratio = budget < 40 ? 0.3 : (tier === TIERS.INFORMATIONAL ? 0.4 : 0.65);
-    const targetCharLen = Math.max(20, Math.floor(currentLen * ratio));
+    // Calculate a fair target length based on budget ratio, but no less than 40 chars
+    const targetCharLen = Math.max(40, Math.floor(currentLen * budgetRatio));
     lines[i] = trimPlainLine(lines[i], targetCharLen, tier);
   }
   out = lines.join('\n').trim();
@@ -322,9 +325,17 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
 
   // FINAL ANCHOR GUARANTEE: Ensure the very first significant line is ALWAYS present
   const originalFirst = original.split('\n').filter(l => l.trim().length > 5)[0] || '';
-  if (originalFirst && !out.includes(originalFirst.slice(0, 15))) {
-    const head = trimPlainLine(originalFirst, 40, tier);
-    out = `${head}\n${out}`;
+  if (originalFirst) {
+    const compressedFirst = compressPrompt(originalFirst, { level: 'full', lockConstraints: false }).trim();
+    // Normalize for matching: Remove spaces, technical symbols, and fillers
+    const norm = (s) => s.replace(/[^\w\u0E00-\u0E7F]/g, '').toLowerCase();
+    const firstMatchKey = norm(compressedFirst).slice(0, 15);
+    const outMatchKey = norm(out);
+
+    if (firstMatchKey && !outMatchKey.includes(firstMatchKey)) {
+      const head = trimPlainLine(compressedFirst, 40, tier);
+      out = `${head}\n${out}`;
+    }
   }
   
   // FINAL RESULT GUARANTEE: Ensure the very last significant line (Outcome) is ALWAYS present

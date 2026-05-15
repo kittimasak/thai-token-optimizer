@@ -107,7 +107,7 @@ function normalizeSemanticKey(text) {
 }
 
 const HARD_WORD_RE = /(```|`|https?:\/\/|~\/|\.\/|\/|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|\b(?:node|npm|pnpm|git|docker|tto|codex|claude)\b|codex_hooks)/i;
-const STRUCTURE_SENSITIVE_RE = /^(\s*["']?(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status)[A-Za-z0-9_.-]+["']?\s*[:=]|\s*(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status)[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\s*at\s+[a-z0-9_<>]+\s*\(|.*\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b|\s*(?:git|rm|npm|pnpm|yarn|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|tto|thai-token-optimizer)\b|\s*(?:DROP|TRUNCATE|DELETE|UPDATE|ALTER|INSERT)\b)/i;
+const STRUCTURE_SENSITIVE_RE = /^(\s*["']?(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status)[A-Za-z0-9_.-]+["']?\s*[:=]|\s*(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status)[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\s*at\s+[a-z0-9_<>]+\s*\(|.*\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b|\s*(?:MISSION|CONTEXT|CONCLUSION|OVERVIEW|SUMMARY|RESULT|git|rm|npm|pnpm|yarn|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|tto|thai-token-optimizer)\b|\s*(?:DROP|TRUNCATE|DELETE|UPDATE|ALTER|INSERT)\b)/i;
 
 function collapseRepeatedPhrases(line) {
   const words = String(line || '').trim().split(/\s+/).filter(Boolean);
@@ -476,9 +476,12 @@ function selectiveWindowCompress(text, level = 'auto', semanticBlocks = []) {
     for (const [from, to] of ULTRA_REPLACEMENTS) out = out.split(from).join(to);
   }
   for (const [pattern, repl] of FILLER_PATTERNS) {
-    // Skip particle removal for auto/full to let semanticDedup handle grouping
+    // Skip particle removal for auto/full to let semanticDedup handle grouping,
+    // but ALLOW greeting/polite word removal (those that don't look like trailing particles)
     const isParticle = pattern.source.includes('ครับ') || pattern.source.includes('ค่ะ');
-    if (isParticle && level !== 'ultra' && (level === 'auto' || level === 'full')) {
+    const isGreeting = pattern.source.includes('สวัสดี') || pattern.source.includes('ขอบคุณ');
+    
+    if (isParticle && !isGreeting && level !== 'ultra' && (level === 'auto' || level === 'full')) {
       continue;
     }
     const before = out;
