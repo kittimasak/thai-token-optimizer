@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0 - Semantic Analyzer
+ * Thai Token Optimizer v2.0 - Semantic Analyzer
  * ============================================================================
  * Handles AST-lite extraction and redundancy detection between Thai text
  * and code structures.
@@ -51,7 +51,7 @@ function extractSymbols(code, lang = 'javascript') {
   // Fallback for partial code: Extract anything that looks like an identifier
   if (symbols.size === 0) {
     const ids = code.match(/\b[A-Za-z_][A-Za-z0-9_]{2,}\b/g);
-    if (ids) ids.forEach(id => symbols.add(ids));
+    if (ids) ids.forEach(id => symbols.add(id));
   }
 
   // Extract nested properties
@@ -87,9 +87,12 @@ function calculateRedundancy(thaiSegment, symbols) {
   let matches = 0;
   let tempText = thaiSegment;
   for (const sym of sortedSymbols) {
-    if (tempText.includes(sym)) {
+    let cursor = 0;
+    while ((cursor = tempText.indexOf(sym, cursor)) !== -1) {
       matches += sym.length;
-      tempText = tempText.split(sym).join(' ');
+      // Replace with spaces to keep indices but avoid re-matching
+      tempText = tempText.slice(0, cursor) + ' '.repeat(sym.length) + tempText.slice(cursor + sym.length);
+      cursor += sym.length;
     }
   }
 
@@ -102,6 +105,18 @@ function calculateRedundancy(thaiSegment, symbols) {
 function pruneRedundantThai(thaiText, codeSymbols) {
   if (!codeSymbols || codeSymbols.length === 0) return thaiText;
 
+  const fallbackIntent = clause => {
+    const matches = String(clause || '').match(/เขียน|สร้าง|แก้|ตรวจ|ทดสอบ|สรุป|อธิบาย|ฟังก์ชัน|คืนค่า/g) || [];
+    return Array.from(new Set(matches)).join(' ').trim();
+  };
+
+  const isMeaningfulThai = text => {
+    const cleaned = String(text || '')
+      .replace(/[.\sและโดยซึ่งที่ของครับค่ะ]+/g, '')
+      .trim();
+    return cleaned.length > 1;
+  };
+
   // Split into sentences/clauses to prune selectively
   const clauses = thaiText.split(/([。\.!\?|]| และ | โดย | ซึ่ง | เข้ามา | แล้ว | เข้าไป | รบกวนช่วย | ช่วย | หน่อยครับ | หน่อยค | หน่อย | ครับ | ค่ะ)/);
   let result = [];
@@ -109,25 +124,34 @@ function pruneRedundantThai(thaiText, codeSymbols) {
   for (let i = 0; i < clauses.length; i++) {
     const clause = clauses[i];
     if (!clause || !clause.trim()) {
-      if (clause && !/^[ช่วย|และ|โดย|ซึ่ง|รบกวนช่วย]+$/.test(clause.trim())) result.push(clause);
+      if (clause && !/^[ช่วย|และ|โดย|ซึ่ง|รบกวนช่วย|ที่]+$/.test(clause.trim())) result.push(clause);
       continue;
     }
 
     const redundancy = calculateRedundancy(clause, codeSymbols);
     
-    // Threshold: 15% redundancy is enough to trigger optimization
-    if (redundancy > 0.15 && clause.length < 200) {
-      const hasIntent = /(ห้าม|ต้อง|เด็ดขาด|สำคัญ|อย่า|keep|preserve|only|เท่านั้น|เด็ดขาด)/.test(clause);
+    // Threshold: 10% redundancy is enough to trigger optimization in v2.0.1
+    if (redundancy > 0.10 && clause.length < 200) {
+      const hasIntent = /(ห้าม|ต้อง|คง|ยังคง|รักษา|เด็ดขาด|สำคัญ|อย่า|keep|preserve|only|เท่านั้น|version|เวอร์ชัน|gate|PASS|FAIL|preservation|benchmark|regression|อธิบาย)/i.test(clause);
       
       if (!hasIntent) {
-        if (redundancy > 0.4) continue; // Prune entirely if very redundant
+        if (redundancy > 0.35) {
+          const fallback = fallbackIntent(clause);
+          if (fallback) result.push(fallback);
+          continue;
+        }
         
         let compressed = clause;
         for (const sym of codeSymbols) {
           compressed = compressed.split(sym).join('');
         }
-        compressed = compressed.replace(/(ฟังก์ชัน|ตัวแปร|parameter|พารามิเตอร์|ชื่อ|ที่เป็น|รับ|ส่ง|คำนวณ|กำหนดค่า|ตั้งค่า|แก้ค่า|ไปที่)/g, '').trim();
-        if (compressed.length > 3) result.push(compressed);
+        compressed = compressed.replace(/(ฟังก์ชัน|ตัวแปร|parameter|พารามิเตอร์|ชื่อ|ที่เป็น|รับ|ส่ง|คำนวณ|กำหนดค่า|ตั้งค่า|แก้ค่า|ไปที่|การทำงานของ|ให้หน่อย|ให้มีความหมาย)/g, '').trim();
+        if (compressed.length > 2 && isMeaningfulThai(compressed)) {
+          result.push(compressed);
+        } else {
+          const fallback = fallbackIntent(clause);
+          if (fallback) result.push(fallback);
+        }
         continue;
       }
     }
@@ -136,9 +160,11 @@ function pruneRedundantThai(thaiText, codeSymbols) {
 
   // Final cleanup of dangling connectors at start/end or doubled up
   let final = result.join('')
-    .replace(/^[และ|โดย|ซึ่ง|ที่]+\s*/, '')
-    .replace(/\s+[และ|โดย|ซึ่ง|ที่]+$/, '')
-    .replace(/(และ|โดย|ซึ่ง){2,}/g, '$1');
+    .replace(/^[และ|โดย|ซึ่ง|ที่|ของ]+\s*/, '')
+    .replace(/\s+[และ|โดย|ซึ่ง|ที่|ของ|ครับ|ค่ะ]+$/, '')
+    .replace(/(และ|โดย|ซึ่ง){2,}/g, '$1')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
     
   return final;
 }

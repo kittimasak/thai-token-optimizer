@@ -1,0 +1,2 @@
+{"type":"user","timestamp":"2026-01-01T00:00:05.000Z","message":{"content":"start"}}
+{"type":"assistant","message":{"model":"gpt-5.5","usage":{"input_tokens":4100,"output_tokens":350,"cache_read_input_tokens":500,"cache_creation_input_tokens":100}}}

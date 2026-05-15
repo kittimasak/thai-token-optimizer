@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -39,7 +39,7 @@ function checkWritable(dir) {
 function fileOk(root, rel) { return fs.existsSync(path.join(root, rel)); }
 function packageChecks(root, pkg) {
   return [
-    { name: 'Package version remains 1.0.0', ok: pkg.version === '1.0.0', detail: pkg.version || 'missing', required: true },
+    { name: 'Package version remains 2.0.0', ok: pkg.version === '2.0.0', detail: pkg.version || 'missing', required: true },
     { name: 'Node >= 18', ok: Number(process.versions.node.split('.')[0]) >= 18, detail: process.versions.node, required: true },
     { name: 'CLI entry exists', ok: fileOk(root, 'bin/thai-token-optimizer.js'), detail: 'bin/thai-token-optimizer.js', required: true },
     { name: 'Backup module exists', ok: fileOk(root, 'hooks/tto-backup.js'), detail: 'hooks/tto-backup.js', required: true },
@@ -109,7 +109,7 @@ function addCodexChecks(checks, paths, root) {
   checks.push(
     { name: 'Codex hooks installed', ok: !!hooks && hasTto(JSON.stringify(hooks)), detail: paths.codexHooks, required: true },
     { name: 'Codex hooks feature flag', ok: /^\s*codex_hooks\s*=\s*true\s*$/m.test(configText), detail: paths.codexConfig, required: true },
-    { name: 'Codex AGENTS block (optional)', ok: agentsText.includes('Thai Token Optimizer START') || agentsText.includes('Thai Token Optimizer v1.0'), detail: `${paths.codexAgents} — run tto install-agents to enable`, required: false }
+    { name: 'Codex AGENTS block (optional)', ok: agentsText.includes('Thai Token Optimizer START') || agentsText.includes('Thai Token Optimizer v2.0'), detail: `${paths.codexAgents} — run tto install-agents to enable`, required: false }
   );
   for (const [eventName, file, input] of expected) {
     const commands = hookCommandsForEvent(hooks?.hooks, eventName);
@@ -143,10 +143,46 @@ function addOpenCodeChecks(checks, paths) {
   const opencodeConfigJson = readJson(paths.opencodeConfig);
   const pluginText = fs.existsSync(paths.opencodePlugin) ? fs.readFileSync(paths.opencodePlugin, 'utf8') : '';
   checks.push(
-    { name: 'OpenCode plugin installed', ok: pluginText.includes('Thai Token Optimizer v1.0'), detail: paths.opencodePlugin, required: true },
+    { name: 'OpenCode plugin installed', ok: pluginText.includes('Thai Token Optimizer v2.0'), detail: paths.opencodePlugin, required: true },
     { name: 'OpenCode config present', ok: !!opencodeConfigJson || fs.existsSync(paths.opencodeConfig), detail: paths.opencodeConfig, required: true },
     { name: 'OpenCode plugin exposes hooks', ok: /tool\.execute\.before/.test(pluginText) && /experimental\.session\.compacting/.test(pluginText), detail: paths.opencodePlugin, required: true }
   );
+  const sim = simulateOpenCodePlugin(paths);
+  checks.push({ name: 'OpenCode plugin simulation', ok: sim.ok, detail: sim.detail, required: true });
+}
+
+function simulateOpenCodePlugin(paths) {
+  if (!fs.existsSync(paths.opencodePlugin)) return { ok: false, detail: paths.opencodePlugin };
+  const script = `
+    import { pathToFileURL } from 'node:url';
+    const mod = await import(pathToFileURL(${JSON.stringify(paths.opencodePlugin)}));
+    const plugin = await mod.ThaiTokenOptimizer({
+      client: { app: { log: async () => {} } },
+      $: async () => ({ stdout: '' })
+    });
+    const envOut = { env: {} };
+    await plugin['shell.env']({}, envOut);
+    const compactOut = { context: [] };
+    await plugin['experimental.session.compacting']({}, compactOut);
+    const riskyOut = { args: { command: 'rm -rf /tmp/x' } };
+    await plugin['tool.execute.before']({ tool: 'shell', command: 'rm -rf /tmp/x' }, riskyOut);
+    const normalOut = { args: { command: 'list files' } };
+    await plugin['tool.execute.before']({ tool: 'shell', command: 'list files' }, normalOut);
+    console.log(JSON.stringify({
+      envOk: envOut.env.THAI_TOKEN_OPTIMIZER === '1',
+      compactOk: compactOut.context.length > 0 && /During compaction/.test(compactOut.context[0]),
+      riskyOk: Boolean(riskyOut.args.__thaiTokenOptimizerSafety),
+      normalOk: !normalOut.args.__thaiTokenOptimizerSafety
+    }));
+  `;
+  const r = spawnSync(process.execPath, ['--input-type=module', '-e', script], { encoding: 'utf8', timeout: 5000 });
+  if (r.status !== 0) return { ok: false, detail: `OpenCode plugin simulation exit ${r.status}: ${(r.stderr || '').trim()}` };
+  try {
+    const parsed = JSON.parse(r.stdout);
+    return { ok: parsed.envOk && parsed.compactOk && parsed.riskyOk && parsed.normalOk, detail: paths.opencodePlugin };
+  } catch (e) {
+    return { ok: false, detail: `OpenCode plugin simulation invalid JSON: ${e.message}` };
+  }
 }
 
 function simulateOpenClawHook(paths, input) {
@@ -155,7 +191,7 @@ function simulateOpenClawHook(paths, input) {
   if (r.status !== 0) return { ok: false, detail: `simulate.cjs exit ${r.status}: ${(r.stderr || '').trim()}` };
   try {
     const parsed = JSON.parse(r.stdout);
-    return { ok: parsed.service === 'thai-token-optimizer' && parsed.version === '1.0.0' && String(parsed.safety || '').includes('backup'), detail: paths.openclawSimulator };
+    return { ok: parsed.service === 'thai-token-optimizer' && parsed.version === '2.0.0' && String(parsed.safety || '').includes('backup'), detail: paths.openclawSimulator };
   } catch (e) {
     return { ok: false, detail: `simulate.cjs invalid JSON: ${e.message}` };
   }
@@ -168,7 +204,7 @@ function addOpenClawChecks(checks, paths) {
   const entry = config?.hooks?.internal?.entries?.['thai-token-optimizer'];
   checks.push(
     { name: 'OpenClaw hook metadata installed', ok: hookMd.includes('name: thai-token-optimizer') && hookMd.includes('gateway:startup') && hookMd.includes('agent:bootstrap'), detail: paths.openclawHookMd, required: true },
-    { name: 'OpenClaw handler installed', ok: handlerText.includes('Thai Token Optimizer v1.0') && handlerText.includes('export default handler'), detail: paths.openclawHandler, required: true },
+    { name: 'OpenClaw handler installed', ok: handlerText.includes('Thai Token Optimizer v2.0') && handlerText.includes('export default handler'), detail: paths.openclawHandler, required: true },
     { name: 'OpenClaw config enables hook', ok: !!entry?.enabled && String(entry.path || '').includes('thai-token-optimizer'), detail: paths.openclawConfig, required: true },
     { name: 'OpenClaw command events configured', ok: Array.isArray(entry?.events) && entry.events.includes('command:new') && entry.events.includes('command:reset') && entry.events.includes('command'), detail: paths.openclawConfig, required: true }
   );
@@ -196,23 +232,23 @@ function addHermesChecks(checks, paths) {
   checks.push(
     { name: 'Hermes config enables plugin', ok: configText.includes('plugins:') && configText.includes('- thai-token-optimizer'), detail: paths.hermesConfig, required: true },
     { name: 'Hermes shell hooks configured', ok: configText.includes('pre_llm_call') && configText.includes('pre_tool_call') && configText.includes('thai-token-optimizer-pre_tool_call.cjs'), detail: paths.hermesConfig, required: true },
-    { name: 'Hermes plugin manifest installed', ok: pluginYaml.includes('name: thai-token-optimizer') && pluginYaml.includes('1.0.0'), detail: paths.hermesPluginYaml, required: true },
+    { name: 'Hermes plugin manifest installed', ok: pluginYaml.includes('name: thai-token-optimizer') && pluginYaml.includes('2.0.0'), detail: paths.hermesPluginYaml, required: true },
     { name: 'Hermes plugin hooks registered', ok: pluginPy.includes('ctx.register_hook("pre_llm_call"') && pluginPy.includes('ctx.register_hook("pre_tool_call"') && pluginPy.includes('transform_terminal_output'), detail: paths.hermesPluginPy, required: true },
     { name: 'Hermes shell hook scripts installed', ok: shellScripts.every(file => fs.existsSync(file)), detail: `${shellScripts.length} scripts`, required: true }
   );
-  const sim = simulateHermesShellHook(paths, '{"hook_event_name":"pre_tool_call","tool_name":"terminal","tool_input":{"command":"rm -rf /tmp/x production secret"},"session_id":"doctor","cwd":"/tmp","extra":{}}');
+  const sim = simulateHermesShellHook(paths, '{"hook_event_name":"pre_tool_call","tool_name":"terminal","tool_input":{"command":"rm -rf /tmp/x"},"session_id":"doctor","cwd":"/tmp","extra":{}}');
   checks.push({ name: 'Hermes shell hook simulation', ok: sim.ok, detail: sim.detail, required: true });
 }
 
 function runDoctor(options = {}) {
   const ci = Boolean(options.ci);
   const target = normalizeDoctorTarget(options.target || 'all');
-  const root = path.resolve(__dirname, '..');
+  const root = options.rootDir ? path.resolve(options.rootDir) : path.resolve(__dirname, '..');
   const pkg = readJson(path.join(root, 'package.json')) || {};
   const checks = packageChecks(root, pkg);
   if (ci) {
     const ok = checks.every(c => c.ok || !c.required);
-    return { name: 'Thai Token Optimizer', versionLabel: 'v1.0', packageVersion: pkg.version, ok, mode: 'ci', target, checks };
+    return { name: 'Thai Token Optimizer', versionLabel: 'v2.0', packageVersion: pkg.version, ok, mode: 'ci', target, checks };
   }
 
   const codexHome = process.env.CODEX_HOME || path.join(os.homedir(), '.codex');
@@ -248,10 +284,10 @@ function runDoctor(options = {}) {
   if (target === 'all' || target === 'openclaw') addOpenClawChecks(checks, paths);
   if (target === 'all' || target === 'hermes') addHermesChecks(checks, paths);
   const ok = checks.every(c => c.ok || !c.required);
-  return { name: 'Thai Token Optimizer', versionLabel: 'v1.0', packageVersion: pkg.version, ok, mode: 'installed', target, checks };
+  return { name: 'Thai Token Optimizer', versionLabel: 'v2.0', packageVersion: pkg.version, ok, mode: 'installed', target, checks };
 }
 function formatDoctor(result) {
-  const lines = [`Thai Token Optimizer v1.0 Doctor`, `Mode: ${result.mode || 'installed'}`, `Target: ${result.target || 'all'}`, `Status: ${result.ok ? 'OK' : 'WARN'}`, ''];
+  const lines = [`Thai Token Optimizer v2.0 Doctor`, `Mode: ${result.mode || 'installed'}`, `Target: ${result.target || 'all'}`, `Status: ${result.ok ? 'OK' : 'WARN'}`, ''];
   for (const c of result.checks) {
     const mark = c.ok ? '✓' : (c.required === false ? '!' : '✗');
     lines.push(`${mark} ${c.name} — ${c.detail}`);
@@ -265,7 +301,7 @@ if (require.main === module) {
     console.log(formatDoctor(result));
     process.exitCode = result.ok ? 0 : 1;
   } catch (e) {
-    console.error(`Thai Token Optimizer v1.0 Doctor error: ${e.message}`);
+    console.error(`Thai Token Optimizer v2.0.0 Doctor error: ${e.message}`);
     process.exitCode = 1;
   }
 }

@@ -1,9 +1,9 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
-A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
+Claude Code skill guidance for Thai Token Optimizer v2.0.
 
 Author      : Dr.Kittimasak Naijit
 Repository  : https://github.com/kittimasak/thai-token-optimizer
@@ -16,26 +16,36 @@ Notes:
 ============================================================================
 -->
 
-# Thai Token Optimizer v1.0 Skill for Claude Code
+# Thai Token Optimizer v2.0 Skill for Claude Code
 
-Use this skill when the user wants compact Thai responses, Thai prompt optimization, or token-efficient coding guidance.
+Use this skill when the user wants compact Thai responses, Thai prompt compression, token-efficient coding guidance, or TTO repository work.
 
 ## Identity
 
 ```text
-Thai Token Optimizer v1.0
-package version: 1.0.0
+Thai Token Optimizer v2.0
+package version: 2.0.0
 ```
 
-## Core behavior
+## Core Behavior
 
-- Use compact Thai.
+- Thai-first, compact, direct.
 - Preserve English technical terms when clearer.
 - Preserve commands, paths, config keys, code, versions, error messages, and safety constraints.
 - Put commands/code before explanation for coding tasks.
 - Use safe mode for risky operations.
+- Never claim tests passed unless actually run or shown.
 
-## Activation phrases
+## TTO Stage UI
+
+```text
+[TTO Stage 1/4] Detect Intent
+[TTO Stage 2/4] Compress Candidate
+[TTO Stage 3/4] Preserve Critical
+[TTO Stage 4/4] Output Compact
+```
+
+## Activation Phrases
 
 ```text
 token thai auto
@@ -43,66 +53,62 @@ token thai lite
 token thai full
 token thai safe
 token thai off
+/tto spec
+/tto nospec
+/tto nointeractive
 ลด token ไทย
 ประหยัด token
 ตอบสั้น
 ```
 
-## Modes
+## Command Surface
 
-| Mode | Behavior |
-|---|---|
-| `auto` | Choose level from task risk and profile |
-| `lite` | Compact but explanatory |
-| `full` | Shortest useful answer for low-risk work |
-| `safe` | Safety-first with backup/dry-run/verify/rollback |
-| `off` | Disable compact behavior |
+```bash
+tto status --pretty
+tto dashboard --view quality
+tto compress --pretty --level auto --target claude --budget 500 --check prompt.txt
+tto compress --speculative --diagnostics --check --target claude prompt.txt
+tto benchmark --pretty --strict --default-policy --mtp
+tto quality --pretty
+tto coach --pretty
+tto ops --pretty
+tto fleet --pretty --doctor --calibration --session-scan
+tto checkpoint status --pretty
+tto cache stats --pretty
+tto context --pretty
+tto calibration status --pretty
+```
 
-## Safety override
+## Safety Override
 
-Use safe mode for:
-
-- `rm -rf`
-- `DROP TABLE`
-- `TRUNCATE`
-- `DELETE FROM`
-- `git reset --hard`
-- `git push --force`
-- production deploy
-- database migration
-- auth/payment/security
-- API keys/secrets/tokens
-- backup/rollback/uninstall
-- global config edits
+Use safe mode for destructive commands, production deploy, database migration, auth/payment/security, API keys/secrets/tokens, backup/rollback/uninstall, and global config edits.
 
 Safe answer pattern:
 
 ```text
-เสี่ยง:
-backup:
-dry-run:
-run:
-verify:
-rollback:
+risk → backup → dry-run/preview → exact command → verify → rollback
 ```
 
-## Preservation rules
+## Preservation Rules
 
 Never mutate:
 
 ```text
-Thai Token Optimizer v1.0
-package version: 1.0.0
-tto benchmark --strict --default-policy
-tto rollback gemini --dry-run
-codex_hooks = true
+Thai Token Optimizer v2.0
+package version: 2.0.0
+tto benchmark --pretty --strict --default-policy --mtp
+tto rollback claude --dry-run
+claude hooks in ~/.claude/settings.json
 ~/.claude/settings.json
+~/.claude/settings.json
+~/.claude/CLAUDE.md
 ```
 
-## Recommended verification
+## Recommended Verification
 
 ```bash
-npm test
-npm run ci
-tto doctor --pretty
+node --test tests/test_install.js
+node --test tests/test_pretty_ui.js
+tto doctor claude --pretty
 ```
+

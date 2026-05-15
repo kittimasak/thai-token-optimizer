@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -31,10 +31,26 @@ const { makeBackup, listBackups, selectRollback, restoreFiles, VALID_TARGETS } =
 const { runDoctor, formatDoctor } = require('../hooks/tto-doctor');
 const { getPolicy, setPolicy, setPolicyPathValue, ensurePolicy, POLICY_PATH } = require('../hooks/tto-policy');
 const { listProfiles, setProfile, describeProfile } = require('../hooks/tto-profiles');
-const { renderStatus, renderDashboard, renderDoctor, renderCompress, renderBenchmark, renderSafety } = require('../hooks/tto-ui');
+const { buildContextAudit } = require('../hooks/tto-context-audit');
+const { buildFleetAudit } = require('../hooks/tto-fleet-audit');
+const { summarizeCalibration, recordCalibration, recordFromStatsRealTotal, clearCalibration } = require('../hooks/tto-calibration');
+const {
+  captureCheckpoint,
+  listCheckpoints,
+  checkpointStatus,
+  restoreCheckpoint,
+  capturePreCompactCheckpoint,
+  capturePostCompactCheckpoint,
+  readTextWithCache,
+  computeQualityEngine,
+  logCacheRead,
+  cacheStats,
+  clearCacheReads
+} = require('../hooks/tto-runtime-analytics');
+const { renderStatus, renderDashboard, renderDashboardView, renderQuality, renderDoctor, renderCompress, renderBenchmark, renderSafety, renderCheckpoint, renderCacheStats, renderContextAudit, renderCoach, renderFleet, renderCalibration } = require('../hooks/tto-ui');
 
 const NAME = 'Thai Token Optimizer';
-const VERSION_LABEL = 'v1.0';
+const VERSION_LABEL = 'v2.0.0';
 
 function usage() {
   console.log(`thai-token-optimizer ${VERSION_LABEL} <command> [target]
@@ -46,8 +62,16 @@ Commands:
   safe                    Enable safe mode
   off|stop                Disable optimizer
   status [--pretty]       Show state
-  ui|dashboard            Show pretty terminal dashboard
+  ui|dashboard [--view overview|quality|waste|trend|agents|doctor|fleet] Show terminal dashboard
+  ops [--pretty] | scan|audit|context|quality|drift|validate [options] Operations analytics command family
+  fleet [--roots dir1,dir2] [--pretty] [--doctor] [--doctor-target all|codex|claude|gemini|opencode|openclaw|hermes] [--calibration] [--calibration-limit N] [--session-scan] Fleet/organization audit across projects
   doctor [target] [--pretty] Health check target: all|codex|claude|gemini|opencode|openclaw|hermes
+  quality [--pretty]      Show quality score from benchmark artifacts
+  coach [--pretty] [--apply quick|safe] Guided remediation plan (health + anti-pattern + fix plan)
+  calibration status|record|from-stats|clear [--pretty]
+  context [--pretty]      Deep context component audit (skills/mcp/config/memory/agents/tools)
+  checkpoint status|list|capture|restore|precompact|postcompact [--pretty]
+  cache stats|clear [--pretty]
   backup [target]         Create config backup
   backups                 List backups
   rollback [latest|id|target] [--dry-run] Restore backup
@@ -108,7 +132,7 @@ function installCodex() {
   const configPath = path.join(codexHome, 'config.toml');
   const hooks = readJson(hooksPath, { hooks: {} });
   hooks.hooks ||= {};
-  addHookEvent(hooks.hooks, 'SessionStart', { matcher: 'startup|resume|clear', hooks: [commandHook('tto-activate.js', 5, 'Loading Thai Token Optimizer v1.0')] });
+  addHookEvent(hooks.hooks, 'SessionStart', { matcher: 'startup|resume|clear', hooks: [commandHook('tto-activate.js', 5, 'Loading Thai Token Optimizer v2.0')] });
   addHookEvent(hooks.hooks, 'UserPromptSubmit', { hooks: [commandHook('tto-mode-tracker.js', 5)] });
   addHookEvent(hooks.hooks, 'PreToolUse', { hooks: [commandHook('tto-pretool-guard.js', 5)] });
   addHookEvent(hooks.hooks, 'PostToolUse', { hooks: [commandHook('tto-posttool-summary.js', 5)] });
@@ -130,7 +154,7 @@ function installClaude() {
   const settingsPath = path.join(claudeHome, 'settings.json');
   const settings = readJson(settingsPath, {});
   settings.hooks ||= {};
-  addHookEvent(settings.hooks, 'SessionStart', { hooks: [commandHook('tto-activate.js', 5, 'Loading Thai Token Optimizer v1.0')] });
+  addHookEvent(settings.hooks, 'SessionStart', { hooks: [commandHook('tto-activate.js', 5, 'Loading Thai Token Optimizer v2.0')] });
   addHookEvent(settings.hooks, 'UserPromptSubmit', { hooks: [commandHook('tto-mode-tracker.js', 5)] });
   addHookEvent(settings.hooks, 'PreToolUse', { hooks: [commandHook('tto-pretool-guard.js', 5)] });
   addHookEvent(settings.hooks, 'PostToolUse', { hooks: [commandHook('tto-posttool-summary.js', 5)] });
@@ -155,7 +179,7 @@ function install(target) {
   if (target === 'codex' || target === 'all') installCodex();
   if (target === 'claude' || target === 'all') installClaude();
   // Adapter installation must run exactly once.
-  // Previous v1.0 pack called installAdapter('all') twice for `tto install all`,
+  // Previous v2.0 pack called installAdapter('all') twice for `tto install all`,
   // causing duplicate backups/writes for Gemini/OpenCode and other adapters.
   if (target === 'all') installAdapter('all');
   else if (!['codex', 'claude'].includes(target)) installAdapter(target);
@@ -174,7 +198,15 @@ function parseOption(args, name, fallback) { const i = args.indexOf(name); if (i
 function hasFlag(args, name) { return args.includes(name); }
 function argsWithoutOption(args, name) { const out = []; for (let i = 0; i < args.length; i++) { if (args[i] === name) { i++; continue; } out.push(args[i]); } return out; }
 function argsWithoutFlags(args, flags) { return args.filter(x => !flags.includes(x)); }
-function textFromArgsOrFile(args) { const stdin = readStdinSyncIfPiped(); if (stdin.trim()) return stdin; const joined = args.join(' '); if (args.length === 1 && fs.existsSync(args[0]) && fs.statSync(args[0]).isFile()) return fs.readFileSync(args[0], 'utf8'); return joined; }
+function textFromArgsOrFile(args) {
+  const stdin = readStdinSyncIfPiped();
+  if (stdin.trim()) return stdin;
+  const joined = args.join(' ');
+  if (args.length === 1 && fs.existsSync(args[0]) && fs.statSync(args[0]).isFile()) {
+    return readTextWithCache(args[0], { command: 'textFromArgsOrFile', cwd: process.cwd() }).content;
+  }
+  return joined;
+}
 function installAgents() {
   const mf = makeBackup('codex');
   const codexHome = process.env.CODEX_HOME || path.join(os.homedir(), '.codex');
@@ -260,7 +292,9 @@ function runCompress(args) {
 function runPreserve(args) {
   const [a, b] = args;
   if (!a || !b) { console.error('Usage: tto preserve original.txt optimized.txt'); process.exit(1); }
-  console.log(JSON.stringify(checkPreservation(fs.readFileSync(a, 'utf8'), fs.readFileSync(b, 'utf8')), null, 2));
+  const original = readTextWithCache(a, { command: 'preserve.original', cwd: process.cwd() }).content;
+  const optimized = readTextWithCache(b, { command: 'preserve.optimized', cwd: process.cwd() }).content;
+  console.log(JSON.stringify(checkPreservation(original, optimized), null, 2));
 }
 function runClassify(args) {
   validateKnownOptions(args, { flags: ['--pretty'] });
@@ -290,6 +324,439 @@ function runBenchmark(args=[]) {
   if (hasFlag(args, '--pretty')) console.log(renderBenchmark(r));
   if (r && r.strict && !r.strict.ok) process.exitCode = 1;
   if (hasFlag(args, '--mtp') && r && r.mtp && !r.mtp.gateOk) process.exitCode = 1;
+}
+function gradeFromScore(score) {
+  if (score >= 90) return 'S';
+  if (score >= 80) return 'A';
+  if (score >= 70) return 'B';
+  if (score >= 55) return 'C';
+  if (score >= 40) return 'D';
+  return 'F';
+}
+function readBenchmarkArtifact() {
+  const local = path.join(process.cwd(), 'benchmarks', 'regression_report.json');
+  if (fs.existsSync(local)) return readJson(local, null);
+  const root = path.resolve(__dirname, '..');
+  const p = path.join(root, 'benchmarks', 'regression_report.json');
+  return readJson(p, null);
+}
+function readTrendHistory(limit = 8) {
+  const local = path.join(process.cwd(), 'benchmarks', 'regression_history.jsonl');
+  const p = fs.existsSync(local) ? local : path.join(path.resolve(__dirname, '..'), 'benchmarks', 'regression_history.jsonl');
+  if (!fs.existsSync(p)) return [];
+  return fs.readFileSync(p, 'utf8')
+    .split(/\n+/)
+    .filter(Boolean)
+    .map((line) => { try { return JSON.parse(line); } catch { return null; } })
+    .filter(Boolean)
+    .slice(-Math.max(1, limit))
+    .reverse();
+}
+function buildQualityPayload(artifact) {
+  const strictGate = Boolean(artifact?.strictResult?.ok);
+  const mtpGate = Boolean(artifact?.mtpResult?.gateOk);
+  const actionRoutingGate = Boolean(artifact?.actionRouting?.gateOk);
+  const weakSignals = [];
+  if (!strictGate) weakSignals.push('strict_gate_fail');
+  if (!mtpGate) weakSignals.push('mtp_gate_fail');
+  if (!actionRoutingGate) weakSignals.push('action_routing_fail');
+  const ws = Array.isArray(artifact?.wasteSignals) ? artifact.wasteSignals : [];
+  for (const s of ws) weakSignals.push(s.id || 'unknown_signal');
+  const actions = Array.isArray(artifact?.actionSuggestions) ? artifact.actionSuggestions : [];
+  const suggestedActions = actions
+    .map(a => `${a.id || 'signal'}: ${a.action || a.message || a.suggestion || ''}`.trim())
+    .filter(Boolean);
+  let score = 100;
+  if (!strictGate) score -= 20;
+  if (!mtpGate) score -= 20;
+  if (!actionRoutingGate) score -= 15;
+  score -= Math.min(30, ws.length * 5);
+  score = Math.max(0, Math.min(100, score));
+  return {
+    score,
+    grade: gradeFromScore(score),
+    strictGate,
+    mtpGate,
+    actionRoutingGate,
+    weakSignals: [...new Set(weakSignals)],
+    suggestedActions
+  };
+}
+function runQualityCommand(args = []) {
+  validateKnownOptions(args, { flags: ['--pretty'] });
+  const artifact = readBenchmarkArtifact();
+  const lifecycle = checkpointStatus().lifecycle;
+  const cache = cacheStats(20);
+  const quality2 = computeQualityEngine({ artifact, lifecycle, cache });
+  const quality1 = artifact ? buildQualityPayload(artifact) : {
+    score: 0, grade: 'F', strictGate: false, mtpGate: false, actionRoutingGate: false, weakSignals: ['missing_benchmark_artifact'], suggestedActions: ['run: tto benchmark --strict --default-policy --mtp']
+  };
+  const quality = {
+    ...quality1,
+    score: quality2.score,
+    grade: quality2.grade,
+    weakSignals: [...new Set([...(quality1.weakSignals || []), ...(quality2.weakSignals || [])])],
+    suggestedActions: [...new Set([...(quality1.suggestedActions || []), ...(quality2.recommendations || [])])],
+    stage1: quality2.stage1,
+    stage2: quality2.stage2,
+    distortion: quality2.distortion
+  };
+  const calibration = summarizeCalibration(50);
+  quality.calibration = calibration;
+  if (calibration.count > 0 && Number(calibration.avgGapPct || 0) > 20) {
+    quality.weakSignals = [...new Set([...(quality.weakSignals || []), 'real_session_calibration_gap_high'])];
+    quality.suggestedActions = [...new Set([...(quality.suggestedActions || []), 'Run `tto calibration from-stats --real-total <provider_tokens>` to re-calibrate estimator'])];
+  }
+  if (hasFlag(args, '--pretty')) console.log(renderQuality(quality));
+  else console.log(JSON.stringify(quality, null, 2));
+}
+function buildCoachPayload() {
+  const artifact = readBenchmarkArtifact();
+  const lifecycle = checkpointStatus().lifecycle;
+  const cache = cacheStats(20);
+  const quality2 = computeQualityEngine({ artifact, lifecycle, cache });
+  const quality1 = artifact ? buildQualityPayload(artifact) : {
+    score: 0, grade: 'F', strictGate: false, mtpGate: false, actionRoutingGate: false, weakSignals: ['missing_benchmark_artifact'], suggestedActions: ['run: tto benchmark --strict --default-policy --mtp']
+  };
+  const quality = {
+    ...quality1,
+    score: quality2.score,
+    grade: quality2.grade,
+    weakSignals: [...new Set([...(quality1.weakSignals || []), ...(quality2.weakSignals || [])])],
+    suggestedActions: [...new Set([...(quality1.suggestedActions || []), ...(quality2.recommendations || [])])],
+    stage1: quality2.stage1,
+    stage2: quality2.stage2,
+    distortion: quality2.distortion
+  };
+  const weak = new Set(quality.weakSignals || []);
+  const antiPatterns = [];
+  if (weak.has('context_fill_high')) antiPatterns.push({ id: 'context_saturation', severity: 'high', owner: 'workflow-owner', detail: 'Context window fill risk is high' });
+  if (weak.has('message_efficiency_low')) antiPatterns.push({ id: 'repeated_reads', severity: 'medium', owner: 'developer', detail: 'Repeated file reads reduce efficiency' });
+  if (weak.has('compression_opportunity_high')) antiPatterns.push({ id: 'cache_policy_too_soft', severity: 'medium', owner: 'developer', detail: 'Read-cache warn hits indicate easy token savings remain' });
+  if (weak.has('output_waste')) antiPatterns.push({ id: 'output_waste', severity: 'medium', owner: 'prompt-quality-owner', detail: 'Verbose outputs remain compressible' });
+  if (weak.has('tool_cascade')) antiPatterns.push({ id: 'tool_cascade', severity: 'medium', owner: 'agent-runtime-owner', detail: 'Repeated tool cycles may add avoidable context' });
+  if (weak.has('bad_decomposition')) antiPatterns.push({ id: 'bad_decomposition', severity: 'medium', owner: 'prompt-author', detail: 'Large prompts should be split into scoped tasks' });
+  if (weak.has('low_saving_cluster')) antiPatterns.push({ id: 'low_saving_cluster', severity: 'medium', owner: 'compression-engine-owner', detail: 'Low-value narrative lines need stronger selective compression' });
+  if (weak.has('routing_risk') || weak.has('action_routing_fail')) antiPatterns.push({ id: 'action_routing_risk', severity: 'high', owner: 'qa-owner', detail: 'Required actions are unresolved in benchmark routing' });
+  if (weak.has('strict_gate_fail') || weak.has('mtp_gate_fail')) antiPatterns.push({ id: 'quality_gate_fail', severity: 'high', owner: 'maintainer', detail: 'One or more quality gates are failing' });
+  if (!antiPatterns.length) antiPatterns.push({ id: 'none', severity: 'info', owner: 'system', detail: 'No major anti-pattern detected' });
+
+  const fixPlan = [
+    { id: 'step-1', action: 'Run `tto quality --pretty` and `tto dashboard --view quality` to inspect weak signals', severity: 'medium', owner: 'developer' },
+    { id: 'step-2', action: 'Capture checkpoint before optimization: `tto checkpoint precompact`', severity: 'medium', owner: 'developer' }
+  ];
+  if (weak.has('message_efficiency_low') || weak.has('compression_opportunity_high')) {
+    fixPlan.push({ id: 'step-3', action: 'Tighten cache policy and verify: `tto config set readCache.mode block` then `tto cache stats --pretty`', severity: 'high', owner: 'developer' });
+  }
+  if (weak.has('output_waste')) {
+    fixPlan.push({ id: 'step-3a', action: 'Cap verbose answers and prefer compact templates for repeated explanations', severity: 'medium', owner: 'prompt-quality-owner' });
+  }
+  if (weak.has('tool_cascade')) {
+    fixPlan.push({ id: 'step-3b', action: 'After repeated tool cycles, stop and summarize before continuing', severity: 'medium', owner: 'agent-runtime-owner' });
+  }
+  if (weak.has('bad_decomposition')) {
+    fixPlan.push({ id: 'step-3c', action: 'Split monolithic prompts into 2-4 scoped tasks with explicit outputs', severity: 'medium', owner: 'prompt-author' });
+  }
+  if (weak.has('low_saving_cluster')) {
+    fixPlan.push({ id: 'step-3d', action: 'Tune selective compression for low-value narrative blocks', severity: 'medium', owner: 'compression-engine-owner' });
+  }
+  if (weak.has('context_fill_high')) {
+    fixPlan.push({ id: 'step-4', action: 'Compact session and capture continuity: `tto checkpoint postcompact`', severity: 'high', owner: 'developer' });
+  }
+  if (weak.has('strict_gate_fail') || weak.has('mtp_gate_fail') || weak.has('routing_risk') || weak.has('action_routing_fail')) {
+    fixPlan.push({ id: 'step-5', action: 'Re-run benchmark gate: `tto benchmark --pretty --strict --default-policy --mtp`', severity: 'high', owner: 'qa-owner' });
+  }
+
+  return {
+    healthScore: quality.score,
+    healthGrade: quality.grade,
+    quality,
+    antiPatterns,
+    fixPlan,
+    summary: `grade=${quality.grade}; weak=${(quality.weakSignals || []).length}; antiPatterns=${antiPatterns.length}`
+  };
+}
+function applyCoachFixes(mode, payload) {
+  const actions = [];
+  if (!mode) return { applied: false, mode: null, actions };
+  if (mode === 'quick' || mode === 'safe') {
+    const current = getPolicy();
+    if ((current.readCache || {}).mode !== 'block') {
+      setPolicyPathValue('readCache.mode', 'block');
+      actions.push('set readCache.mode=block');
+    }
+    capturePreCompactCheckpoint({ note: `coach:${mode}` });
+    actions.push('capture checkpoint precompact');
+    if (mode === 'quick') {
+      capturePostCompactCheckpoint({ note: 'coach:quick' });
+      actions.push('capture checkpoint postcompact');
+    }
+  }
+  return { applied: actions.length > 0, mode, actions };
+}
+function runCoachCommand(args = []) {
+  validateKnownOptions(args, { valueOptions: ['--apply'], flags: ['--pretty'] });
+  const mode = parseOption(args, '--apply', '');
+  if (mode && !['quick', 'safe'].includes(mode)) throw new Error('Invalid --apply mode. Use quick|safe');
+  const payload = buildCoachPayload();
+  const remediation = applyCoachFixes(mode, payload);
+  const out = { ...payload, remediation };
+  if (hasFlag(args, '--pretty')) console.log(renderCoach(out));
+  else console.log(JSON.stringify(out, null, 2));
+}
+function runDashboardCommand(args = []) {
+  validateKnownOptions(args, { valueOptions: ['--view', '--roots', '--doctor-target', '--calibration-limit'], flags: ['--pretty', '--doctor', '--calibration', '--session-scan'] });
+  const view = parseOption(args, '--view', 'overview');
+  const rootsRaw = parseOption(args, '--roots', '');
+  const roots = rootsRaw ? rootsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const fleet = buildFleetAudit(roots, {
+    doctor: hasFlag(args, '--doctor'),
+    doctorTarget: parseOption(args, '--doctor-target', 'all'),
+    calibration: hasFlag(args, '--calibration'),
+    calibrationLimit: Number(parseOption(args, '--calibration-limit', '50')),
+    sessionScan: hasFlag(args, '--session-scan')
+  });
+  const state = getState();
+  const doctor = runDoctor({ ci: false });
+  const artifact = readBenchmarkArtifact();
+  const historyRows = readTrendHistory(8);
+  const qualityBase = artifact ? buildQualityPayload(artifact) : {
+    score: 0, grade: 'F', strictGate: false, mtpGate: false, actionRoutingGate: false, weakSignals: ['missing_benchmark_artifact'], suggestedActions: ['run: tto benchmark --strict --default-policy --mtp']
+  };
+  const quality2 = computeQualityEngine({ artifact, lifecycle: checkpointStatus().lifecycle, cache: cacheStats(20) });
+  const quality = {
+    ...qualityBase,
+    score: quality2.score,
+    grade: quality2.grade,
+    weakSignals: [...new Set([...(qualityBase.weakSignals || []), ...(quality2.weakSignals || [])])],
+    suggestedActions: [...new Set([...(qualityBase.suggestedActions || []), ...(quality2.recommendations || [])])],
+    stage1: quality2.stage1,
+    stage2: quality2.stage2,
+    distortion: quality2.distortion
+  };
+  const wasteSignals = Array.isArray(artifact?.wasteSignals) ? artifact.wasteSignals : [];
+  const actionSuggestions = Array.isArray(artifact?.actionSuggestions) ? artifact.actionSuggestions : [];
+  const agents = {
+    rows: (doctor.checks || []).filter(c => /Codex|Claude|Gemini|OpenCode|OpenClaw|Hermes/i.test(String(c.name || ''))).map(c => ({ name: c.name, ok: !!c.ok, detail: c.detail || '' }))
+  };
+  const trend = {
+    windowSize: historyRows.length,
+    slowdown: historyRows.length ? `${historyRows[0].slowdownMeanMs} (latest)` : 'n/a',
+    gain: historyRows.length ? `${historyRows[0].enhancedGainPercent} (latest)` : 'n/a',
+    saving: historyRows.length ? `${historyRows[0].strictAvgSaving} (latest)` : 'n/a',
+    rows: historyRows
+  };
+  const cpStatus = checkpointStatus();
+  const cache = cacheStats(5);
+  console.log(renderDashboardView(view, {
+    state,
+    doctor,
+    quality,
+    waste: {
+      signals: wasteSignals,
+      actions: actionSuggestions.map(a => `${a.id || 'signal'}: ${a.action || a.message || a.suggestion || ''}`.trim())
+    },
+    trend,
+    agents,
+    fleet,
+    extras: {
+      checkpointTotal: cpStatus.total,
+      checkpointLatest: cpStatus.latest?.id || null,
+      cacheRepeated: cache.repeatedFiles,
+      cacheReads: cache.totalReads
+    }
+  }));
+}
+function runFleetCommand(args = []) {
+  validateKnownOptions(args, { valueOptions: ['--roots', '--doctor-target', '--calibration-limit'], flags: ['--pretty', '--doctor', '--calibration', '--session-scan'] });
+  const rootsRaw = parseOption(args, '--roots', '');
+  const roots = rootsRaw ? rootsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+  const calibrationOn = hasFlag(args, '--calibration');
+  const sessionScanOn = hasFlag(args, '--session-scan') || calibrationOn;
+  const out = buildFleetAudit(roots, {
+    doctor: hasFlag(args, '--doctor'),
+    doctorTarget: parseOption(args, '--doctor-target', 'all'),
+    calibration: calibrationOn,
+    calibrationLimit: Number(parseOption(args, '--calibration-limit', '50')),
+    sessionScan: sessionScanOn
+  });
+  if (hasFlag(args, '--pretty')) console.log(renderFleet(out));
+  else console.log(JSON.stringify(out, null, 2));
+}
+function runCalibrationCommand(args = []) {
+  validateKnownOptions(args, {
+    valueOptions: ['--estimated', '--real', '--target', '--real-total', '--samples'],
+    flags: ['--pretty']
+  });
+  const pretty = hasFlag(args, '--pretty');
+  const positional = args.filter(a => !String(a).startsWith('--'));
+  const sub = (positional[0] || 'status').toLowerCase();
+  if (sub === 'status') {
+    const out = summarizeCalibration(100);
+    console.log(pretty ? renderCalibration(out) : JSON.stringify(out, null, 2));
+    return;
+  }
+  if (sub === 'record') {
+    const estimated = Number(parseOption(args, '--estimated', '0'));
+    const real = Number(parseOption(args, '--real', '0'));
+    if (!Number.isFinite(estimated) || !Number.isFinite(real) || real <= 0) throw new Error('Usage: tto calibration record --estimated N --real N [--target codex|claude|gemini|opencode]');
+    const out = recordCalibration({ estimated, real, target: parseOption(args, '--target', 'generic'), source: 'manual' });
+    console.log(JSON.stringify(out, null, 2));
+    return;
+  }
+  if (sub === 'from-stats') {
+    const realTotal = Number(parseOption(args, '--real-total', '0'));
+    if (!Number.isFinite(realTotal) || realTotal <= 0) throw new Error('Usage: tto calibration from-stats --real-total N [--samples N] [--target codex|claude|gemini|opencode]');
+    const sampleSize = Number(parseOption(args, '--samples', '20'));
+    const out = recordFromStatsRealTotal({ realTotal, sampleSize, target: parseOption(args, '--target', 'generic') });
+    console.log(JSON.stringify(out, null, 2));
+    return;
+  }
+  if (sub === 'clear') {
+    const out = clearCalibration();
+    console.log(JSON.stringify(out, null, 2));
+    return;
+  }
+  throw new Error('Usage: tto calibration status|record|from-stats|clear [--pretty]');
+}
+function runCheckpointCommand(args = []) {
+  validateKnownOptions(args, { flags: ['--pretty'] });
+  const pretty = hasFlag(args, '--pretty');
+  const positional = args.filter(a => !String(a).startsWith('--'));
+  const sub = (positional[0] || 'status').toLowerCase();
+  const trailing = positional.slice(1);
+  if (sub === 'status') {
+    const st = checkpointStatus();
+    const payload = {
+      total: st.total,
+      latestId: st.latest?.id || null,
+      latestTs: st.latest?.ts || null,
+      rows: st.latest ? [st.latest] : [],
+      lifecycle: st.lifecycle
+    };
+    console.log(pretty ? renderCheckpoint(payload) : JSON.stringify(payload, null, 2));
+    return;
+  }
+  if (sub === 'list') {
+    const st = checkpointStatus();
+    const rows = listCheckpoints(20);
+    const payload = { total: rows.length, latestId: rows[0]?.id || null, rows, lifecycle: st.lifecycle };
+    console.log(pretty ? renderCheckpoint(payload) : JSON.stringify(payload, null, 2));
+    return;
+  }
+  if (sub === 'capture') {
+    const note = trailing.join(' ');
+    const row = captureCheckpoint(note, 'cli');
+    console.log(pretty ? renderCheckpoint({ total: checkpointStatus().total, latestId: row.id, rows: [row] }) : JSON.stringify(row, null, 2));
+    return;
+  }
+  if (sub === 'restore') {
+    const target = trailing[0] || 'latest';
+    const out = restoreCheckpoint(target);
+    if (!out) throw new Error(`Checkpoint not found: ${target}`);
+    console.log(pretty ? renderCheckpoint({ total: checkpointStatus().total, latestId: out.checkpoint.id, rows: [out.checkpoint] }) : JSON.stringify(out, null, 2));
+    return;
+  }
+  if (sub === 'precompact') {
+    const note = trailing.join(' ');
+    const row = capturePreCompactCheckpoint({ note: note || undefined });
+    console.log(pretty ? renderCheckpoint({ total: checkpointStatus().total, latestId: row.id, rows: [row] }) : JSON.stringify(row, null, 2));
+    return;
+  }
+  if (sub === 'postcompact') {
+    const note = trailing.join(' ');
+    const row = capturePostCompactCheckpoint({ note: note || undefined });
+    console.log(pretty ? renderCheckpoint({ total: checkpointStatus().total, latestId: row.id, rows: [row] }) : JSON.stringify(row, null, 2));
+    return;
+  }
+  throw new Error('Usage: tto checkpoint status|list|capture|restore|precompact|postcompact [--pretty]');
+}
+function runCacheCommand(args = []) {
+  validateKnownOptions(args, { flags: ['--pretty'] });
+  const pretty = hasFlag(args, '--pretty');
+  const sub = (args.find(a => !String(a).startsWith('--')) || 'stats').toLowerCase();
+  if (sub === 'stats') {
+    const out = cacheStats(10);
+    console.log(pretty ? renderCacheStats(out) : JSON.stringify(out, null, 2));
+    return;
+  }
+  if (sub === 'clear') {
+    const out = clearCacheReads();
+    console.log(pretty ? renderCacheStats(cacheStats(10)) : JSON.stringify(out, null, 2));
+    return;
+  }
+  throw new Error('Usage: tto cache stats|clear [--pretty]');
+}
+function runContextCommand(args = []) {
+  validateKnownOptions(args, { flags: ['--pretty'] });
+  const audit = buildContextAudit({ cwd: process.cwd() });
+  if (hasFlag(args, '--pretty')) console.log(renderContextAudit(audit));
+  else console.log(JSON.stringify(audit, null, 2));
+}
+function runOpsCommand(args = []) {
+  const looksLikeFlagOnly = args.length === 0 || String(args[0] || '').startsWith('--');
+  const sub = looksLikeFlagOnly ? 'overview' : String(args[0] || 'scan').toLowerCase();
+  const rest = looksLikeFlagOnly ? args : args.slice(1);
+  if (sub === 'overview') {
+    const pretty = rest.includes('--pretty');
+    if (pretty) {
+      runDashboardCommand(['--view', 'overview', '--doctor', '--calibration']);
+      console.log('');
+      runDashboardCommand(['--view', 'quality']);
+      console.log('');
+      runDashboardCommand(['--view', 'trend']);
+      console.log('');
+      runFleetCommand(['--pretty', '--doctor', '--calibration']);
+      return;
+    }
+    const rootsRaw = parseOption(rest, '--roots', '');
+    const roots = rootsRaw ? rootsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const out = buildFleetAudit(roots, { doctor: true, doctorTarget: 'all', calibration: true, calibrationLimit: 50 });
+    console.log(JSON.stringify(out, null, 2));
+    return;
+  }
+  if (sub === 'scan') {
+    const mapped = [...rest];
+    if (!mapped.includes('--doctor')) mapped.push('--doctor');
+    if (!mapped.includes('--calibration')) mapped.push('--calibration');
+    if (!mapped.includes('--session-scan')) mapped.push('--session-scan');
+    if (!mapped.includes('--pretty')) mapped.push('--pretty');
+    return runFleetCommand(mapped);
+  }
+  if (sub === 'audit') {
+    return runDoctorCommand(rest);
+  }
+  if (sub === 'context') {
+    return runContextCommand(rest);
+  }
+  if (sub === 'quality') {
+    return runQualityCommand(rest);
+  }
+  if (sub === 'drift') {
+    const pretty = rest.includes('--pretty');
+    const rows = readTrendHistory(12);
+    const trend = {
+      windowSize: rows.length,
+      slowdown: rows.length ? `${rows[0].slowdownMeanMs} (latest)` : 'n/a',
+      gain: rows.length ? `${rows[0].enhancedGainPercent} (latest)` : 'n/a',
+      saving: rows.length ? `${rows[0].strictAvgSaving} (latest)` : 'n/a',
+      rows
+    };
+    if (pretty) {
+      console.log(renderDashboardView('trend', { trend }));
+    } else {
+      console.log(JSON.stringify(trend, null, 2));
+    }
+    return;
+  }
+  if (sub === 'validate') {
+    const mapped = [...rest];
+    if (!mapped.includes('--strict')) mapped.push('--strict');
+    if (!mapped.includes('--default-policy')) mapped.push('--default-policy');
+    if (!mapped.includes('--mtp')) mapped.push('--mtp');
+    return runBenchmark(mapped);
+  }
+  throw new Error('Usage: tto ops [--pretty] | scan|audit|context|quality|drift|validate [options]');
 }
 function runBackup(args) { const target = normalizeTarget(args[0] || 'all'); const mf = makeBackup(target); console.log(JSON.stringify({ backup: mf.id, target: mf.target, files: mf.files.length, root: path.join(HOME_DIR, 'backups') }, null, 2)); }
 function runBackups() { console.log(JSON.stringify(listBackups().map(b => ({ id: b.id, target: b.target, createdAt: b.createdAt, files: b.files.length })), null, 2)); }
@@ -343,7 +810,31 @@ function runForget(args) {
     console.log(JSON.stringify({ note: 'word not found', dictionary: dict }, null, 2));
   }
 }
-function runConfig(args) { const sub = (args[0] || 'get').toLowerCase(); if (sub === 'path') return console.log(POLICY_PATH); if (sub === 'init') return console.log(ensurePolicy()); if (sub === 'get') return console.log(JSON.stringify(getPolicy(), null, 2)); if (sub === 'set') { if (!args[1] || args[2] === undefined) { console.error('Usage: tto config set <key> <value>'); process.exit(1); } return console.log(JSON.stringify(setPolicyPathValue(args[1], args[2]), null, 2)); } console.error('Usage: tto config get|set <key> <value>|path|init'); process.exit(1); }
+function runConfig(args) {
+  const sub = (args[0] || 'get').toLowerCase();
+  if (sub === 'path') return console.log(POLICY_PATH);
+  if (sub === 'init') return console.log(ensurePolicy());
+  if (sub === 'get') {
+    const policy = getPolicy();
+    const key = args[1];
+    if (key) {
+      let cur = policy;
+      for (const p of key.split('.')) {
+        if (cur && typeof cur === 'object' && p in cur) cur = cur[p];
+        else { cur = undefined; break; }
+      }
+      if (cur === undefined) { console.error(`Key not found: ${key}`); process.exit(1); }
+      return console.log(typeof cur === 'string' ? cur : JSON.stringify(cur, null, 2));
+    }
+    return console.log(JSON.stringify(policy, null, 2));
+  }
+  if (sub === 'set') {
+    if (!args[1] || args[2] === undefined) { console.error('Usage: tto config set <key> <value>'); process.exit(1); }
+    return console.log(JSON.stringify(setPolicyPathValue(args[1], args[2]), null, 2));
+  }
+  console.error('Usage: tto config get|set <key> <value>|path|init');
+  process.exit(1);
+}
 
 const cmd = (process.argv[2] || 'status').toLowerCase();
 const rest = process.argv.slice(3);
@@ -362,7 +853,15 @@ try {
     const state = { name: NAME, versionLabel: VERSION_LABEL, statePath: STATE_PATH, statsPath: STATS_PATH, ...getState() };
     console.log(hasFlag(rest, '--pretty') ? renderStatus(state) : JSON.stringify(state, null, 2));
   }
-  else if (cmd === 'ui' || cmd === 'dashboard') { const result = runDoctor({ ci: false }); console.log(renderDashboard(getState(), result)); }
+  else if (cmd === 'ui' || cmd === 'dashboard') runDashboardCommand(rest);
+  else if (cmd === 'quality') runQualityCommand(rest);
+  else if (cmd === 'coach') runCoachCommand(rest);
+  else if (cmd === 'ops') runOpsCommand(rest);
+  else if (cmd === 'fleet') runFleetCommand(rest);
+  else if (cmd === 'calibration') runCalibrationCommand(rest);
+  else if (cmd === 'context') runContextCommand(rest);
+  else if (cmd === 'checkpoint') runCheckpointCommand(rest);
+  else if (cmd === 'cache') runCacheCommand(rest);
   else if (cmd === 'doctor') runDoctorCommand(rest);
   else if (cmd === 'backup') runBackup(rest);
   else if (cmd === 'backups') runBackups();

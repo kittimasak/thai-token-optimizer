@@ -7,7 +7,7 @@
           "type": "command",
           "command": "node \"${CODEX_PLUGIN_ROOT:-.}/hooks/tto-activate.js\"",
           "timeout": 5,
-          "statusMessage": "Loading Thai Token Optimizer v1.0"
+          "statusMessage": "[TTO Stage 1/4] Detect Intent — loading Thai Token Optimizer v2.0"
         }
       ]
     }
@@ -20,7 +20,7 @@
           "type": "command",
           "command": "node \"${CODEX_PLUGIN_ROOT:-.}/hooks/tto-mode-tracker.js\"",
           "timeout": 5,
-          "statusMessage": "Tracking Thai Token Optimizer mode"
+          "statusMessage": "[TTO Stage 1/4] Detect Intent — tracking TTO mode/profile/safety"
         }
       ]
     }
@@ -33,7 +33,7 @@
           "type": "command",
           "command": "node \"${CODEX_PLUGIN_ROOT:-.}/hooks/tto-pretool-guard.js\"",
           "timeout": 5,
-          "statusMessage": "Checking Thai Token Optimizer safety guard"
+          "statusMessage": "[TTO Stage 3/4] Preserve Critical — checking safety guard"
         }
       ]
     }
@@ -46,7 +46,7 @@
           "type": "command",
           "command": "node \"${CODEX_PLUGIN_ROOT:-.}/hooks/tto-posttool-summary.js\"",
           "timeout": 5,
-          "statusMessage": "Preparing compact Thai tool summary"
+          "statusMessage": "[TTO Stage 4/4] Output Compact — preparing compact tool summary"
         }
       ]
     }
@@ -59,7 +59,7 @@
           "type": "command",
           "command": "node \"${CODEX_PLUGIN_ROOT:-.}/hooks/tto-stop-summary.js\"",
           "timeout": 5,
-          "statusMessage": "Finalizing compact Thai response"
+          "statusMessage": "[TTO Stage 4/4] Output Compact — finalizing safely"
         }
       ]
     }

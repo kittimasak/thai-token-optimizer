@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -29,8 +29,7 @@ const FILLER_PATTERNS = [
   [/(จริงๆ แล้ว|จริง ๆ แล้ว|โดยทั่วไปแล้ว|โดยปกติแล้ว|ในส่วนของ|ในเรื่องของ|ในกรณีที่|ทำการ|สามารถที่จะ|สามารถ)/g, ''],
   [/(อาจจะ|น่าจะ|ค่อนข้าง|ประมาณว่า|เหมือนกับว่า|ซึ่งเป็น|ที่เป็น)/g, ''],
   [/(ขอให้ช่วย|ช่วยทำการ|รบกวนช่วย|อยากให้ช่วย|รบกวน)/g, 'ช่วย'],
-  [/(สวัสดีครับ|สวัสดีค่ะ|สวัสดี|ขอบพระคุณล่วงหน้าครับ|ขอบพระคุณล่วงหน้าค่ะ|ขอบพระคุณล่วงหน้า|ขอบคุณมากครับ|ขอบคุณมากค่ะ|ขอบคุณมาก)/g, ''],
-  [/\s+/g, ' ']
+  [/(สวัสดีครับ|สวัสดีค่ะ|สวัสดี|ขอบพระคุณล่วงหน้าครับ|ขอบพระคุณล่วงหน้าค่ะ|ขอบพระคุณล่วงหน้า|ขอบคุณมากครับ|ขอบคุณมากค่ะ|ขอบคุณมาก)/g, '']
 ];
 
 const REPLACEMENTS = [
@@ -48,7 +47,10 @@ const REPLACEMENTS = [
   ['ทำการทดสอบ', 'ทดสอบ'],
   ['ทำการปรับแต่ง', 'ปรับแต่ง'],
   ['สรุปเนื้อหา', 'สรุป'],
-  ['อธิบายขั้นตอน', 'อธิบาย']
+  ['อธิบายขั้นตอน', 'อธิบาย'],
+  ['อย่างละเอียด', 'ละเอียด'],
+  ['สาระสำคัญทั้งหมด', 'สาระสำคัญ'],
+  ['ความหมายเดิมเปลี่ยนไป', 'ความหมายเปลี่ยน']
 ];
 
 const ULTRA_REPLACEMENTS = [
@@ -62,12 +64,53 @@ const ULTRA_REPLACEMENTS = [
 ];
 
 function normalizeSemanticKey(text) {
-  return String(text || '')
+  const raw = String(text || '').trim();
+  if (!raw) return '';
+  // If the line is only structural/punctuation, keep it as is to avoid empty key
+  if (/^[(){}\[\],.;:!?/\\|]+$/.test(raw)) return raw;
+  
+  return raw
     .toLowerCase()
     .replace(/[“”"']/g, '')
     .replace(/[(){}\[\],.;:!?/\\|]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+const HARD_WORD_RE = /(```|`|https?:\/\/|~\/|\.\/|\/|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|\b(?:node|npm|pnpm|git|docker|tto|codex|claude)\b|codex_hooks)/i;
+const STRUCTURE_SENSITIVE_RE = /^(\s+["']?[A-Za-z0-9_.-]+["']?\s*[:=]|\s+[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\s*at\s+|.*\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b)/i;
+
+function collapseRepeatedPhrases(line) {
+  const words = String(line || '').trim().split(/\s+/).filter(Boolean);
+  if (words.length < 6) return String(line || '').trim();
+
+  const sameGroup = (aStart, bStart, size) => {
+    for (let offset = 0; offset < size; offset++) {
+      const a = normalizeSemanticKey(words[aStart + offset]);
+      const b = normalizeSemanticKey(words[bStart + offset]);
+      if (!a || a !== b) return false;
+    }
+    return true;
+  };
+  const hasHardWord = (start, size) => words.slice(start, start + size).some(w => HARD_WORD_RE.test(w));
+
+  const out = [];
+  let i = 0;
+  while (i < words.length) {
+    let matched = false;
+    const maxSize = Math.min(14, Math.floor((words.length - i) / 2));
+    for (let size = 3; size <= maxSize; size++) {
+      if (hasHardWord(i, size)) continue;
+      if (!sameGroup(i, i + size, size)) continue;
+      out.push(...words.slice(i, i + size));
+      i += size;
+      while (i + size <= words.length && sameGroup(i - size, i, size)) i += size;
+      matched = true;
+      break;
+    }
+    if (!matched) out.push(words[i++]);
+  }
+  return out.join(' ').trim();
 }
 
 function semanticDedup(text) {
@@ -76,7 +119,7 @@ function semanticDedup(text) {
   const dedupBlocks = [];
 
   for (const block of blocks) {
-    const lines = block.split('\n').map(x => x.trim()).filter(Boolean);
+    const lines = block.split('\n').map(x => STRUCTURE_SENSITIVE_RE.test(x) ? x : collapseRepeatedPhrases(x)).filter(Boolean);
     const seenLine = new Set();
     const keptLines = [];
     for (const line of lines) {
@@ -97,15 +140,79 @@ function semanticDedup(text) {
   return dedupBlocks.join('\n\n').trim();
 }
 
-function selectiveWindowCompress(text, level = 'auto') {
+function selectiveWindowCompress(text, level = 'auto', semanticBlocks = []) {
   const lines = String(text || '').split('\n');
   const out = [];
+  
+  // Enhanced patterns for Logs, Progress Bars, and Stack Traces
+  const LOG_RE = /^(?:\[[\d\s-:.TZ]+\]|(?:\d{4}-\d{2}-\d{2}|\d{2}:\d{2}:\d{2})(?:[.\d\s+-:TZ]*)|\[\d+\]|[\w\s.-]+:)/i;
+  const PROGRESS_RE = /^(?:\[[#=-]+\]|\s*[\d.]+(?:%|MB|KB|GB|B)\s*|\s*\|\s*[\d.]+\/|Working:|Processing:)/i;
+  const STACK_RE = /^\s*at\s+[\w.<>]+\s+\(.*\)|^\s*at\s+.*\d+:\d+/i;
+
+  let batch = [];
+  let batchType = null; // 'log', 'progress', 'stack'
+
+  const flushBatch = () => {
+    if (batch.length === 0) return;
+    const isUltra = level === 'ultra' || level === 'full';
+
+    if (batchType === 'progress' && isUltra && batch.length > 1) {
+      // Progress bars: Keep only the latest state
+      out.push(`... [${batch.length - 1} progress updates masked by TTO] ...`);
+      out.push(batch[batch.length - 1]);
+    } else if (batchType === 'progress' && isUltra && batch.length === 1) {
+      out.push(batch[0]);
+    } else if (batch.length > 4 && isUltra) {
+      // Logs/Stacks: Keep start and end
+      out.push(batch[0]);
+      out.push(batch[1]);
+      out.push(`... [${batch.length - 4} ${batchType} lines omitted/masked by TTO] ...`);
+      out.push(batch[batch.length - 2]);
+      out.push(batch[batch.length - 1]);
+    } else {
+      for (const b of batch) out.push(b);
+    }
+    batch = [];
+    batchType = null;
+  };
+
   for (const rawLine of lines) {
     const s = rawLine.trim();
-    if (!s) { out.push(''); continue; }
-    const highValue = /(```|`|https?:\/\/|~\/|\.\/|\/|version|เวอร์ชัน|v\d+\.\d+|\b\d+\.\d+\.\d+\b|\b(?:node|npm|pnpm|git|docker|tto|codex|claude)\b|error|stack|trace|rollback|backup|constraint|h้าม|ต้อง)/i.test(s);
+    if (!s) { 
+      flushBatch();
+      out.push(''); 
+      continue; 
+    }
+
+    let currentType = null;
+    if (PROGRESS_RE.test(s)) currentType = 'progress';
+    else if (STACK_RE.test(s)) currentType = 'stack';
+    else if (LOG_RE.test(s)) currentType = 'log';
+
+    if (currentType && (batchType === null || batchType === currentType)) {
+      batchType = currentType;
+      batch.push(rawLine);
+      continue;
+    } else {
+      flushBatch();
+      if (currentType) {
+        batchType = currentType;
+        batch.push(rawLine);
+        continue;
+      }
+    }
+
+    // Check against Semantic Blocks for proactive protection
+    const matchingBlock = semanticBlocks.find(b => s.includes(b.raw) || b.targets.some(t => s.includes(t) && b.raw.match(/(ห้าม|ต้อง|เด็ดขาด)/)));
+    if (matchingBlock) {
+      // If it's a constraint, preserve it with minimal cleaning
+      out.push(STRUCTURE_SENSITIVE_RE.test(rawLine) ? rawLine : compressSegment(rawLine, 'lite')); 
+      continue;
+    }
+
+    const highValue = /(```|`|https?:\/\/|~\/|\.\.\/|\.\/|\b(?:\/|[a-zA-Z]:\\)[\w.-]+|version|เวอร์ชัน|v\d+\.\d+|\b\d+\.\d+\.\d+\b|\b(?:node|npm|pnpm|git|docker|tto|codex|claude)\b|error|stack|trace|rollback|backup|constraint|ห้าม|ต้อง|must|must not|do not|never|keep|preserve|^[{}[\],]+$|^".*":|^".*"$)/i.test(s);
     if (highValue) {
-      out.push(s);
+      out.push(STRUCTURE_SENSITIVE_RE.test(rawLine) ? rawLine : s);
       continue;
     }
     const compactLevel = level === 'safe' ? 'lite' : (level === 'lite' ? 'lite' : 'ultra');
@@ -117,21 +224,26 @@ function selectiveWindowCompress(text, level = 'auto') {
     }
     out.push(compacted);
   }
+  flushBatch();
   return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
-}
+  }
 
-function stripCodeFences(text) {
+  function stripCodeFences(text) {
   return String(text || '').replace(/```[\s\S]*?```/g, m => m);
-}
+  }
 
-function compressSegment(segment, level = 'auto') {
+  function compressSegment(segment, level = 'auto') {
   let out = segment;
   for (const [from, to] of REPLACEMENTS) out = out.split(from).join(to);
   if (level === 'ultra') {
     for (const [from, to] of ULTRA_REPLACEMENTS) out = out.split(from).join(to);
   }
   for (const [pattern, repl] of FILLER_PATTERNS) out = out.replace(pattern, repl);
-  out = out.replace(/\s+([,.;:!?])/g, '$1').replace(/[ \t]+\n/g, '\n');
+  // Avoid removing space before punctuation if it looks like a path or special technical notation
+  out = out.replace(/\s+([,;:!?])/g, '$1').replace(/[ \t]+\n/g, '\n');
+  // Specifically handle '.' to avoid breaking ./ or file extensions
+  out = out.replace(/\s+\.(?!\/|\w)/g, '.');
+
   if (level === 'full' || level === 'auto' || level === 'ultra') {
     out = out
       .replace(/ช่วยอธิบาย/g, 'อธิบาย')
@@ -154,27 +266,33 @@ function compressSegment(segment, level = 'auto') {
   }
 
   if (level === 'safe' || level === 'lite') {
-    out = out.replace(/\s+/g, ' ');
+    out = out
+      .split('\n')
+      .map(line => line.replace(/[ \t]+/g, ' ').trim())
+      .join('\n');
   } else {
     out = out.replace(/[ \t]{2,}/g, ' ');
   }
-  return out;
+  return out.trim();
 }
 
 function compressPrompt(text, options = {}) {
+  const { extractSemanticBlocks } = require('./tto-constraint-locker');
   const level = options.level || 'auto';
   const original = String(text || '');
+  const semanticBlocks = extractSemanticBlocks(original);
+  
   const compressed = transformSemanticAware(original, seg => compressSegment(seg, level));
   let normalized = compressed.replace(/\n{3,}/g, '\n\n').trim();
   if (options.semanticDedup !== false) normalized = semanticDedup(normalized);
-  if (options.selectiveWindow) normalized = selectiveWindowCompress(normalized, level);
+  if (options.selectiveWindow || level === 'ultra') normalized = selectiveWindowCompress(normalized, level, semanticBlocks);
   return options.lockConstraints === false ? normalized : appendMissingConstraints(original, normalized);
 }
 
 function formatCompressionReport(original, optimized, estimateSavings, preservation) {
   const stats = estimateSavings(original, optimized);
   const lines = [
-    'Thai Token Optimizer v1.0 — compression report',
+    'Thai Token Optimizer v2.0.0 — compression report',
     `Original: ${stats.before.estimatedTokens} tokens / ${stats.before.chars} chars`,
     `Optimized: ${stats.after.estimatedTokens} tokens / ${stats.after.chars} chars`,
     `Saved: ${stats.savedTokens} tokens (${stats.savingPercent}%)`
@@ -196,6 +314,7 @@ module.exports = {
   compressSegment,
   formatCompressionReport,
   semanticDedup,
+  collapseRepeatedPhrases,
   selectiveWindowCompress,
   normalizeSemanticKey
 };

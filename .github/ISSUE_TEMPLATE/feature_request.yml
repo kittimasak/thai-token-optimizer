@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest an improvement for Thai Token Optimizer v1.0.
+description: Suggest an improvement for Thai Token Optimizer v2.0.
 title: "[Feature]: "
 labels:
   - enhancement
@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Please keep the project identity as `Thai Token Optimizer v1.0 / package version: 1.0.0`.
+        Please keep the project identity as `Thai Token Optimizer v2.0 / package version: 2.0.0`.
 
   - type: textarea
     id: problem

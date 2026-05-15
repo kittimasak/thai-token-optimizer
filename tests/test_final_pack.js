@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -55,11 +55,11 @@ test('exact tokenizer mode falls back safely without optional dependency', () =>
   assert.ok(out.tokenizer);
 });
 
-test('strict benchmark returns report and preserves v1.0 package version', () => {
+test('strict benchmark returns report and preserves v2.0 package version', () => {
   const out = run(['benchmark', '--strict']);
   assert.match(out, /Strict Regression Report/);
   const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-  assert.equal(pkg.version, '1.0.0');
+  assert.equal(pkg.version, '2.0.0');
 });
 
 test('multi-agent adapter installs portable guidance', () => {

@@ -1,6 +1,6 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
 A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -18,14 +18,15 @@ Notes:
 
 # /tto-dashboard
 
-Show Pretty CLI dashboard.
+Show terminal dashboard views.
 
 ```bash
-tto ui
+tto dashboard --view overview
+tto dashboard --view quality
+tto dashboard --view waste
+tto dashboard --view trend
+tto dashboard --view agents
+tto dashboard --view doctor
+tto dashboard --view fleet
 ```
 
-Alias:
-
-```bash
-tto dashboard
-```

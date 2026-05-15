@@ -1,0 +1,210 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="560" viewBox="0 0 1600 560" role="img" aria-labelledby="title desc">
+  <title id="title">Thai Token Optimizer v2.0 Hero Banner</title>
+  <desc id="desc">Polished animated SVG hero banner for Thai Token Optimizer v2.0 with clean typography, tidy panels, and refined animated flow.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#020617"/>
+      <stop offset="34%" stop-color="#081736"/>
+      <stop offset="68%" stop-color="#10295a"/>
+      <stop offset="100%" stop-color="#0b6d61"/>
+    </linearGradient>
+
+    <radialGradient id="orbLeft" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.55"/>
+      <stop offset="72%" stop-color="#7c3aed" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="orbRight" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.46"/>
+      <stop offset="74%" stop-color="#14b8a6" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#14b8a6" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#d946ef"/>
+      <stop offset="26%" stop-color="#a78bfa"/>
+      <stop offset="58%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="56%" stop-color="#dbeafe"/>
+      <stop offset="100%" stop-color="#bbf7d0"/>
+    </linearGradient>
+
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.06"/>
+    </linearGradient>
+
+    <filter id="shadow" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#020617" flood-opacity="0.40"/>
+    </filter>
+
+    <filter id="softGlow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <style>
+      .enTitle { font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif; font-size: 62px; font-weight: 900; fill: url(#titleGrad); letter-spacing: -1.6px; }
+      .subtitle { font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif; font-size: 24px; font-weight: 600; fill: #dbe7f5; }
+      .thai { font-family: 'Noto Sans Thai', Tahoma, 'Segoe UI', sans-serif; font-size: 26px; font-weight: 800; fill: #f8fafc; }
+      .chipText { font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif; font-size: 18px; font-weight: 800; fill: #eff6ff; }
+      .mono { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; font-size: 16px; fill: #e5edf8; }
+      .panelLabel { font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif; font-size: 16px; font-weight: 700; fill: #cbd5e1; }
+      .stepText { font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif; font-size: 18px; font-weight: 800; fill: #f8fafc; }
+
+      .accentBar { animation: pulseBar 3s ease-in-out infinite; }
+      .chip { fill: rgba(255,255,255,.10); stroke: rgba(255,255,255,.18); stroke-width: 1.4; filter: url(#shadow); animation: lift 6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      .chip.c2 { animation-delay: .25s; } .chip.c3 { animation-delay: .5s; } .chip.c4 { animation-delay: .75s; } .chip.c5 { animation-delay: 1s; }
+      .panel, .step { filter: url(#shadow); }
+      .termCard { fill: url(#glass); stroke: rgba(255,255,255,.18); stroke-width: 1.5; }
+      .stepRect { fill: rgba(2,6,23,.46); stroke: rgba(56,189,248,.34); stroke-width: 1.6; }
+      .flowGlow { stroke: url(#accent); stroke-width: 14; opacity: .12; fill: none; stroke-linecap: round; filter: url(#softGlow); }
+      .flowMain { stroke: url(#accent); stroke-width: 5.2; fill: none; stroke-linecap: round; stroke-dasharray: 58 24; animation: dashFlow 5.5s linear infinite; }
+      .flowThin { stroke: url(#accent); stroke-width: 1.6; fill: none; opacity: .32; stroke-dasharray: 4 14; animation: dashBack 8.5s linear infinite; }
+      .node { filter: url(#softGlow); animation: nodePulse 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      .n2 { animation-delay: .25s; } .n3 { animation-delay: .5s; } .n4 { animation-delay: .75s; } .n5 { animation-delay: 1s; }
+      .arrowGlow { stroke: #67e8f9; stroke-width: 10; stroke-linecap: round; opacity: .12; fill: none; filter: url(#softGlow); }
+      .arrowLine { stroke: #67e8f9; stroke-width: 3.6; stroke-linecap: round; fill: none; stroke-dasharray: 12 14; animation: arrowDash 1.9s linear infinite; }
+      .cursor { animation: blink 1.1s steps(1) infinite; }
+      .orbit { fill: none; stroke: #38bdf8; stroke-width: 1.1; opacity: .14; stroke-dasharray: 4 12; animation: spin 18s linear infinite; transform-origin: 1386px 92px; }
+      .particle { fill: #dbeafe; opacity: 0; animation: twinkle 4s ease-in-out infinite; }
+      .p2 { animation-delay: .5s; } .p3 { animation-delay: 1s; } .p4 { animation-delay: 1.5s; } .p5 { animation-delay: 2s; } .p6 { animation-delay: 2.5s; }
+      .shimmer { fill: rgba(255,255,255,.10); }
+
+      @keyframes pulseBar { 0%,100% { opacity: .85; } 50% { opacity: 1; } }
+      @keyframes lift { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+      @keyframes dashFlow { to { stroke-dashoffset: -164; } }
+      @keyframes dashBack { to { stroke-dashoffset: 110; } }
+      @keyframes nodePulse { 0%,100% { transform: scale(1); opacity: .82; } 50% { transform: scale(1.18); opacity: 1; } }
+      @keyframes arrowDash { to { stroke-dashoffset: -52; } }
+      @keyframes blink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @keyframes twinkle { 0%,100% { opacity: 0; transform: translateX(0); } 40% { opacity: .9; } 70% { opacity: .2; transform: translateX(10px); } }
+
+      @media (prefers-reduced-motion: reduce) {
+        .accentBar,.chip,.flowMain,.flowThin,.node,.arrowLine,.cursor,.orbit,.particle { animation: none !important; }
+      }
+    </style>
+  </defs>
+
+  <rect width="1600" height="560" rx="30" fill="url(#bg)"/>
+  <rect x="1" y="1" width="1598" height="558" rx="29" fill="none" stroke="rgba(255,255,255,.08)"/>
+
+  <!-- Background ambience -->
+  <circle cx="120" cy="428" r="240" fill="url(#orbLeft)"/>
+  <circle cx="1440" cy="180" r="300" fill="url(#orbRight)"/>
+  <circle cx="1025" cy="515" r="260" fill="#22d3ee" opacity=".04"/>
+  <path class="orbit" d="M1252 96 C1325 10 1463 24 1502 130 C1541 240 1416 324 1341 255 C1288 206 1295 108 1382 74"/>
+  <path class="orbit" opacity=".10" d="M1208 130 C1290 22 1510 22 1550 178"/>
+  <circle class="particle" cx="308" cy="92" r="2.0"/>
+  <circle class="particle p2" cx="485" cy="150" r="1.8"/>
+  <circle class="particle p3" cx="698" cy="122" r="1.6"/>
+  <circle class="particle p4" cx="1004" cy="106" r="1.8"/>
+  <circle class="particle p5" cx="1378" cy="132" r="1.8"/>
+  <circle class="particle p6" cx="1490" cy="246" r="1.6"/>
+
+  <!-- Left title block -->
+  <rect x="62" y="60" width="10" height="84" rx="5" fill="url(#accent)" class="accentBar"/>
+  <text x="96" y="116" class="enTitle">Thai Token Optimizer v2.0</text>
+  <text x="98" y="154" class="subtitle">Compact Thai for AI Coding Agents • CLI + Hooks + Adapters</text>
+  <text x="98" y="206" class="thai">ลด Token ได้ แต่ห้ามลดความถูกต้อง ความปลอดภัย หรือเงื่อนไขสำคัญ</text>
+
+  <!-- chips -->
+  <g>
+    <rect x="96" y="238" width="170" height="48" rx="24" class="chip"/>
+    <text x="181" y="268" text-anchor="middle" class="chipText">code-aware</text>
+
+    <rect x="282" y="238" width="170" height="48" rx="24" class="chip c2"/>
+    <text x="367" y="268" text-anchor="middle" class="chipText">safety-first</text>
+
+    <rect x="468" y="238" width="182" height="48" rx="24" class="chip c3"/>
+    <text x="559" y="268" text-anchor="middle" class="chipText">rollback-ready</text>
+
+    <rect x="666" y="238" width="160" height="48" rx="24" class="chip c4"/>
+    <text x="746" y="268" text-anchor="middle" class="chipText">local-first</text>
+
+    <rect x="842" y="238" width="190" height="48" rx="24" class="chip c5"/>
+    <text x="937" y="268" text-anchor="middle" class="chipText">MTP/speculative</text>
+  </g>
+
+  <!-- terminal panel -->
+  <g class="panel">
+    <rect x="1098" y="64" width="420" height="318" rx="28" class="termCard"/>
+    <path d="M1122 78 H1494 C1504 78 1510 85 1510 95 V110 H1106 V95 C1106 85 1112 78 1122 78 Z" class="shimmer"/>
+    <circle cx="1136" cy="108" r="6.5" fill="#fb7185"/>
+    <circle cx="1158" cy="108" r="6.5" fill="#fbbf24"/>
+    <circle cx="1180" cy="108" r="6.5" fill="#4ade80"/>
+    <text x="1210" y="114" class="panelLabel">tto terminal</text>
+
+    <text x="1130" y="156" class="mono">$ tto compress --pretty</text>
+    <line x1="1130" y1="180" x2="1478" y2="180" stroke="rgba(255,255,255,.10)"/>
+    <text x="1130" y="216" class="mono">Before 1789 tokens</text>
+    <text x="1130" y="254" class="mono">After  1344 tokens</text>
+    <text x="1130" y="292" class="mono">Saved  24.9% ✓ preserved</text>
+    <text x="1130" y="330" class="mono">Mode   safe local-first</text>
+    <text x="1130" y="366" class="mono">Signal code-aware</text>
+    <text x="1286" y="366" class="mono">rollback-ready</text>
+    <rect x="1462" y="350" width="10" height="22" fill="#5eead4" class="cursor"/>
+  </g>
+
+  <!-- animated mid flow -->
+  <path d="M72 398 C220 334 326 462 510 396 S836 330 1020 394 S1334 452 1512 386" class="flowGlow"/>
+  <path d="M72 398 C220 334 326 462 510 396 S836 330 1020 394 S1334 452 1512 386" class="flowThin"/>
+  <path d="M72 398 C220 334 326 462 510 396 S836 330 1020 394 S1334 452 1512 386" class="flowMain"/>
+
+  <circle cx="184" cy="390" r="10" fill="#e879f9" class="node"/>
+  <circle cx="400" cy="418" r="12" fill="#a78bfa" class="node n2"/>
+  <circle cx="670" cy="376" r="12" fill="#38bdf8" class="node n3"/>
+  <circle cx="988" cy="394" r="12" fill="#22d3ee" class="node n4"/>
+  <circle cx="1286" cy="408" r="12" fill="#34d399" class="node n5"/>
+  <circle cx="400" cy="418" r="28" fill="none" stroke="#a78bfa" opacity=".24"/>
+  <circle cx="670" cy="376" r="28" fill="none" stroke="#38bdf8" opacity=".24"/>
+  <circle cx="988" cy="394" r="28" fill="none" stroke="#22d3ee" opacity=".24"/>
+  <circle cx="1286" cy="408" r="28" fill="none" stroke="#34d399" opacity=".24"/>
+
+  <!-- Bottom process boxes -->
+  <g class="step">
+    <rect x="92" y="450" width="170" height="70" rx="20" class="stepRect"/>
+    <text x="177" y="493" text-anchor="middle" class="stepText">Prompt</text>
+
+    <rect x="322" y="450" width="170" height="70" rx="20" class="stepRect"/>
+    <text x="407" y="493" text-anchor="middle" class="stepText">Parser</text>
+
+    <rect x="552" y="450" width="170" height="70" rx="20" class="stepRect"/>
+    <text x="637" y="493" text-anchor="middle" class="stepText">Compress</text>
+
+    <rect x="812" y="450" width="170" height="70" rx="20" class="stepRect"/>
+    <text x="897" y="493" text-anchor="middle" class="stepText">Verify</text>
+
+    <rect x="1072" y="450" width="170" height="70" rx="20" class="stepRect"/>
+    <text x="1157" y="493" text-anchor="middle" class="stepText">Output</text>
+  </g>
+
+  <!-- bottom arrows -->
+  <g>
+    <path d="M262 485 L306 485" class="arrowGlow"/>
+    <path d="M262 485 L306 485" class="arrowLine"/>
+    <polygon points="320,485 302,474 302,496" fill="#67e8f9" filter="url(#softGlow)"/>
+
+    <path d="M492 485 L536 485" class="arrowGlow"/>
+    <path d="M492 485 L536 485" class="arrowLine"/>
+    <polygon points="550,485 532,474 532,496" fill="#67e8f9" filter="url(#softGlow)"/>
+
+    <path d="M722 485 L794 485" class="arrowGlow"/>
+    <path d="M722 485 L794 485" class="arrowLine"/>
+    <polygon points="808,485 790,474 790,496" fill="#67e8f9" filter="url(#softGlow)"/>
+
+    <path d="M982 485 L1054 485" class="arrowGlow"/>
+    <path d="M982 485 L1054 485" class="arrowLine"/>
+    <polygon points="1068,485 1050,474 1050,496" fill="#67e8f9" filter="url(#softGlow)"/>
+  </g>
+</svg>

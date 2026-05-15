@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -22,6 +22,8 @@
 const { logError } = require('./tto-config');
 
 function emitSafeStopPayload() {
+  // Stop hook in Codex expects minimal valid JSON payload.
+  // Keep this strict to avoid "invalid stop hook JSON output".
   process.stdout.write(JSON.stringify({ continue: true }));
 }
 

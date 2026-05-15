@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -22,28 +22,39 @@
 const { getState, logError } = require('./tto-config');
 const { classifyText, extractTextFromHookPayload } = require('./tto-safety-classifier');
 
+function emitContinue(payload = {}) {
+  process.stdout.write(JSON.stringify({ continue: true, ...payload }));
+}
+
 let input = '';
 process.stdin.on('data', c => input += c);
 process.stdin.on('end', () => {
   try {
     const state = getState();
-    if (!state.enabled) process.exit(0);
+    if (!state.enabled) {
+      emitContinue();
+      process.exit(0);
+    }
     let payload = {};
     try { payload = JSON.parse(input || '{}'); } catch (_) {}
     const text = extractTextFromHookPayload(payload);
     const safety = classifyText(text);
     if (safety.shouldRelaxCompression) {
-      process.stdout.write(JSON.stringify({
+      emitContinue({
         hookSpecificOutput: {
           hookEventName: 'PreToolUse',
           additionalContext:
-            `THAI TOKEN OPTIMIZER v1.0 SAFETY OVERRIDE: ${safety.categories.join(', ')}. ` +
-            'Before tool use, preserve exact command, explain risk briefly, include backup/rollback/verification when relevant. Do not compress safety-critical steps.'
+            `[TTO Stage 3/4] Preserve Critical (Safety Override)\n` +
+            `หมวดความเสี่ยง: ${safety.categories.join(', ')}\n` +
+            'ก่อนใช้ tool: คง command exact, อธิบายความเสี่ยงสั้นๆ, ระบุ backup/rollback/verification และห้ามบีบอัดส่วนที่กระทบความปลอดภัย'
         }
-      }));
+      });
+    } else {
+      emitContinue();
     }
   } catch (e) {
     logError(`pretool-guard: ${e.message}`);
+    emitContinue();
   }
   process.exit(0);
 });

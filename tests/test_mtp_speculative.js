@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0 - MTP & Speculative Decoding Test
+ * Thai Token Optimizer v2.0 - MTP & Speculative Decoding Test
  * ============================================================================
  */
 
@@ -30,14 +30,14 @@ function runTracker(prompt, env = {}) {
 
 test('speculative compression logic picks candidate with best preservation', () => {
   const { compressToBudget } = require('../hooks/tto-budget-compressor');
-  const input = 'ช่วยอธิบายการติดตั้ง Thai Token Optimizer v1.0 โดยห้ามเปลี่ยนเวอร์ชัน 1.0.0';
+  const input = 'ช่วยอธิบายการติดตั้ง Thai Token Optimizer v2.0 โดยห้ามเปลี่ยนเวอร์ชัน 2.0.0';
   
   // Test with speculative=true
   const result = compressToBudget(input, { speculative: true });
   
   assert.equal(result.speculative, true);
-  assert.ok(result.optimized.includes('Thai Token Optimizer v1.0'));
-  assert.ok(result.optimized.includes('1.0.0'));
+  assert.ok(result.optimized.includes('Thai Token Optimizer v2.0'));
+  assert.ok(result.optimized.includes('2.0.0'));
   assert.equal(result.preservation.preservationPercent, 100);
   assert.ok(['lite', 'auto', 'full', 'ultra'].includes(result.level));
 });
@@ -76,7 +76,7 @@ test('CLI --no-speculative overrides speculative state flag', () => {
 });
 
 test('CLI diagnostics prints candidate selection details', () => {
-  const input = 'ช่วยอธิบาย Thai Token Optimizer v1.0 โดยคงคำสั่ง tto doctor --pretty';
+  const input = 'ช่วยอธิบาย Thai Token Optimizer v2.0 โดยคงคำสั่ง tto doctor --pretty';
   const res = run(['compress', '--speculative', '--diagnostics', input]);
   assert.equal(res.status, 0);
   assert.match(res.stderr, /Diagnostics:/);

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -37,15 +37,23 @@ function parseTrigger(prompt) {
   if (slashMatch) {
     const arg = (slashMatch[1] || '').toLowerCase();
     if (['auto', 'lite', 'full', 'safe'].includes(arg)) return { enabled: true, level: arg };
+    if (arg === 'spec' || arg === 'speculative') return { enabled: true, speculative: true };
+    if (arg === 'nospec' || arg === 'no-speculative') return { speculative: false };
+    if (arg === 'interactive') return { autoCompressInput: false };
+    if (arg === 'nointeractive') return { autoCompressInput: true };
     if (arg === 'stop' || arg === 'off') return { enabled: false };
     if (arg === '') return { enabled: true, level: 'full' };
     return null;
   }
 
-  const ttoMatch = lower.match(/^(?:token thai|thai token|thai compact|tto)\s+(on|start|enable|auto|lite|full|safe|off|stop|disable)$/);
+  const ttoMatch = lower.match(/^(?:token thai|thai token|thai compact|tto)\s+(on|start|enable|auto|lite|full|safe|off|stop|disable|spec|speculative|nospec|no-speculative|interactive|nointeractive)$/);
   if (ttoMatch) {
     const arg = ttoMatch[1];
     if (['off', 'stop', 'disable'].includes(arg)) return { enabled: false };
+    if (arg === 'spec' || arg === 'speculative') return { enabled: true, speculative: true };
+    if (arg === 'nospec' || arg === 'no-speculative') return { speculative: false };
+    if (arg === 'interactive') return { autoCompressInput: false };
+    if (arg === 'nointeractive') return { autoCompressInput: true };
     if (arg === 'on' || arg === 'start' || arg === 'enable') return { enabled: true, level: 'full' };
     return { enabled: true, level: arg };
   }
@@ -55,6 +63,9 @@ function parseTrigger(prompt) {
 
   for (const phrase of disableThai) if (trimmed === phrase) return { enabled: false };
   for (const phrase of enableThai) if (trimmed === phrase) return { enabled: true, level: 'full' };
+
+  if (trimmed === 'เปิดโหมดคาดการณ์' || trimmed === 'เปิด speculation') return { enabled: true, speculative: true };
+  if (trimmed === 'ปิดโหมดคาดการณ์' || trimmed === 'ปิด speculation') return { speculative: false };
 
   if (trimmed === 'ลด token ไทย auto' || trimmed === 'ลด token ไทย อัตโนมัติ') return { enabled: true, level: 'auto' };
   if (trimmed === 'ลด token ไทย lite' || trimmed === 'ลด token ไทย เบา') return { enabled: true, level: 'lite' };
@@ -79,11 +90,32 @@ function emitActiveReminder(state, prompt, safety) {
   const est = estimateTokens(prompt, 'codex/claude', { exact: policy.exactTokenizer });
   appendStats({ event: 'UserPromptSubmit', estimatedPromptTokens: est.estimatedTokens, level: state.level, effectiveLevel, safetyCategories: safety.categories });
   setState({ lastSafetyCategory: safety.categories[0] || undefined });
-  process.stdout.write(JSON.stringify({ continue: true }));
+  const context =
+    Number(est.estimatedTokens || 0) >= 300 || safety.safeCritical || safety.shouldRelaxCompression
+      ? `[TTO Stage 1/4] Detect Intent\n` +
+        `mode=${state.level}; effective=${effectiveLevel}; profile=${state.profile || 'coding'}; speculative=${state.speculative ? 'on' : 'off'}\n` +
+        `[TTO Stage 3/4] Preserve Critical\n` +
+        `คง command/path/error/identifier ให้ตรงเดิม; safety=${safety.categories.join(', ') || 'clear'}\n` +
+        `[TTO Stage 4/4] Output Compact\n` +
+        `ตอบไทยกระชับ พร้อม next action ที่จำเป็น`
+      : `TTO: compact Thai active (${state.level}->${effectiveLevel}); keep command/path/error/ID exact.`;
+  process.stdout.write(JSON.stringify({
+    continue: true,
+    hookSpecificOutput: {
+      hookEventName: 'UserPromptSubmit',
+      additionalContext: context
+    }
+  }));
 }
 
 if (require.main === module) {
   let input = '';
+  let responded = false;
+  const respondContinue = () => {
+    if (responded) return;
+    responded = true;
+    process.stdout.write(JSON.stringify({ continue: true }));
+  };
   process.stdin.on('data', chunk => { input += chunk; });
   process.stdin.on('end', () => {
     try {
@@ -93,8 +125,10 @@ if (require.main === module) {
       if (trigger) setState(trigger);
       const state = getState();
       if (state.enabled) emitActiveReminder(state, prompt, classifyText(prompt));
+      else respondContinue();
     } catch (e) {
       logError(`mode-tracker: ${e.message}`);
+      respondContinue();
     }
     process.exit(0);
   });

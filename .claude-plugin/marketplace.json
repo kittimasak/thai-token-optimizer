@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "thai-token-optimizer-marketplace",
-  "description": "Thai Token Optimizer v1.0 plugins for compact Thai AI responses.",
+  "description": "Thai Token Optimizer v2.0 plugin for compact Thai AI coding workflows.",
   "owner": {
     "name": "Dr.Kittimasak Naijit",
     "url": "https://github.com/kittimasak"
@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "thai-token-optimizer",
-      "description": "Adaptive compact Thai+English mode for Claude Code. Reduces Thai output tokens without losing technical accuracy or safety clarity.",
+      "description": "TTO v2.0 compact Thai + safety-aware Claude Code hooks with MTP guidance, quality score, coach mode, ops analytics, and exact preservation of commands/paths/errors.",
       "source": "./",
       "category": "productivity"
     }

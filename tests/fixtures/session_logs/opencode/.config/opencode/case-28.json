@@ -1,0 +1,26 @@
+{
+  "messages": [
+    {
+      "timestamp": "2026-01-01T00:00:28.000Z",
+      "model": "opencode-model",
+      "usage": {
+        "input": 3180,
+        "output": 190
+      },
+      "cacheRead": 100,
+      "cacheWrite": 20,
+      "toolCalls": 0
+    },
+    {
+      "timestamp": "2026-01-01T00:00:29.000Z",
+      "model": "opencode-model",
+      "usage": {
+        "input": 100,
+        "output": 80
+      },
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "toolCalls": 0
+    }
+  ]
+}

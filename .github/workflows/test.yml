@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [18, 22]
+        node-version: [18, 20, 22]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -23,5 +23,106 @@ jobs:
       - run: npm install --include=optional
       - name: Run tests (bounded)
         run: timeout 55m npm run test:ci
-      - run: node bin/thai-token-optimizer.js benchmark --strict --default-policy
-      - run: test "$(node -p "require('./package.json').version")" = "1.0.0"
+      - name: Run benchmark (strict + mtp)
+        run: node bin/thai-token-optimizer.js benchmark --strict --default-policy --mtp
+      - name: Update benchmark history
+        run: node scripts/update-benchmark-history.js
+      - name: Generate benchmark trend report
+        run: node scripts/benchmark-trend-report.js 10
+      - name: Generate benchmark diff report
+        run: node scripts/benchmark-artifact-diff.js
+      - name: Generate fleet history
+        run: node scripts/update-fleet-history.js --out benchmarks/fleet_history.jsonl
+      - name: Fleet drift gate
+        run: node scripts/fleet-drift-gate.js --history benchmarks/fleet_history.jsonl --consecutive 3 --maxWasteTokens 200000 --maxUsd 10 --minConfidence 0.5
+      - name: Update calibration history
+        run: node scripts/update-calibration-history.js
+      - name: Calibration CI gate
+        run: node scripts/calibration-ci-gate.js --history benchmarks/calibration_history.jsonl --maxGapPct 20 --consecutive 3
+      - name: Upload benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-artifacts-node-${{ matrix.node-version }}
+          path: |
+            benchmarks/regression_report.md
+            benchmarks/regression_report.json
+            benchmarks/regression_diff.md
+            benchmarks/regression_history.jsonl
+            benchmarks/regression_trend.md
+            benchmarks/fleet_history.jsonl
+            benchmarks/calibration_history.jsonl
+      - name: Post regression diff summary to PR (sticky comment)
+        if: always() && github.event_name == 'pull_request' && matrix.node-version == 22
+        uses: actions/github-script@v8
+        env:
+          DIFF_PATH: benchmarks/regression_diff.md
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = process.env.DIFF_PATH;
+            const marker = '<!-- tto-benchmark-diff-summary -->';
+            const title = '## Thai Token Optimizer CI Benchmark Diff Summary';
+            const fallback = [
+              marker,
+              title,
+              '',
+              'Regression diff file was not found at `benchmarks/regression_diff.md`.',
+              'Please inspect job artifacts for details.'
+            ].join('\n');
+
+            let diffText = fallback;
+            if (fs.existsSync(path)) {
+              const raw = fs.readFileSync(path, 'utf8').trim();
+              const maxLen = 60000;
+              const clipped = raw.length > maxLen
+                ? `${raw.slice(0, maxLen)}\n\n... (truncated by CI comment limit)`
+                : raw;
+              diffText = [
+                marker,
+                title,
+                '',
+                `Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+                '',
+                '```md',
+                clipped,
+                '```'
+              ].join('\n');
+            }
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100
+            });
+
+            const botLogin = 'github-actions[bot]';
+            const existing = comments.find(c =>
+              c.user &&
+              c.user.login === botLogin &&
+              typeof c.body === 'string' &&
+              c.body.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body: diffText
+              });
+              core.info(`Updated sticky PR comment: ${existing.id}`);
+            } else {
+              const created = await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body: diffText
+              });
+              core.info(`Created sticky PR comment: ${created.data.id}`);
+            }
+      - run: test "$(node -p "require('./package.json').version")" = "2.0.0"

@@ -1,9 +1,10 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
-A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
+A Thai token optimization skill for AI coding agents that keeps commands, code,
+and technical details accurate while reducing Thai token usage.
 
 Author      : Dr.Kittimasak Naijit
 Repository  : https://github.com/kittimasak/thai-token-optimizer
@@ -16,39 +17,31 @@ Notes:
 ============================================================================
 -->
 
-# Thai Token Optimizer v1.0
+# Thai Token Optimizer v2.0 Skill
 
-Adaptive Thai token optimization for AI coding agents, with compact Thai responses, prompt compression, safety-aware behavior, and strict preservation of technical details.
+Use this skill when the user wants compact Thai output, Thai prompt compression, token-efficient AI coding workflows, or work inside the Thai Token Optimizer repository.
 
 Canonical identity:
 
 ```text
-Thai Token Optimizer v1.0
-package version: 1.0.0
+Thai Token Optimizer v2.0
+package version: 2.0.0
 ```
 
-Do not change the version number, product identity, command names, or compatibility claims unless explicitly instructed by the user.
+Do not rename the project, change `2.0.0`, remove safety behavior, or weaken preservation rules unless the maintainer explicitly asks.
 
 ---
 
-## 1. Purpose
+## 1. Skill Goal
 
-Thai Token Optimizer v1.0 helps AI coding agents communicate in Thai with fewer tokens while preserving correctness, safety, and reproducibility.
-
-It is designed for:
-
-- compact Thai responses
-- Thai prompt compression
-- token-efficient coding workflows
-- safe command guidance
-- multi-agent AI coding tools
-- technical Thai-English mixed conversations
-- preserving commands, paths, configs, versions, and exact errors
-
-Primary principle:
+Make Thai interaction more compact while preserving:
 
 ```text
-ลด token ได้ แต่ห้ามลดความถูกต้อง ความปลอดภัย หรือเงื่อนไขสำคัญ
+safety
+correctness
+constraints
+reproducibility
+technical precision
 ```
 
 Priority order:
@@ -62,408 +55,91 @@ Priority order:
 6. Brevity
 ```
 
+Core rule:
+
+```text
+ลด token ได้ แต่ห้ามลดความถูกต้อง ความปลอดภัย หรือเงื่อนไขสำคัญ
+```
+
 ---
 
-## 2. Use when
+## 2. Activate This Skill When
 
-Use Thai Token Optimizer behavior when any of the following is true:
+Use TTO behavior when any condition is true:
 
 - User asks to reduce Thai tokens.
 - User asks for compact Thai responses.
-- User asks for short Thai answers.
 - User asks for prompt compression.
-- User says: `ลด token ไทย`
-- User says: `ประหยัด token`
-- User says: `ตอบสั้น`
-- User says: `thai compact`
-- User says: `token thai`
-- Hook context says: `THAI TOKEN OPTIMIZER v1.0 ACTIVE`
-- The active mode/profile from config says Thai Token Optimizer is enabled.
-- The current project uses Thai Token Optimizer hooks, adapters, or AGENTS instructions.
+- User says `ลด token ไทย`, `ประหยัด token`, `ตอบสั้น`, `thai compact`, or `token thai`.
+- Hook context says `THAI TOKEN OPTIMIZER v2.0 ACTIVE`.
+- The current repo is `thai-token-optimizer`.
+- User edits or audits these files: `README.md`, `MANUAL.md`, `AGENTS.md`, `SKILL.md`, `hooks/*`, `adapters/*`, `benchmarks/*`, `tests/*`, `.codex-plugin/*`, `.claude-plugin/*`.
+- User asks about Codex/Claude/Gemini/OpenCode/OpenClaw/Hermes integration.
 
-Also use it when writing or editing project files for Thai Token Optimizer itself, including:
-
-- `README.md`
-- `AGENTS.md`
-- `SKILL.md`
-- hook scripts
-- adapter files
-- benchmark reports
-- test reports
-- changelog
-- troubleshooting docs
+Do not over-compress if the user asks for deep teaching, full audit, safety-critical steps, legal/medical/financial guidance, or long-form documentation.
 
 ---
 
-## 3. Do not use when
+## 3. Response Style
 
-Do not aggressively compress when:
+Default output when active:
 
-- user asks for detailed explanation
-- user asks for teaching material
-- user asks for legal/medical/financial safety-critical advice
-- operation is destructive
-- operation affects production
-- operation changes database schema/data
-- operation handles secrets/API keys/tokens
-- operation changes authentication/authorization/payment logic
-- operation edits global config
-- operation performs backup/rollback/uninstall
-- user explicitly requests full reasoning, careful audit, or detailed test report
+- Thai-first, compact, direct.
+- Keep English technical terms if clearer.
+- Use code/commands before explanation for implementation/debug tasks.
+- Use short sections and flat bullets.
+- Avoid long intros, repeated framing, filler, hedging, and unnecessary politeness.
+- State what was run/tested only if actually run.
+- If uncertain, say it briefly.
+- If safety risk exists, use `safe` style even if the user asks for short output.
 
-In these cases, use `safe` or `lite` mode instead of `full`.
-
----
-
-## 4. Core rules
-
-When active:
-
-- Use compact Thai.
-- Keep English technical terms when clearer.
-- Keep exact paths, command flags, package names, identifiers, errors, URLs, versions, function names, class names, API names, config keys, and environment variables unchanged.
-- Remove unnecessary politeness, filler, hedging, repeated wording, and long introductions.
-- Prefer code/patch first for coding tasks.
-- Prefer commands first for setup/debug tasks.
-- Add only necessary warnings.
-- Keep important constraints visible.
-- If unsure whether compression may remove meaning, answer slightly longer.
-- Never claim test results unless actually tested.
-- Never claim exact token count if using heuristic estimation.
-- Never hide uncertainty.
-
----
-
-## 5. Activation commands
-
-Recognize these commands in user messages or hook input.
-
-### Enable
+Recommended report shape:
 
 ```text
-token thai on
-thai token on
-thai compact on
-ลด token ไทย
-ประหยัด token
-ตอบสั้น
-```
-
-### Mode selection
-
-```text
-token thai auto
-token thai lite
-token thai full
-token thai safe
-```
-
-### Disable
-
-```text
-token thai off
-thai compact off
-หยุดลด token
-หยุดตอบสั้น
-```
-
-### Status
-
-```text
-token thai status
-tto status
-```
-
-Respond briefly when a mode changes.
-
-Example:
-
-```text
-เปิด `token thai auto` แล้ว
-```
-
----
-
-## 6. Modes
-
-### `auto`
-
-Default mode.
-
-Select compression level based on the task:
-
-Use compact/full behavior for:
-
-- simple commands
-- small bugfixes
-- direct answers
-- status checks
-- known workflow commands
-- repeated topics
-
-Use lite behavior for:
-
-- concept explanation
-- architecture design
-- teaching
-- research planning
-- trade-off comparison
-- README/documentation generation
-
-Use safe behavior for:
-
-- destructive commands
-- backup/rollback
-- uninstall
-- production deploy
-- database migration
-- auth/payment/security
-- secrets/API keys
-- global config editing
-- CI/CD release automation
-
-### `lite`
-
-Compact but explanatory.
-
-Use for:
-
-- teaching
-- conceptual explanation
-- design discussion
-- medium-complexity debugging
-- documentation writing
-
-Style:
-
-- short paragraphs
-- minimal bullets
-- keep rationale
-- avoid overly terse answers
-
-### `full`
-
-Maximum compression while usable.
-
-Use only for low-risk tasks.
-
-Style:
-
-- commands/code first
-- minimal explanation
-- no long intro
-- no repeated caveats
-- direct final answer
-
-Never use `full` for safety-critical work.
-
-### `safe`
-
-Safety-first.
-
-Required for dangerous or irreversible work.
-
-Must include:
-
-- risk
-- backup
-- dry-run/preview when possible
-- exact command
-- verification
-- rollback
-
-Example pattern:
-
-```text
-เสี่ยง: กระทบ config หลายระบบ
-
-backup:
-```bash
-tto backup all
-```
-
-dry-run:
-```bash
-tto rollback latest --dry-run
-```
-
-run:
-```bash
-tto rollback latest
-```
-
-verify:
-```bash
-tto doctor
-```
-```
-
----
-
-## 7. Profiles
-
-If the active profile is available, adapt responses accordingly.
-
-### `coding`
-
-Use for code generation, bugfixes, refactoring, TypeScript/JavaScript/Python/PHP/etc.
-
-Behavior:
-
-- patch/code first
-- preserve file names and functions
-- short cause
-- test command
-- avoid generic explanation
-
-Pattern:
-
-```text
-สาเหตุ
-ไฟล์ที่แก้
-patch/code
-ทดสอบ
-```
-
-### `command`
-
-Use for terminal/DevOps tasks.
-
-Behavior:
-
-- command first
-- explain only needed flags
-- include verify command
-- include rollback if risky
-
-### `research`
-
-Use for research and academic planning.
-
-Behavior:
-
-- keep methodology
-- keep assumptions
-- keep evaluation metrics
-- do not over-compress reasoning
-- preserve paper titles/model names/citations if provided
-
-### `teaching`
-
-Use for student-facing explanations.
-
-Behavior:
-
-- concise but understandable
-- step-by-step
-- use examples
-- avoid excessive jargon
-
-### `paper`
-
-Use for academic writing.
-
-Behavior:
-
-- formal Thai
-- preserve terminology
-- keep structure
-- avoid overly casual compression
-
-### `ultra`
-
-Use only for low-risk, very short replies.
-
-Behavior:
-
-- minimum prose
-- no teaching detail
-- no long caveats
-- never use for safety-critical operations
-
----
-
-## 8. Default response patterns
-
-### Direct answer
-
-```text
-คำตอบตรง
-เหตุผลสั้น
-คำสั่ง/โค้ด
-ตรวจสอบผล
-```
-
-### Coding/debugging
-
-```text
-สาเหตุ:
-...
-
-แก้:
-```language
-...
-```
+แก้แล้ว:
+- ...
 
 ทดสอบ:
-```bash
-...
-```
-```
-
-### Installation/setup
-
-```text
-ติดตั้ง:
-```bash
-...
-```
-
-ตรวจ:
-```bash
-...
-```
-
-ถ้าไม่ผ่าน:
-```bash
-...
-```
-```
-
-### Audit/testing
-
-```text
-ตรวจแล้ว:
 - ...
 
-ผ่าน:
+หมายเหตุ:
 - ...
-
-พบ:
-- ...
-
-ต้องแก้:
-- ...
-```
-
-### Documentation writing
-
-```text
-ปรับให้แล้ว ครอบคลุม:
-- ...
-ไฟล์:
-...
 ```
 
 ---
 
-## 9. Preservation rules
+## 4. Modes
 
-Never alter critical technical content.
+| Mode | Use For | Behavior |
+|---|---|---|
+| `auto` | default mixed work | choose full/lite/safe by task risk |
+| `lite` | teaching, research, design, documentation | compact but explanatory |
+| `full` | low-risk direct answers, commands, small fixes | shortest usable output |
+| `safe` | production, DB, auth, payment, secrets, rollback, destructive work | preserve risk/backup/dry-run/verify/rollback |
+| `off` | user disables TTO | normal assistant behavior |
 
-Preserve exactly:
+Never use `full` for risky operations.
 
-- code fences
+---
+
+## 5. Profiles
+
+| Profile | Bias | Behavior |
+|---|---|---|
+| `coding` | concise implementation | code/patch first, short cause, test command |
+| `command` | terminal-first | exact command, expected result, verify command |
+| `research` | methodology | keep assumptions, variables, metrics, citation intent |
+| `teaching` | learner-friendly | concise steps with useful examples |
+| `paper` | formal/safe | preserve academic structure, numbers, constraints |
+| `ultra` | maximum compression | low-risk only, minimal prose |
+
+---
+
+## 6. Preservation Rules
+
+Never mutate these unless explicitly editing them:
+
+- fenced code blocks
 - inline code
 - shell commands
 - command flags
@@ -473,7 +149,7 @@ Preserve exactly:
 - function/class names
 - package names
 - API names
-- error messages
+- exact error messages
 - stack traces
 - regex
 - SQL
@@ -485,8 +161,8 @@ Preserve exactly:
 - ports/IPs
 - model names
 - tool names
-- **Personal Dictionary words (`tto keep`)**
-- **Spaces between technical terms and version numbers (e.g., `Optimizer v1.0`)**
+- words protected by `tto keep`
+- spaces between technical terms and versions, e.g. `Optimizer v2.0`
 
 Examples that must remain exact:
 
@@ -494,8 +170,9 @@ Examples that must remain exact:
 node bin/thai-token-optimizer.js install all
 npm test
 npm run ci
-tto benchmark --strict --default-policy
+tto benchmark --strict --default-policy --mtp
 tto rollback gemini --dry-run
+tto compress --pretty --level auto --target codex --budget 500 --check prompt.txt
 ```
 
 ```toml
@@ -503,67 +180,14 @@ codex_hooks = true
 ```
 
 ```json
-"version": "1.0.0"
-```
-
-```text
-Thai Token Optimizer v1.0
-~/.codex/config.toml
-~/.gemini/extensions/thai-token-optimizer/gemini-extension.json
-~/.config/opencode/plugins/thai-token-optimizer.js
-```
-
-Do not mutate:
-
-```text
-codex_hooks = true -> codex hooks true
+"version": "2.0.0"
 ```
 
 ---
 
+## 7. Safety Override
 
-## 10. Semantic preservation
-
-Before finalizing a compressed response, verify that the following remain intact:
-
-- user’s objective
-- target system/tool
-- required output
-- filenames
-- commands
-- config keys
-- version numbers
-- safety constraints
-- negative instructions
-- examples
-- expected tests
-- rollback/verification requirements
-
-If compression removes meaning, use a longer answer.
-
-Correctness beats token reduction.
-
----
-
-## 11. Code-aware compression
-
-When compressing coding content:
-
-- Do not shorten variable/function/class names.
-- Do not translate API names.
-- Do not remove error messages.
-- Do not remove test commands.
-- Do not rewrite syntax unless asked.
-- Do not collapse safe multi-step operations into risky one-liners.
-- Do not remove backup/rollback steps.
-- Keep code blocks intact unless editing them.
-- Keep enough context for patches to apply safely.
-
----
-
-## 12. Safety classifier behavior
-
-Switch to `safe` style if prompt includes or implies:
+Switch to safe behavior if the prompt includes or implies:
 
 ```text
 rm -rf
@@ -573,6 +197,8 @@ DELETE FROM
 git reset --hard
 git push --force
 production
+deploy
+release
 database migration
 auth
 authorization
@@ -581,45 +207,210 @@ secret
 API key
 token
 credential
-chmod
-chown
 rollback
 backup
 uninstall
-release
-CI/CD
 global config
+CI/CD publish
 ```
 
 Safe response must include:
 
-1. Risk
-2. Backup
-3. Dry-run/preview when available
-4. Run command
-5. Verification
-6. Rollback
+```text
+risk
+backup or dry-run
+exact command
+verification
+rollback when relevant
+```
 
-Do not reduce these away.
+Do not compress away safety details.
 
 ---
 
-## 13. Supported tools and agent behavior
+## 8. TTO Stage UI
 
-Thai Token Optimizer v1.0 supports or can guide integration with:
+When explaining hook behavior to users, use the unified stage format:
 
 ```text
-Codex
-Claude Code
-Gemini CLI
-OpenCode
-Cursor
-Aider
-Cline
-Roo
+[TTO Stage 1/4] Detect Intent
+[TTO Stage 2/4] Compress Candidate
+[TTO Stage 3/4] Preserve Critical
+[TTO Stage 4/4] Output Compact
 ```
 
-### Codex
+Meaning:
+
+| Stage | Meaning |
+|---|---|
+| `1/4 Detect Intent` | mode/profile/risk/trigger detection |
+| `2/4 Compress Candidate` | build compact candidate without dropping critical details |
+| `3/4 Preserve Critical` | lock commands, paths, versions, errors, config, safety constraints |
+| `4/4 Output Compact` | return concise final output with essential next action |
+
+For Codex hooks that must return JSON, stdout must be valid JSON only. Debug logs must go to stderr or be disabled.
+
+---
+
+## 9. Command Surface v2.0
+
+Use exact commands below when guiding users.
+
+### Mode and Status
+
+```bash
+tto auto
+tto lite
+tto full
+tto safe
+tto off
+tto status
+tto status --pretty
+tto ui
+tto dashboard --view overview
+tto dashboard --view quality
+tto dashboard --view waste
+tto dashboard --view trend
+tto dashboard --view agents
+tto dashboard --view doctor
+tto dashboard --view fleet
+```
+
+### Compression and Preservation
+
+```bash
+tto compress --pretty --level auto --target codex --budget 500 --check prompt.txt
+tto compress --speculative --diagnostics --check --target codex prompt.txt
+tto compress --no-speculative --check --target codex prompt.txt
+tto rewrite --pretty --budget 300 prompt.txt
+tto estimate --target codex "ข้อความภาษาไทย"
+tto estimate --exact --target codex "ข้อความภาษาไทย"
+tto preserve original.txt optimized.txt
+tto classify --pretty "DROP TABLE users production secret"
+```
+
+Speculative precedence:
+
+```text
+1. --no-speculative
+2. --speculative
+3. state.speculative
+```
+
+### Personalization
+
+```bash
+tto keep "คำเฉพาะ"
+tto forget "คำเฉพาะ"
+tto dictionary
+```
+
+Dictionary words are hard-protected.
+
+### Quality, Coach, Benchmark
+
+```bash
+tto benchmark --pretty --strict --default-policy --mtp
+tto quality --pretty
+tto coach --pretty
+tto coach --apply safe --pretty
+tto coach --apply quick --pretty
+```
+
+### Operations Analytics
+
+```bash
+tto ops --pretty
+tto ops scan --pretty
+tto ops audit codex --pretty
+tto ops context --pretty
+tto ops quality --pretty
+tto ops drift --pretty
+tto ops validate --pretty
+```
+
+### Fleet and Calibration
+
+```bash
+tto fleet --pretty
+tto fleet --pretty --roots /path/repoA,/path/repoB
+tto fleet --pretty --doctor --doctor-target codex
+tto fleet --pretty --calibration --session-scan
+tto fleet --pretty --calibration --calibration-limit 50 --session-scan
+tto calibration status --pretty
+tto calibration record --estimated 1200 --real 1350 --target codex
+tto calibration from-stats --real-total 25000 --samples 20 --target codex
+tto calibration clear
+```
+
+### Checkpoint, Cache, Context
+
+```bash
+tto checkpoint status --pretty
+tto checkpoint list --pretty
+tto checkpoint capture "before-change" --pretty
+tto checkpoint precompact "before compact" --pretty
+tto checkpoint postcompact "after compact" --pretty
+tto checkpoint restore latest --pretty
+tto cache stats --pretty
+tto cache clear
+tto context --pretty
+```
+
+### Install, Backup, Rollback
+
+```bash
+tto backup all
+tto backups
+tto install codex
+tto install claude
+tto install gemini
+tto install opencode
+tto install openclaw
+tto install hermes
+tto install cursor
+tto install aider
+tto install cline
+tto install roo
+tto install all
+tto install-agents
+tto doctor --pretty
+tto rollback latest --dry-run
+tto rollback latest
+tto uninstall all
+```
+
+Use dry-run before rollback. Do not run install/uninstall/rollback in a user environment unless requested.
+
+### Config
+
+```bash
+tto config path
+tto config init
+tto config get
+tto config set defaultMode auto
+tto config set defaultProfile coding
+tto config set safetyMode strict
+tto config set readCache.mode warn
+tto config set readCache.mode block
+```
+
+---
+
+## 10. Supported Agent Integrations
+
+| Target | Integration | Main Command |
+|---|---|---|
+| Codex | hooks + `AGENTS.md` | `tto install codex` |
+| Claude Code | settings hooks | `tto install claude` |
+| Gemini CLI | extension + hooks | `tto install gemini` |
+| OpenCode | native plugin + config | `tto install opencode` |
+| OpenClaw | managed hook + config | `tto install openclaw` |
+| Hermes Agent | shell hooks + plugin hooks | `tto install hermes` |
+| Cursor | rule file | `tto install cursor` |
+| Aider | instruction file | `tto install aider` |
+| Cline | rule file | `tto install cline` |
+| Roo Code | rule file | `tto install roo` |
 
 Important paths:
 
@@ -627,585 +418,194 @@ Important paths:
 ~/.codex/config.toml
 ~/.codex/hooks.json
 ~/.codex/AGENTS.md
-```
-
-Rules:
-
-- Ensure `codex_hooks = true` appears once under `[features]`.
-- Do not duplicate TOML keys.
-- Use `tto install codex`.
-- Use `tto install-agents` for AGENTS integration.
-- Verify with `tto doctor`.
-
-Commands:
-
-```bash
-tto install codex
-tto install-agents
-tto doctor
-```
-
-### Claude Code
-
-Important path:
-
-```text
 ~/.claude/settings.json
-```
-
-Rules:
-
-- Keep JSON valid.
-- Do not remove existing unrelated hooks/settings.
-- Verify with `tto doctor`.
-
-Command:
-
-```bash
-tto install claude
-```
-
-### Gemini CLI
-
-Important paths:
-
-```text
-~/.gemini/extensions/thai-token-optimizer/
 ~/.gemini/extensions/thai-token-optimizer/gemini-extension.json
-```
-
-Rules:
-
-- Keep extension metadata valid.
-- Keep generated TOML command files valid.
-- Verify generated extension files.
-
-Command:
-
-```bash
-tto install gemini
-```
-
-### OpenCode
-
-Important paths:
-
-```text
 ~/.config/opencode/plugins/thai-token-optimizer.js
-~/.config/opencode/opencode.json
-```
-
-Rules:
-
-- Keep plugin JavaScript valid.
-- Preserve existing OpenCode config.
-- Verify with doctor.
-
-Command:
-
-```bash
-tto install opencode
-```
-
-### Cursor / Aider / Cline / Roo
-
-Important files:
-
-```text
 ~/.cursor/rules/thai-token-optimizer.mdc
 ~/.aider/thai-token-optimizer.md
 ~/.cline/rules/thai-token-optimizer.md
 ~/.roo/rules/thai-token-optimizer.md
 ```
 
-Commands:
+---
 
-```bash
-tto install cursor
-tto install aider
-tto install cline
-tto install roo
-```
+## 11. Documentation Rules
+
+When writing docs for this repo:
+
+- Keep `Thai Token Optimizer v2.0`.
+- Keep `package version: 2.0.0`.
+- Include terminal-first usage, not web dashboard claims.
+- Include all current command families: `quality`, `coach`, `ops`, `fleet`, `calibration`, `context`, `checkpoint`, `cache`, MTP/speculative.
+- Include supported agents truthfully.
+- Include backup/rollback and doctor notes.
+- Do not expose private planning docs if user asks to hide `docs/*` details.
+- Do not claim tests pass unless run.
+- Mention that `doctor --pretty` can be `WARN` depending on local adapter footprint.
 
 ---
 
-## 14. CLI command reference
+## 12. Testing and Audit Behavior
 
-Common commands:
-
-```bash
-tto status
-tto auto
-tto lite
-tto full
-tto safe
-tto off
-```
-
-Install:
+When asked to test/audit TTO, prefer targeted checks first:
 
 ```bash
-tto install codex
-tto install claude
-tto install gemini
-tto install opencode
-tto install cursor
-tto install aider
-tto install cline
-tto install roo
-tto install all
-tto install-agents
-```
-
-Uninstall:
-
-```bash
-tto uninstall codex
-tto uninstall claude
-tto uninstall gemini
-tto uninstall opencode
-tto uninstall all
-```
-
-Profiles:
-
-```bash
-tto profile list
-tto profile coding
-tto profile research
-tto profile teaching
-tto profile paper
-tto profile command
-tto profile ultra
-```
-
-Config:
-
-```bash
-tto config init
-tto config get
-tto config path
-tto config set defaultProfile coding
-tto config set safetyMode strict
-```
-
-Estimate/compress:
-
-```bash
-tto estimate --target codex "ข้อความไทย"
-tto estimate --exact --target claude "ข้อความไทย"
-tto compress --level auto --budget 500 --target codex prompt.txt
-tto compress --level auto --budget 500 --target codex --check prompt.txt
-```
-
-Safety/preservation:
-
-```bash
-tto classify "DROP TABLE users production secret token"
-tto preserve original.txt optimized.txt
-```
-
-Backup/rollback:
-
-```bash
-tto backup all
-tto backups
-tto rollback latest --dry-run
-tto rollback latest
-tto rollback gemini --dry-run
-tto rollback gemini
-tto rollback latest --no-prebackup
-```
-
-Doctor/benchmark:
-
-```bash
-tto doctor
-tto doctor --ci
-tto benchmark
-tto benchmark --strict
-tto benchmark --strict --default-policy
-npm test
-npm run ci
-```
-
----
-
-## 15. Backup and rollback rules
-
-Backup before any config-changing operation.
-
-Use:
-
-```bash
-tto backup all
-```
-
-Before rollback, preview:
-
-```bash
-tto rollback latest --dry-run
-```
-
-Then run:
-
-```bash
-tto rollback latest
-```
-
-For target-specific rollback:
-
-```bash
-tto rollback gemini --dry-run
-tto rollback gemini
-```
-
-Rules:
-
-- `rollback gemini` must restore only Gemini files.
-- `rollback codex` must restore only Codex files.
-- `rollback all` may restore all backed-up targets.
-- `rollback latest` may affect whatever target the latest backup contains.
-- Prefer pre-rollback backup.
-- Do not delete user config without backup.
-- Do not silently restore unrelated targets.
-
----
-
-## 16. Benchmark and CI rules
-
-Use benchmark to validate token optimization quality.
-
-Recommended:
-
-```bash
-tto benchmark --strict --default-policy
-npm run ci
-```
-
-Strict benchmark should check:
-
-- average saving
-- preservation score
-- version preservation
-- code/config preservation
-- safety-critical behavior
-- constraint preservation
-
-CI behavior must be reproducible.
-
-Use default policy in CI:
-
-```bash
-tto benchmark --strict --default-policy
+node --check bin/thai-token-optimizer.js
+node --test tests/test_pretty_ui.js
+node --test tests/test_mtp_speculative.js tests/test_mtp_benchmark.js tests/test_mtp_detectors.js
+node --test tests/test_fleet_auditor.js tests/test_session_parsers_integration.js
+tto benchmark --pretty --strict --default-policy --mtp
+tto doctor --pretty
 tto doctor --ci
 ```
 
-Do not rely on user-local config for CI.
-
----
-
-## 17. Exact tokenizer mode
-
-Default token estimation may be heuristic.
-
-When exact mode is requested:
-
-```bash
-tto estimate --exact --target codex "ข้อความไทย"
-```
-
-Rules:
-
-- If exact tokenizer is available, use it.
-- If unavailable, say it falls back to heuristic.
-- Do not claim exact counts when using fallback.
-- Thai token counts vary by model/tokenizer.
-
-Target examples:
-
-```text
-codex
-claude
-gemini
-opencode
-```
-
----
-
-## 18. Prompt compression rules
-
-When compressing Thai prompts:
-
-Remove:
-
-- redundant politeness
-- repeated wording
-- filler
-- vague transitions
-- unnecessary background
-
-Keep:
-
-- task goal
-- constraints
-- target tool
-- output format
-- examples
-- numbers
-- version
-- filenames
-- commands
-- safety conditions
-
-Example:
-
-Original:
-
-```text
-ช่วยอธิบายรายละเอียดเกี่ยวกับแนวทางการติดตั้ง Thai Token Optimizer v1.0 ให้สามารถใช้งานกับ Codex และ Claude Code ได้ โดยต้องไม่เปลี่ยน package version 1.0.0 และขอให้มีคำสั่งทดสอบด้วย
-```
-
-Compressed:
-
-```text
-อธิบายติดตั้ง Thai Token Optimizer v1.0 สำหรับ Codex + Claude Code โดยห้ามเปลี่ยน package version 1.0.0 และใส่คำสั่งทดสอบ
-```
-
----
-
-## 19. Documentation rules
-
-When writing documentation for this project:
-
-- Keep `Thai Token Optimizer v1.0`.
-- Keep `package version: 1.0.0`.
-- Include supported tools.
-- Include installation commands.
-- Include CLI reference.
-- Include modes and profiles.
-- Include safety behavior.
-- Include backup/rollback.
-- Include benchmark/CI.
-- Include troubleshooting.
-- Include known limitations.
-- Avoid unsupported claims.
-- Do not claim runtime support that is not implemented or tested.
-- Mark untested integrations honestly.
-
-Recommended document sections:
-
-```text
-Overview
-Features
-Supported tools
-Quick start
-Installation
-Modes
-Profiles
-Configuration
-CLI reference
-Hooks
-Adapters
-Compression pipeline
-Safety
-Backup/Rollback
-Benchmark
-CI/CD
-Troubleshooting
-Development
-Security
-FAQ
-License
-```
-
----
-
-## 20. Testing behavior
-
-When asked to test or audit:
-
-Run or recommend:
+Full checks:
 
 ```bash
 npm test
+npm run test:ci
 npm run ci
-node --check <file>
-tto doctor
-tto benchmark --strict --default-policy
 ```
 
-For deep audit, check:
-
-- JavaScript syntax
-- JSON validity
-- JSONL validity
-- TOML validity
-- GitHub Actions YAML
-- package version lock
-- old-name references
-- unsupported claims
-- install/uninstall behavior
-- backup/rollback scope
-- CLI unknown flags
-- hook scripts with stdin JSON
-- generated adapter files
-- benchmark gates
-- config preservation
-
-When reporting results, separate:
+Report results as:
 
 ```text
-ผ่าน
-พบปัญหา
-ความเสี่ยง
-ต้องแก้
-ไฟล์ที่เกี่ยวข้อง
-คำสั่งทดสอบ
-```
+ผ่าน:
+- ...
 
----
+พบปัญหา:
+- ...
 
-## 21. Error handling
-
-When something fails:
-
-- State the exact failing command.
-- State the relevant file/function if known.
-- Provide minimal fix.
-- Provide verification command.
-- Provide rollback if config-changing.
-
-Example:
-
-```text
-ปัญหา: `tto install codex` ทำให้ `codex_hooks` ซ้ำ
-
-ไฟล์: `bin/thai-token-optimizer.js`
-ฟังก์ชัน: `ensureCodexFeatureFlag()`
-
-แก้: replace key เดิมแทน insert key ใหม่
+ไฟล์ที่แก้:
+- ...
 
 ทดสอบ:
+- ...
+```
+
+If tests generate artifacts such as `benchmarks/regression_report.md` or `benchmarks/regression_report.json`, inspect `git status` and avoid committing unintended artifacts.
+
+---
+
+## 13. Common Troubleshooting
+
+### Invalid Codex hook JSON
+
+Error:
+
+```text
+UserPromptSubmit hook failed
+error: hook returned invalid user prompt submit JSON output
+```
+
+or:
+
+```text
+Stop hook failed
+error: hook returned invalid stop hook JSON output
+```
+
+Likely cause:
+
+- hook prints non-JSON text to stdout
+- fallback output is not valid hook JSON
+- debug banner leaks into stdout
+
+Fix direction:
+
+```text
+stdout = valid JSON only
+stderr = debug logs if needed
+fallback = minimal valid JSON, e.g. {"continue":true} when contract allows
+```
+
+Verify:
+
 ```bash
-npm test
-npm run ci
+node --check hooks/tto-mode-tracker.js
+node --check hooks/tto-stop-summary.js
+tto doctor codex --pretty
 ```
-```
+
+### Doctor WARN
+
+`doctor --pretty` may be `WARN` if optional adapters are not installed or local agent binaries/configs are absent. That does not automatically mean core compression is broken.
+
+### MTP performance
+
+MTP/speculative in TTO is a candidate-selection layer. It can improve token reduction quality, but it is not a guaranteed model inference speedup.
 
 ---
 
-## 22. Prohibited behavior
+## 14. Response Examples
 
-Do not:
-
-- Reintroduce old project names.
-- Remove backup/rollback instructions from risky operations.
-- Compress away constraints.
-- Mutate paths, commands, config keys, or versions.
-- Claim all tests passed without running or seeing results.
-- Claim exact tokenizer behavior when using heuristic fallback.
-- Restore all targets when user requested one target.
-- Uninstall all targets when user requested one target.
-- Write destructive one-liners without safeguards.
-- Ignore user-provided negative instructions.
-- Over-compress educational or safety-critical explanations.
-
----
-
-## 23. Example responses
-
-### Simple status
+### Mode enabled
 
 ```text
 เปิด `token thai auto` แล้ว
 ```
 
-### Install Codex
+### Safe install
 
 ```text
-ติดตั้ง Codex:
+ติดตั้งแบบปลอดภัย:
 
 ```bash
 tto backup codex
 tto install codex
 tto install-agents
-tto doctor
+tto doctor codex --pretty
 ```
 ```
 
-### Safe rollback
+### Bugfix report
 
 ```text
-ตรวจ rollback ก่อน:
-
-```bash
-tto rollback gemini --dry-run
-```
-
-ถ้าถูกต้องค่อยรัน:
-
-```bash
-tto rollback gemini
-tto doctor
-```
-```
-
-### Bug report
-
-```text
-พบ 2 จุด:
-
-1. `ensureCodexFeatureFlag()` สร้าง `codex_hooks` ซ้ำ
-2. `rollback gemini` restore target อื่นจาก backup `all`
-
-แก้:
-- replace `codex_hooks` เดิม
-- filter restore files ตาม target
+แก้แล้ว:
+- replace `codex_hooks` เดิมแทนการ insert ซ้ำ
+- stop hook คืน valid JSON เท่านั้น
 
 ทดสอบ:
-```bash
-npm test
-npm run ci
-```
+- `node --test tests/test_pretty_ui.js` ผ่าน
 ```
 
----
-
-## 25. Advanced Spacing & Budget Rules
-
-- **Accuracy > Budget:** เมื่อใช้ `--budget` ห้ามตัด (slice/truncate) คำสั่ง, path, หรือ version แม้จะทำให้เกิน budget ก็ตาม ความถูกต้องทางเทคนิคต้องมาก่อนเสมอ (Mandate v1.0)
-- **Spacing Integrity:** ห้ามลบช่องว่างระหว่าง technical identifiers (เช่น `Optimizer v1.0`) เพื่อป้องกันการพังของ regex/parser
-- **Semantic Muting:** หาก Code Block สื่อความหมายชัดเจน (Self-documenting) ให้ตัดคำอธิบายไทยที่ซ้ำซ้อนออกได้ทันที
-- **Dictionary Priority:** คำใน `tto keep` มีสถานะเป็น "Hard Protected" ห้ามบีบอัดหรือเปลี่ยนแปลง
-
----
-
-## 26. Final rule
-
-Thai Token Optimizer v1.0 must make Thai interaction more compact without damaging:
+### Risky database request
 
 ```text
-safety
-correctness
-constraints
-reproducibility
-technical precision
+เสี่ยง: destructive database operation
+
+backup ก่อน:
+```bash
+mysqldump -u USER -p DB_NAME > backup.sql
 ```
 
-If there is conflict between shortness and correctness, choose correctness.
+ตรวจเป้าหมาย:
+```sql
+SELECT COUNT(*) FROM users;
+```
 
-If there is conflict between token reduction and safety, choose safety.
+ยังไม่ควรรัน `DROP TABLE users` จนกว่าจะยืนยัน backup, environment, และ rollback plan
+```
 
 ---
 
-## 27. Research: MTP & Speculative Decoding
+## 15. Prohibited Behavior
 
-แนวคิดของ **Multi-Token Prediction (MTP)** และ **Speculative Decoding** สามารถนำมาประยุกต์ใช้กับ **Thai Token Optimizer (TTO)** เพื่อเปลี่ยนผ่านจาก Rule-based ไปสู่ **Hybrid AI-driven**:
+Do not:
 
-- **TTO as a "Rule-based Speculator":** คาดการณ์ประโยคที่ถูกบีบอัดแล้วล่วงหน้า 3-5 tokens ขณะผู้ใช้พิมพ์ เพื่อทำ Auto-complete แบบ Real-time
-- **Training a TTO-Aware Draft Model:** เทรน Small Language Model (SLM) ด้วย Dataset ที่ผ่านการบีบอัดด้วย TTO เพื่อทำหน้าที่เป็น Draft Model ที่ Gen ข้อความไทยแบบ Compact
-- **Constraint-Aware Verification:** ใช้ `tto-preservation-checker.js` และ `tto-constraint-locker.js` เป็นส่วนหนึ่งของ Verification Step เพื่อตรวจสอบ Hard Constraints ก่อนตัดสินใจขั้นสุดท้าย
-- **Semantic Muting as Speculation:** ใช้ MTP ทำนายส่วนของคำอธิบายไทยที่ "ซ้ำซ้อน" กับโค้ด และสั่งหยุด Gen (Muting) เพื่อประหยัด token
+- Reintroduce older version labels or stale package identity.
+- Remove backup/rollback behavior from risky workflows.
+- Compress away hard constraints.
+- Mutate commands, paths, config keys, versions, or exact errors.
+- Claim exact tokenizer behavior when output is heuristic.
+- Claim tests passed without running them.
+- Restore all targets when user requested one target.
+- Uninstall all targets when user requested one target.
+- Print non-JSON logs to stdout from hooks that must return JSON.
+- Over-compress educational, production, database, security, auth, payment, or rollback guidance.
 
-ประโยชน์: ลด Latency (เร็วขึ้น) และเพิ่ม High Fidelity (แม่นยำขึ้น)
+---
+
+## 16. Final Rule
+
+Thai Token Optimizer v2.0 should make Thai coding-agent interaction compact, but never at the cost of safety, correctness, constraints, reproducibility, or technical precision.

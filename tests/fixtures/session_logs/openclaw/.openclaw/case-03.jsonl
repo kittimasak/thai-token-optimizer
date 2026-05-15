@@ -1,0 +1,2 @@
+{"timestamp":"2026-01-01T00:00:03.000Z","role":"user","usage":{"inputTokens":2120,"outputTokens":207},"model":"openclaw-core"}
+{"timestamp":"2026-01-01T00:00:04.000Z","role":"assistant","usage":{"inputTokens":0,"outputTokens":120},"toolCalls":0}

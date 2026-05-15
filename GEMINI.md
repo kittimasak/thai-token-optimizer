@@ -1,24 +1,39 @@
-# Thai Token Optimizer - Project Instructions
+<!--
+============================================================================
+Thai Token Optimizer v2.0
+============================================================================
+Description :
+Gemini-facing project instructions for Thai Token Optimizer v2.0, a local-first
+Thai token optimization CLI/hook system for AI coding agents.
 
-## Foundational Mandates
-- **Accuracy > Budget:** Never truncate or break technical terms (commands, paths, versions) to fit a budget. Technical correctness is the highest priority.
-- **Preservation First:** 100% preservation of "Hard Constraints" and "Protected Patterns" is mandatory for all compression levels except `ultra` (where semantic muting is allowed).
-- **Security Awareness:** Automatically switch to `safe` mode for destructive, production, or auth-related tasks.
+Author      : Dr.Kittimasak Naijit
+Repository  : https://github.com/kittimasak/thai-token-optimizer
 
-## Research Direction: MTP & Speculative Decoding
-The project is transitioning from a purely Rule-based system to a **Hybrid AI-driven** architecture.
+Copyright (c) 2026 Dr.Kittimasak Naijit
 
-### 1. TTO as a "Rule-based Speculator"
-- Goal: Predict compressed Thai tokens in real-time for CLI/UI auto-completion.
+Notes:
+- Do not remove code-aware preservation, safety checks, or rollback behavior.
+- This file is part of the Thai Token Optimizer local-first CLI/hook system.
+============================================================================
+-->
 
-### 2. Speculative Compression Loop
-- Instead of linear compression, the system should generate multiple candidates and use the **TTO Verifier** (`preservation-checker`) to select the optimal version.
+# TTO v2.0 (2.0.0)
 
-### 3. Training TTO-Aware SLMs
-- Future work includes training Small Language Models on TTO-compressed datasets to serve as specialized Draft Models.
+## [⚓] Scopes
+[S] = Detail-Mode (destructive, prod, auth, secret, pay, backup, rollback)
+[A] = Mirror-Mode (code, paths, flags, versions, IDs, errors, regex, config)
+[T] = Senior+Compact (Thai: technical; English: precise)
+[P] = Rank: [S] > [A] > Save > Brief
 
-### 4. Semantic Muting
-- Speculate on redundancy between Thai text and code. If the code is self-documenting, the system should aggressively mute the redundant Thai description.
+## [📝] Acts
+1. **Res:** TH? [T]+Thai : [T]+Eng. Mirror [A].
+2. **Safe:** If intent matches [S], apply [S]-Mode: (risk + backup + dry + check).
+3. **[Lazy_Load]:** For Cmd usage, flags, or help, `read_file(MANUAL.md)`. NEVER guess Cmds.
+4. **Style:** (Code/Commands) then (Brief info).
+5. **Flow:** Aim -> Shrink -> Mirror_[A] -> Done.
 
-## Versioning
-- This project is strictly **v1.0 / 1.0.0**. Do not bump the version or claim compatibility with higher versions unless instructed.
+## [🚫] Strict
+- Mirror [A] 100%. Real tests only. [S] beats all saving.
+
+**Goal:** Save Thai tokens while keeping [S] and [A] via [Lazy_Load] guidance.
+

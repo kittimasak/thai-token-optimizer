@@ -1,7 +1,7 @@
 {
   "name": "thai-token-optimizer",
-  "version": "1.0.0",
-  "description": "Thai Token Optimizer v1.0 — adaptive Thai token optimization for Codex, Claude Code, Gemini CLI, OpenCode, OpenClaw, and Hermes Agent.",
+  "version": "2.0.0",
+  "description": "Thai Token Optimizer v2.0 — adaptive Thai token optimization for Codex, Claude Code, Gemini CLI, OpenCode, OpenClaw, and Hermes Agent.",
   "private": false,
   "type": "commonjs",
   "scripts": {
@@ -21,8 +21,15 @@
     "tto:compress:budget": "node bin/thai-token-optimizer.js compress --budget 500",
     "benchmark": "node bin/thai-token-optimizer.js benchmark",
     "benchmark:strict": "node bin/thai-token-optimizer.js benchmark --strict",
+    "benchmark:history": "node scripts/update-benchmark-history.js",
+    "benchmark:trend": "node scripts/benchmark-trend-report.js 10",
+    "fleet:fixtures": "node scripts/generate-session-fixtures.js 30",
+    "fleet:history": "node scripts/update-fleet-history.js --out benchmarks/fleet_history.jsonl",
+    "fleet:gate": "node scripts/fleet-drift-gate.js --history benchmarks/fleet_history.jsonl --consecutive 3 --maxWasteTokens 200000 --maxUsd 10 --minConfidence 0.5",
+    "calibration:history": "node scripts/update-calibration-history.js",
+    "calibration:gate": "node scripts/calibration-ci-gate.js --history benchmarks/calibration_history.jsonl --maxGapPct 20 --consecutive 3",
     "doctor": "node bin/thai-token-optimizer.js doctor",
-    "ci": "npm run test:ci && node bin/thai-token-optimizer.js benchmark --strict --default-policy && node bin/thai-token-optimizer.js doctor --ci"
+    "ci": "npm run test:ci && node bin/thai-token-optimizer.js benchmark --strict --default-policy --mtp && node bin/thai-token-optimizer.js doctor --ci"
   },
   "engines": {
     "node": ">=18.0.0"

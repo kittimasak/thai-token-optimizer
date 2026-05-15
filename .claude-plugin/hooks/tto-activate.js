@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -21,6 +21,7 @@
 try {
   const { getState } = require('./tto-config');
   const { getProfileRules, getPolicy } = require('./tto-policy');
+  const { getLatestContinuitySummary } = require('./tto-runtime-analytics');
   const state = getState();
   const policy = getPolicy();
   if (!state.enabled) process.exit(0);
@@ -28,25 +29,30 @@ try {
   const level = ['auto', 'lite', 'full', 'safe'].includes(state.level) ? state.level : 'auto';
   const profile = state.profile || policy.defaultProfile || 'coding';
   const profileRules = getProfileRules(profile);
+  const continuity = getLatestContinuitySummary();
+  
+  // Dynamic Skill Hinting: Detect project context to guide SLM/Agent focus
+  let skillHint = 'General focus';
+  try {
+    const files = fs.readdirSync(process.cwd());
+    const hasJs = files.some(f => /\.(js|ts|jsx|tsx|json)$/.test(f));
+    const hasPy = files.some(f => /\.py$/.test(f));
+    const hasDocs = files.some(f => /\.(md|txt|pdf)$/.test(f));
+    skillHint = [
+      hasJs ? 'JS/TS focus' : null,
+      hasPy ? 'Python focus' : null,
+      hasDocs ? 'Docs focus' : null
+    ].filter(Boolean).join(', ') || 'General focus';
+  } catch (_) {}
+
   const ruleset =
-    `THAI TOKEN OPTIMIZER ACTIVE v1.0 — level: ${level}, profile: ${profile}\nProfile rule: ${profileRules.response}\n\n` +
-    'Goal: compact Thai output with lower token use while preserving technical accuracy. ' +
-    'Keep technical English terms, file paths, exact errors, identifiers, API names, command flags, URLs.\n\n' +
-    '## Levels\n' +
-    '- auto: choose lite/full/safe per task. Full for commands/debug/config, lite for concept, safe for risk.\n' +
-    '- lite: concise Thai, still friendly and explanatory.\n' +
-    '- full: shortest useful Thai. Use fragments/bullets. No filler.\n' +
-    '- safe: no over-compression. Explicit steps, backups, warnings, verification.\n\n' +
-    '## Remove\n' +
-    'Drop polite particles (ครับ, ค่ะ, นะคะ, นะครับ), hedging (อาจจะ, น่าจะ, จริงๆแล้ว), ' +
-    'pleasantries, repeated restatement, and empty filler.\n\n' +
-    '## Pattern\n' +
-    '`[คำตอบตรง] → [เหตุผลสั้น] → [วิธีทำ/โค้ด] → [ข้อควรระวังถ้าจำเป็น]`\n\n' +
-    '## Safety override\n' +
-    'Use safe mode for destructive commands, database migrations, production deploys, auth/security/secrets/payment, or when user asks for detailed clarification. ' +
-    'Do not sacrifice correctness, order, warnings, or rollback steps to save tokens.\n\n' +
-    '## Controls\n' +
-    'Switch: `token thai auto|lite|full|safe|off`. CLI: `tto auto|lite|full|safe|off`.\n';
+    `TTO v2 active — ${level}:${profile} (${skillHint}). ` +
+    `Rule: ${profileRules.response}. ` +
+    'ตอบไทยกระชับ; keep commands/paths/errors/IDs exact; safety tasks include risk/backup/verify/rollback. ' +
+    'Use `tto auto|lite|full|safe|off`.' +
+    (continuity
+      ? ` Checkpoint: ${continuity.id} (${continuity.summary})\n`
+      : '\n');
 
   process.stdout.write(ruleset);
   process.exit(0);

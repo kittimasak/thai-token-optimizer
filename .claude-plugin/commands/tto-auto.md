@@ -1,6 +1,6 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
 A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -18,10 +18,11 @@ Notes:
 
 # /tto-auto
 
-Enable Thai Token Optimizer auto mode.
+Enable TTO auto mode.
 
 ```text
 token thai auto
 ```
 
-Expected behavior: use compact Thai automatically based on task risk and profile.
+Default recommended mode. Claude Code chooses compact/lite/safe behavior from task risk and profile.
+

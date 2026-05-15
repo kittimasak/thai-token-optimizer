@@ -1,6 +1,6 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
 A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -24,4 +24,5 @@ Enable full mode.
 token thai full
 ```
 
-Use only for low-risk command/code/debug tasks requiring maximum brevity.
+Use only for low-risk command/code/debug tasks requiring maximum brevity. Never use for production/database/security/rollback work.
+

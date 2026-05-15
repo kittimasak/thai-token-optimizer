@@ -1,6 +1,6 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
 A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -18,10 +18,11 @@ Notes:
 
 # /tto-off
 
-Disable Thai Token Optimizer.
+Disable compact Thai behavior.
 
 ```text
 token thai off
 ```
 
-Return to normal assistant behavior.
+Return Claude Code to normal assistant behavior.
+

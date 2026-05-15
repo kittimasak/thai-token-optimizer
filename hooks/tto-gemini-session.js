@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -30,9 +30,7 @@ try {
     process.stdout.write(JSON.stringify({
       hookSpecificOutput: {
         additionalContext:
-          `THAI TOKEN OPTIMIZER ACTIVE v1.0 for Gemini CLI. level=${state.level}; profile=${profile}. ` +
-          `Profile rule: ${rules.response}. ตอบไทยกระชับ ลด filler คง code/path/version/error/command exact. ` +
-          'Safety override: destructive/database/production/auth/security/secrets/payment ต้องตอบชัด มี backup/rollback/verification.'
+          `TTO v2.0.0 [${state.level}:${profile}]: Compact Thai. Preserve code/path/version/error/command exact. Safety override for destructive tasks.`
       }
     }));
   }

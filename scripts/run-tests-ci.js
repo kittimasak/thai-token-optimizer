@@ -12,6 +12,11 @@ const files = fs.readdirSync(TEST_DIR)
   .sort()
   .map((name) => path.join(TEST_DIR, name));
 
+if (files.length === 0) {
+  console.error(`No test files found in ${TEST_DIR}`);
+  process.exit(1);
+}
+
 for (const file of files) {
   const rel = path.relative(ROOT, file);
   console.log(`==> ${rel}`);
@@ -21,11 +26,17 @@ for (const file of files) {
     timeout: TIMEOUT_MS
   });
 
-  if (run.error && run.error.code === 'ETIMEDOUT') {
-    console.error(`Timed out: ${rel} after ${TIMEOUT_MS}ms`);
-    process.exit(124);
+  if (run.error) {
+    if (run.error.code === 'ETIMEDOUT') {
+      console.error(`Timed out: ${rel} after ${TIMEOUT_MS}ms`);
+      process.exit(124);
+    }
+    console.error(`Error running ${rel}: ${run.error.message}`);
+    process.exit(1);
   }
+
   if (run.status !== 0) {
+    console.error(`Test failed: ${rel} (exit code ${run.status})`);
     process.exit(run.status || 1);
   }
 }

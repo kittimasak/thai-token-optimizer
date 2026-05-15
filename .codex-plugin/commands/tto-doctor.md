@@ -1,6 +1,6 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
 A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -18,10 +18,13 @@ Notes:
 
 # /tto-doctor
 
-Run Thai Token Optimizer health check.
+Run TTO health checks.
 
 ```bash
+tto doctor codex --pretty
 tto doctor --pretty
+tto doctor --ci
 ```
 
-Use after installing Codex hooks or when behavior is not active.
+Use after installing hooks, changing plugin files, or debugging Codex integration. `WARN` can be normal when optional local adapter footprints are absent.
+

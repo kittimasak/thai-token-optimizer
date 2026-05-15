@@ -8,7 +8,7 @@
             "type": "command",
             "command": "node \"${TTO_ROOT:-.}/hooks/tto-activate.js\"",
             "timeout": 5,
-            "statusMessage": "Loading Thai Token Optimizer v1.0"
+            "statusMessage": "Loading Thai Token Optimizer v2.0"
           }
         ]
       }

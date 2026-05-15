@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -21,21 +21,29 @@
 
 const { getState, logError } = require('./tto-config');
 
+function emitContinue(payload = {}) {
+  process.stdout.write(JSON.stringify({ continue: true, ...payload }));
+}
+
 let input = '';
 process.stdin.on('data', c => input += c);
 process.stdin.on('end', () => {
   try {
     const state = getState();
-    if (!state.enabled) process.exit(0);
-    process.stdout.write(JSON.stringify({
+    if (!state.enabled) {
+      emitContinue();
+      process.exit(0);
+    }
+    emitContinue({
       hookSpecificOutput: {
         hookEventName: 'PostToolUse',
         additionalContext:
-          'THAI TOKEN OPTIMIZER v1.0 POST-TOOL: summarize tool result in compact Thai. Include only changed files, key output, errors, and next action. Keep exact paths/errors.'
+          '[TTO Stage 4/4] Output Compact\nสรุปผลแบบสั้นและชัด: ไฟล์ที่เปลี่ยน, ผลลัพธ์สำคัญ, error (ถ้ามี), และ next action โดยคง path/error exact'
       }
-    }));
+    });
   } catch (e) {
     logError(`posttool-summary: ${e.message}`);
+    emitContinue();
   }
   process.exit(0);
 });

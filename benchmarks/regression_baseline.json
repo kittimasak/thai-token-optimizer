@@ -1,0 +1,348 @@
+{
+  "generatedAt": "2026-05-12T10:53:11.773Z",
+  "strict": true,
+  "mtp": true,
+  "reportPath": "benchmarks/regression_report.md",
+  "strictResult": {
+    "ok": true,
+    "avgSaving": 10.8,
+    "minPreservation": 100,
+    "codeOk": true,
+    "constraintsOk": true,
+    "gates": {
+      "minAverageSavingPercent": 10,
+      "minTechnicalTermPreservationPercent": 95,
+      "requireConstraintPreservationPercent": 100,
+      "requireCodeBlockPreservationPercent": 100,
+      "mtpMinAveragePreservationPercent": 100,
+      "mtpMinSpecHitRatePercent": 60,
+      "mtpMaxAverageSlowdownMs": 30,
+      "mtpEnhancedMinGainPercent": 12,
+      "mtpRepeats": 9,
+      "mtpWarmupRuns": 1,
+      "mtpSeed": 20260512,
+      "mtpEnhancedCorpusPath": "benchmarks/corpus_long_repetitive_mixed_tech_v1.jsonl",
+      "mtpFixtureCorpusPath": "benchmarks/corpus_overfit_guard_v1.jsonl",
+      "mtpFixtureMinGainPercent": 0
+    }
+  },
+  "mtpResult": {
+    "budget": 80,
+    "target": "codex",
+    "repeats": 9,
+    "warmup": 1,
+    "normal": {
+      "speculative": false,
+      "elapsedMs": 1.7,
+      "avgSaved": 6.1,
+      "avgAfter": 49.3,
+      "avgPreserve": 100,
+      "overBudgetCount": 0,
+      "specModeCount": 0,
+      "rows": [
+        {
+          "id": "constraint-version",
+          "mode": "normal",
+          "saved": 0,
+          "after": 47,
+          "preserve": 100,
+          "overBudget": false
+        },
+        {
+          "id": "code-command",
+          "mode": "normal",
+          "saved": 0,
+          "after": 41,
+          "preserve": 100,
+          "overBudget": false
+        },
+        {
+          "id": "db-safety",
+          "mode": "normal",
+          "saved": 0,
+          "after": 33,
+          "preserve": 100,
+          "overBudget": false
+        },
+        {
+          "id": "research",
+          "mode": "normal",
+          "saved": 2,
+          "after": 41,
+          "preserve": 100,
+          "overBudget": false
+        },
+        {
+          "id": "thai-filler-debug",
+          "mode": "normal",
+          "saved": 18,
+          "after": 60,
+          "preserve": 100,
+          "overBudget": false
+        },
+        {
+          "id": "thai-filler-install",
+          "mode": "normal",
+          "saved": 14,
+          "after": 56,
+          "preserve": 100,
+          "overBudget": false
+        },
+        {
+          "id": "thai-filler-research",
+          "mode": "normal",
+          "saved": 10,
+          "after": 58,
+          "preserve": 100,
+          "overBudget": false
+        },
+        {
+          "id": "thai-filler-report",
+          "mode": "normal",
+          "saved": 5,
+          "after": 58,
+          "preserve": 100,
+          "overBudget": false
+        }
+      ]
+    },
+    "speculative": {
+      "speculative": true,
+      "elapsedMs": 16.5,
+      "avgSaved": 7.1,
+      "avgAfter": 48.3,
+      "avgPreserve": 100,
+      "overBudgetCount": 0,
+      "specModeCount": 7,
+      "rows": [
+        {
+          "id": "constraint-version",
+          "mode": "spec:lite",
+          "saved": 0,
+          "after": 47,
+          "preserve": 100,
+          "overBudget": false
+        },
+        {
+          "id": "code-command",
+          "mode": "spec:lite",
+          "saved": 0,
+          "after": 41,
+          "preserve": 100,
+          "overBudget": false
+        },
+        {
+          "id": "db-safety",
+          "mode": "normal",
+          "saved": 0,
+          "after": 33,
+          "preserve": 100,
+          "overBudget": false
+        },
+        {
+          "id": "research",
+          "mode": "spec:lite",
+          "saved": 0,
+          "after": 43,
+          "preserve": 100,
+          "overBudget": false
+        },
+        {
+          "id": "thai-filler-debug",
+          "mode": "spec:auto",
+          "saved": 24,
+          "after": 54,
+          "preserve": 100,
+          "overBudget": false
+        },
+        {
+          "id": "thai-filler-install",
+          "mode": "spec:auto",
+          "saved": 14,
+          "after": 56,
+          "preserve": 100,
+          "overBudget": false
+        },
+        {
+          "id": "thai-filler-research",
+          "mode": "spec:auto",
+          "saved": 14,
+          "after": 54,
+          "preserve": 100,
+          "overBudget": false
+        },
+        {
+          "id": "thai-filler-report",
+          "mode": "spec:lite",
+          "saved": 5,
+          "after": 58,
+          "preserve": 100,
+          "overBudget": false
+        }
+      ]
+    },
+    "normalLatency": {
+      "mean": 1.8,
+      "p50": 1.8,
+      "p95": 2.1,
+      "stddev": 0.1
+    },
+    "speculativeLatency": {
+      "mean": 18.2,
+      "p50": 17.5,
+      "p95": 23.7,
+      "stddev": 2
+    },
+    "specHitRatePercent": 87.5,
+    "slowdownMeanMs": 16.4,
+    "gate": {
+      "mtpMinAveragePreservationPercent": 100,
+      "mtpMinSpecHitRatePercent": 60,
+      "mtpMaxAverageSlowdownMs": 30,
+      "mtpEnhancedMinGainPercent": 12
+    },
+    "gateOk": true,
+    "gateChecks": {
+      "qualityOk": true,
+      "hitRateOk": true,
+      "performanceOk": true,
+      "enhancedGainOk": true,
+      "enhancedPreservationParityOk": true,
+      "fixtureGainOk": true,
+      "fixturePreservationParityOk": true
+    },
+    "delta": {
+      "elapsedMs": 14.8,
+      "avgSaved": 1,
+      "avgAfter": -1,
+      "avgPreserve": 0
+    },
+    "drift": {
+      "normalSaved": {
+        "mean": 6.1,
+        "p50": 6.1,
+        "p95": 6.1,
+        "stddev": 0
+      },
+      "speculativeSaved": {
+        "mean": 7.1,
+        "p50": 7.1,
+        "p95": 7.1,
+        "stddev": 0
+      },
+      "slowdownMs": {
+        "mean": 16.3,
+        "p50": 15.7,
+        "p95": 21.6,
+        "stddev": 1.9
+      }
+    },
+    "policyExactTokenizer": false,
+    "seed": 20260512,
+    "enhancedCorpus": {
+      "corpusPath": "/Users/kittimasak.naijit/Desktop/thai-token-optimizer/benchmarks/corpus_long_repetitive_mixed_tech_v1.jsonl",
+      "samples": 4,
+      "budget": 120,
+      "target": "codex",
+      "baselineAvgSaved": 0.3,
+      "enhancedAvgSaved": 2,
+      "gainPercent": 566.7,
+      "minRequiredGainPercent": 12,
+      "preservationParityOk": true,
+      "gateOk": true,
+      "gateChecks": {
+        "gainOk": true,
+        "preservationParityOk": true
+      },
+      "rows": [
+        {
+          "id": "v1-long-narrative-devops",
+          "baselineSaved": 0,
+          "enhancedSaved": 7,
+          "baselinePreserve": 100,
+          "enhancedPreserve": 100
+        },
+        {
+          "id": "v1-mixed-technical-blocks",
+          "baselineSaved": 1,
+          "enhancedSaved": 1,
+          "baselinePreserve": 100,
+          "enhancedPreserve": 100
+        },
+        {
+          "id": "v1-long-repetitive-research",
+          "baselineSaved": 0,
+          "enhancedSaved": 0,
+          "baselinePreserve": 100,
+          "enhancedPreserve": 100
+        },
+        {
+          "id": "v1-incident-response-mixed",
+          "baselineSaved": 0,
+          "enhancedSaved": 0,
+          "baselinePreserve": 100,
+          "enhancedPreserve": 100
+        }
+      ]
+    },
+    "fixtureCorpus": {
+      "corpusPath": "/Users/kittimasak.naijit/Desktop/thai-token-optimizer/benchmarks/corpus_overfit_guard_v1.jsonl",
+      "samples": 3,
+      "baselineAvgSaved": 0,
+      "enhancedAvgSaved": 1,
+      "gainPercent": 100,
+      "minRequiredGainPercent": 0,
+      "preservationParityOk": true,
+      "gateOk": true,
+      "gateChecks": {
+        "gainOk": true,
+        "preservationParityOk": true
+      },
+      "rows": [
+        {
+          "id": "guard-short-technical",
+          "baselineSaved": 0,
+          "enhancedSaved": 3,
+          "baselinePreserve": 100,
+          "enhancedPreserve": 100
+        },
+        {
+          "id": "guard-mixed-narrative",
+          "baselineSaved": 0,
+          "enhancedSaved": 0,
+          "baselinePreserve": 100,
+          "enhancedPreserve": 100
+        },
+        {
+          "id": "guard-safety-critical",
+          "baselineSaved": 0,
+          "enhancedSaved": 0,
+          "baselinePreserve": 100,
+          "enhancedPreserve": 100
+        }
+      ]
+    }
+  },
+  "wasteSignals": [
+    {
+      "id": "low_saving_cluster",
+      "severity": "warn",
+      "message": "3 samples have <=1% savings; consider prompt decomposition or selective-window tuning"
+    },
+    {
+      "id": "output_waste",
+      "severity": "warn",
+      "message": "3 prompts still have low savings; output verbosity likely disproportionate to task complexity"
+    },
+    {
+      "id": "tool_cascade",
+      "severity": "warn",
+      "message": "3 consecutive low-saving technical turns detected; likely retry/tool cascade waste"
+    },
+    {
+      "id": "bad_decomposition",
+      "severity": "warn",
+      "message": "4 long low-saving prompts detected; split tasks into smaller scoped prompts"
+    }
+  ]
+}

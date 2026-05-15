@@ -1,0 +1,1 @@
+{"timestamp":"2026-01-01T00:00:03.000Z","type":"turn","usage":{"inputTokens":1890,"outputTokens":173},"model":"hermes-core","toolCalls":1}

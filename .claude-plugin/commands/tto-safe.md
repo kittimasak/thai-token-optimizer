@@ -1,6 +1,6 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
 A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -24,4 +24,5 @@ Enable safe mode.
 token thai safe
 ```
 
-Use for production, database, auth, security, backup, rollback, uninstall, and destructive operations.
+Use for production, database, auth, security, payment, backup, rollback, uninstall, and destructive operations. Keep risk/backup/dry-run/verify/rollback.
+

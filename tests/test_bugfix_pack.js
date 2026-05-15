@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -56,11 +56,11 @@ test('install all installs multi-agent adapters exactly once', () => {
 });
 
 test('budget compression preserves inline command, version, and codex_hooks without token-breaking', () => {
-  const input = 'ปรับ Thai Token Optimizer v1.0 โดยห้ามเปลี่ยนเวอร์ชันเด็ดขาด และคงคำสั่ง `node bin/thai-token-optimizer.js install all` กับ codex_hooks = true ใน ~/.codex/config.toml';
+  const input = 'ปรับ Thai Token Optimizer v2.0 โดยห้ามเปลี่ยนเวอร์ชันเด็ดขาด และคงคำสั่ง `node bin/thai-token-optimizer.js install all` กับ codex_hooks = true ใน ~/.codex/config.toml';
   const res = run(['compress', '--level', 'auto', '--budget', '15', '--target', 'codex', '--check', input]);
   assert.equal(res.status, 0, res.stdout + res.stderr);
-  assert.match(res.stdout, /Thai Token Optimizer v1\.0/);
-  assert.doesNotMatch(res.stdout, /v1\.\s+0/);
+  assert.match(res.stdout, /Thai Token Optimizer v2\.0/);
+  assert.doesNotMatch(res.stdout, /v2\.\s+0/);
   assert.match(res.stdout, /`node bin\/thai-token-optimizer\.js install all`/);
   assert.match(res.stdout, /codex_hooks = true/);
   assert.match(res.stdout, /~\/\.codex\/config\.toml/);

@@ -1,0 +1,232 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" role="img" aria-labelledby="title desc">
+  <title id="title">Safety / Backup / Rollback Loop</title>
+  <desc id="desc">Animated SVG diagram for Thai Token Optimizer safety, backup, and rollback workflow. Clean non-overlapping layout with correct clockwise loop direction.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#020617"/>
+      <stop offset="36%" stop-color="#0a1537"/>
+      <stop offset="68%" stop-color="#112a56"/>
+      <stop offset="100%" stop-color="#0b5f55"/>
+    </linearGradient>
+    <radialGradient id="orbPurple" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity=".50"/>
+      <stop offset="72%" stop-color="#7c3aed" stop-opacity=".10"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orbCyan" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity=".42"/>
+      <stop offset="75%" stop-color="#06b6d4" stop-opacity=".08"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#d946ef"/>
+      <stop offset="28%" stop-color="#818cf8"/>
+      <stop offset="55%" stop-color="#38bdf8"/>
+      <stop offset="78%" stop-color="#2dd4bf"/>
+      <stop offset="100%" stop-color="#4ade80"/>
+    </linearGradient>
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="60%" stop-color="#dbeafe"/>
+      <stop offset="100%" stop-color="#bbf7d0"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity=".18"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity=".05"/>
+    </linearGradient>
+    <linearGradient id="darkGlass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a" stop-opacity=".72"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity=".44"/>
+    </linearGradient>
+    <filter id="shadow" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="20" stdDeviation="18" flood-color="#020617" flood-opacity=".48"/>
+    </filter>
+    <filter id="glow" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style>
+      .title { font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif; font-size: 46px; font-weight: 900; letter-spacing: -1px; fill: url(#titleGrad); }
+      .subtitle { font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif; font-size: 19px; font-weight: 560; fill: #dbe7f5; }
+      .centerTitle { font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif; font-size: 34px; font-weight: 900; fill: #f8fafc; }
+      .centerSub { font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif; font-size: 17px; font-weight: 650; fill: #cbd5e1; }
+      .stepNo { font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif; font-size: 24px; font-weight: 900; fill: #f8fafc; }
+      .stepText { font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif; font-size: 15px; font-weight: 760; fill: #eff6ff; }
+      .mini { font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif; font-size: 13px; font-weight: 600; fill: #cbd5e1; }
+      .mono { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; font-size: 14px; fill: #dbeafe; }
+      .accentBar { animation: barPulse 3s ease-in-out infinite; }
+      .orbit { fill: none; stroke: #38bdf8; stroke-width: 1.2; opacity: .14; stroke-dasharray: 4 13; animation: orbitSpin 22s linear infinite; transform-origin: 1110px 105px; }
+      .particle { fill: #dbeafe; opacity: 0; animation: twinkle 4.2s ease-in-out infinite; }
+      .p2 { animation-delay: .55s; } .p3 { animation-delay: 1.1s; } .p4 { animation-delay: 1.65s; } .p5 { animation-delay: 2.2s; }
+      .loopGlow { fill: none; stroke: url(#accent); stroke-width: 20; opacity: .11; filter: url(#glow); }
+      .loopBase { fill: none; stroke: rgba(226,232,240,.20); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 10 12; }
+      .loopMain { fill: none; stroke: url(#accent); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 82 34; animation: loopDash 7s linear infinite; filter: url(#glow); }
+      .stepNode { filter: url(#shadow); animation: floatNode 5.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      .s2 { animation-delay: .25s; } .s3 { animation-delay: .50s; } .s4 { animation-delay: .75s; } .s5 { animation-delay: 1.00s; } .s6 { animation-delay: 1.25s; }
+      .ringPulse { fill: none; stroke-width: 2; opacity: .26; animation: ringPulse 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      .centerCore { filter: url(#shadow); animation: centerFloat 6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      .shield { animation: shieldGlow 2.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      .arrowHead { filter: url(#glow); animation: arrowPulse 2s ease-in-out infinite; }
+      .cmdCard { fill: url(#glass); stroke: rgba(255,255,255,.18); stroke-width: 1.2; filter: url(#shadow); }
+      .cmdLine { opacity: .86; animation: cmdBlink 3s ease-in-out infinite; }
+      @keyframes barPulse { 0%,100% { opacity: .82; } 50% { opacity: 1; } }
+      @keyframes orbitSpin { to { transform: rotate(360deg); } }
+      @keyframes twinkle { 0%,100% { opacity: 0; transform: translateX(0); } 42% { opacity: .85; } 72% { opacity: .25; transform: translateX(12px); } }
+      @keyframes loopDash { to { stroke-dashoffset: -232; } }
+      @keyframes floatNode { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+      @keyframes ringPulse { 0%,100% { transform: scale(1); opacity: .20; } 50% { transform: scale(1.24); opacity: .40; } }
+      @keyframes centerFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+      @keyframes shieldGlow { 0%,100% { transform: scale(1); opacity: .86; } 50% { transform: scale(1.05); opacity: 1; } }
+      @keyframes arrowPulse { 0%,100% { opacity: .76; } 50% { opacity: 1; } }
+      @keyframes cmdBlink { 0%,100% { opacity: .72; } 50% { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) {
+        .accentBar,.orbit,.particle,.loopMain,.stepNode,.ringPulse,.centerCore,.shield,.arrowHead,.cmdLine { animation: none !important; }
+      }
+    </style>
+  </defs>
+
+  <rect width="1400" height="860" rx="32" fill="url(#bg)"/>
+  <rect x="1" y="1" width="1398" height="858" rx="31" fill="none" stroke="rgba(255,255,255,.08)"/>
+
+  <circle cx="160" cy="690" r="270" fill="url(#orbPurple)"/>
+  <circle cx="1185" cy="135" r="290" fill="url(#orbCyan)"/>
+  <circle cx="700" cy="790" r="320" fill="#22d3ee" opacity=".045"/>
+  <path class="orbit" d="M998 104 C1074 8 1228 26 1268 136 C1310 256 1152 330 1076 248 C1012 180 1030 108 1116 76"/>
+  <path class="orbit" opacity=".10" d="M942 146 C1042 4 1292 6 1346 198"/>
+  <circle class="particle" cx="272" cy="154" r="2.0"/>
+  <circle class="particle p2" cx="438" cy="122" r="1.7"/>
+  <circle class="particle p3" cx="1010" cy="262" r="1.9"/>
+  <circle class="particle p4" cx="1186" cy="364" r="1.8"/>
+  <circle class="particle p5" cx="628" cy="198" r="1.6"/>
+
+  <!-- header -->
+  <rect x="60" y="58" width="10" height="78" rx="5" fill="url(#accent)" class="accentBar"/>
+  <text x="92" y="104" class="title">Safety / Backup / Rollback Loop</text>
+  <text x="94" y="140" class="subtitle">Risky operations follow a reversible discipline before changes become permanent</text>
+
+  <!-- command card -->
+  <g>
+    <rect x="978" y="64" width="330" height="126" rx="24" class="cmdCard"/>
+    <circle cx="1006" cy="97" r="6" fill="#fb7185"/>
+    <circle cx="1026" cy="97" r="6" fill="#fbbf24"/>
+    <circle cx="1046" cy="97" r="6" fill="#4ade80"/>
+    <text x="1074" y="102" class="mini">rollback discipline</text>
+    <text x="1002" y="138" class="mono cmdLine">$ tto backup all</text>
+    <text x="1002" y="167" class="mono cmdLine">tto rollback latest --dry-run</text>
+  </g>
+
+  <!-- main loop, lowered to avoid overlap with header -->
+  <path id="loopPath" d="M700 240 C878 240 1008 340 1008 470 C1008 600 878 700 700 700 C522 700 392 600 392 470 C392 340 522 240 700 240 Z" class="loopGlow"/>
+  <path d="M700 240 C878 240 1008 340 1008 470 C1008 600 878 700 700 700 C522 700 392 600 392 470 C392 340 522 240 700 240 Z" class="loopBase"/>
+  <path d="M700 240 C878 240 1008 340 1008 470 C1008 600 878 700 700 700 C522 700 392 600 392 470 C392 340 522 240 700 240 Z" class="loopMain"/>
+
+  <circle r="9" fill="#67e8f9" filter="url(#glow)">
+    <animateMotion dur="7s" repeatCount="indefinite" rotate="auto">
+      <mpath href="#loopPath"/>
+    </animateMotion>
+  </circle>
+
+  <!-- clockwise direction arrowheads aligned to the loop -->
+  <g class="arrowHead" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="4">
+    <!-- 1 -> 2 : upper-right arc -->
+    <g transform="translate(918 307) rotate(37)">
+      <path d="M-16 -10 L0 0 L-16 10" stroke="#67e8f9"/>
+    </g>
+    <!-- 2 -> 3 : right vertical arc -->
+    <g transform="translate(1008 470) rotate(90)">
+      <path d="M-16 -10 L0 0 L-16 10" stroke="#5eead4"/>
+    </g>
+    <!-- 3 -> 4 : lower-right arc -->
+    <g transform="translate(918 633) rotate(143)">
+      <path d="M-16 -10 L0 0 L-16 10" stroke="#34d399"/>
+    </g>
+    <!-- 4 -> 5 : lower-left arc -->
+    <g transform="translate(482 633) rotate(-143)">
+      <path d="M-16 -10 L0 0 L-16 10" stroke="#a78bfa"/>
+    </g>
+    <!-- 5 -> 6 : left vertical arc -->
+    <g transform="translate(392 470) rotate(-90)">
+      <path d="M-16 -10 L0 0 L-16 10" stroke="#c084fc"/>
+    </g>
+    <!-- 6 -> 1 : upper-left arc -->
+    <g transform="translate(482 307) rotate(-37)">
+      <path d="M-16 -10 L0 0 L-16 10" stroke="#818cf8"/>
+    </g>
+  </g>
+
+  <!-- center core -->
+  <g class="centerCore">
+    <circle cx="700" cy="470" r="146" fill="url(#glass)" stroke="rgba(103,232,249,.55)" stroke-width="2.2"/>
+    <circle cx="700" cy="470" r="114" fill="rgba(2,6,23,.34)" stroke="rgba(255,255,255,.10)"/>
+    <g class="shield" fill="none" stroke="#5eead4" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M700 388 l60 22 v48 c0 48 -30 82 -60 96 c-30 -14 -60 -48 -60 -96 v-48z"/>
+      <path d="M670 468 l22 22 l44 -56"/>
+    </g>
+    <text x="700" y="596" text-anchor="middle" class="centerTitle">Safe by default</text>
+    <text x="700" y="628" text-anchor="middle" class="centerSub">preserve • verify • recover</text>
+  </g>
+
+  <!-- step nodes positioned with no overlap -->
+  <g class="stepNode">
+    <circle class="ringPulse" cx="700" cy="240" r="58" stroke="#c084fc"/>
+    <circle cx="700" cy="240" r="62" fill="url(#darkGlass)" stroke="#c084fc" stroke-width="2.2"/>
+    <circle cx="700" cy="240" r="34" fill="rgba(168,85,247,.18)" stroke="rgba(192,132,252,.45)"/>
+    <text x="700" y="235" text-anchor="middle" class="stepNo">1</text>
+    <text x="700" y="266" text-anchor="middle" class="stepText">classify risk</text>
+  </g>
+
+  <g class="stepNode s2">
+    <circle class="ringPulse" cx="940" cy="360" r="58" stroke="#60a5fa"/>
+    <circle cx="940" cy="360" r="62" fill="url(#darkGlass)" stroke="#60a5fa" stroke-width="2.2"/>
+    <circle cx="940" cy="360" r="34" fill="rgba(59,130,246,.18)" stroke="rgba(96,165,250,.45)"/>
+    <text x="940" y="355" text-anchor="middle" class="stepNo">2</text>
+    <text x="940" y="386" text-anchor="middle" class="stepText">backup first</text>
+  </g>
+
+  <g class="stepNode s3">
+    <circle class="ringPulse" cx="940" cy="580" r="58" stroke="#22d3ee"/>
+    <circle cx="940" cy="580" r="62" fill="url(#darkGlass)" stroke="#22d3ee" stroke-width="2.2"/>
+    <circle cx="940" cy="580" r="34" fill="rgba(6,182,212,.18)" stroke="rgba(34,211,238,.45)"/>
+    <text x="940" y="575" text-anchor="middle" class="stepNo">3</text>
+    <text x="940" y="606" text-anchor="middle" class="stepText">dry-run</text>
+  </g>
+
+  <g class="stepNode s4">
+    <circle class="ringPulse" cx="700" cy="700" r="58" stroke="#4ade80"/>
+    <circle cx="700" cy="700" r="62" fill="url(#darkGlass)" stroke="#4ade80" stroke-width="2.2"/>
+    <circle cx="700" cy="700" r="34" fill="rgba(34,197,94,.18)" stroke="rgba(74,222,128,.45)"/>
+    <text x="700" y="695" text-anchor="middle" class="stepNo">4</text>
+    <text x="700" y="726" text-anchor="middle" class="stepText">apply change</text>
+  </g>
+
+  <g class="stepNode s5">
+    <circle class="ringPulse" cx="460" cy="580" r="58" stroke="#2dd4bf"/>
+    <circle cx="460" cy="580" r="62" fill="url(#darkGlass)" stroke="#2dd4bf" stroke-width="2.2"/>
+    <circle cx="460" cy="580" r="34" fill="rgba(20,184,166,.18)" stroke="rgba(45,212,191,.45)"/>
+    <text x="460" y="575" text-anchor="middle" class="stepNo">5</text>
+    <text x="460" y="606" text-anchor="middle" class="stepText">verify result</text>
+  </g>
+
+  <g class="stepNode s6">
+    <circle class="ringPulse" cx="460" cy="360" r="58" stroke="#a78bfa"/>
+    <circle cx="460" cy="360" r="62" fill="url(#darkGlass)" stroke="#a78bfa" stroke-width="2.2"/>
+    <circle cx="460" cy="360" r="34" fill="rgba(167,139,250,.18)" stroke="rgba(167,139,250,.45)"/>
+    <text x="460" y="355" text-anchor="middle" class="stepNo">6</text>
+    <text x="460" y="386" text-anchor="middle" class="stepText">rollback ready</text>
+  </g>
+
+  <!-- bottom caption cards -->
+  <g>
+    <rect x="64" y="744" width="272" height="62" rx="31" fill="rgba(2,6,23,.38)" stroke="rgba(255,255,255,.16)" filter="url(#shadow)"/>
+    <text x="200" y="770" text-anchor="middle" class="mini">Safety checklist</text>
+    <text x="200" y="794" text-anchor="middle" class="mini">classify → backup → verify</text>
+
+    <rect x="1062" y="744" width="274" height="62" rx="31" fill="rgba(2,6,23,.38)" stroke="rgba(255,255,255,.16)" filter="url(#shadow)"/>
+    <text x="1199" y="770" text-anchor="middle" class="mini">Recovery-first design</text>
+    <text x="1199" y="794" text-anchor="middle" class="mini">rollback path always ready</text>
+  </g>
+</svg>

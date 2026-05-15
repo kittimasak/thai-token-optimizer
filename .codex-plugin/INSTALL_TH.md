@@ -1,9 +1,9 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
-A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
+คู่มือติดตั้ง Codex Plugin สำหรับ Thai Token Optimizer v2.0.
 
 Author      : Dr.Kittimasak Naijit
 Repository  : https://github.com/kittimasak/thai-token-optimizer
@@ -16,65 +16,26 @@ Notes:
 ============================================================================
 -->
 
-# คู่มือติดตั้ง Codex Plugin — Thai Token Optimizer v1.0
-
-> คู่มือสำหรับ `.codex-plugin` ของ **Thai Token Optimizer v1.0**
+# คู่มือติดตั้ง Codex Plugin — Thai Token Optimizer v2.0
 
 ```text
-Thai Token Optimizer v1.0
-package version: 1.0.0
+Thai Token Optimizer v2.0
+package version: 2.0.0
 ```
 
 ## ภาพรวม
 
-โฟลเดอร์ `.codex-plugin` ใช้ประกาศ metadata, hooks, command templates และ skill guidance สำหรับติดตั้ง Thai Token Optimizer ให้กับ Codex
+โฟลเดอร์ `.codex-plugin` ใช้ประกาศ metadata, lifecycle hooks, command templates และ skill guidance สำหรับติดตั้ง Thai Token Optimizer ให้กับ Codex
 
-เมื่อใช้งานแล้ว Codex จะสามารถ:
+เมื่อติดตั้งแล้ว Codex จะได้:
 
-- ตอบภาษาไทยแบบกระชับ
-- ลดคำฟุ่มเฟือย
-- รักษา command, path, config, version, error และ code
-- เปิด/ปิดโหมดผ่านข้อความในแชต เช่น `token thai auto`
-- ใช้ safety mode เมื่องานเสี่ยง
-- เรียก hook ก่อน/หลัง tool use
-- ใช้ `AGENTS.md` เป็น instruction หลักของ Codex
-
-## โครงสร้างไฟล์
-
-```text
-.codex-plugin/
-├── plugin.json
-├── README.md
-├── INSTALL_TH.md
-├── VALIDATION.md
-├── hooks/
-│   └── hooks.json
-├── commands/
-│   ├── tto-auto.md
-│   ├── tto-lite.md
-│   ├── tto-full.md
-│   ├── tto-safe.md
-│   ├── tto-off.md
-│   ├── tto-status.md
-│   ├── tto-doctor.md
-│   └── tto-dashboard.md
-└── skills/
-    └── thai-token-optimizer/
-        ├── SKILL.md
-        └── AGENT_GUIDE.md
-```
-
-## ติดตั้งจาก GitHub
-
-```bash
-git clone https://github.com/kittimasak/thai-token-optimizer.git
-cd thai-token-optimizer
-
-npm install
-npm test
-npm run ci
-npm link
-```
+- compact Thai response behavior
+- safety-aware hook guidance
+- preservation ของ command/path/version/error/config exact
+- mode trigger เช่น `token thai auto`
+- MTP/speculative command guidance
+- quality/coach/ops/fleet/checkpoint/cache/context command templates
+- rollback-first installation workflow
 
 ## ติดตั้งเฉพาะ Codex
 
@@ -82,7 +43,7 @@ npm link
 tto backup codex
 tto install codex
 tto install-agents
-tto doctor --pretty
+tto doctor codex --pretty
 ```
 
 ไฟล์ที่เกี่ยวข้อง:
@@ -93,7 +54,7 @@ tto doctor --pretty
 ~/.codex/AGENTS.md
 ```
 
-## ติดตั้งทุกระบบ
+## ติดตั้งทุก integration
 
 ```bash
 tto backup all
@@ -104,45 +65,42 @@ tto doctor --pretty
 
 ## ใช้งานใน Codex
 
-หลังติดตั้งแล้ว restart Codex จากนั้นพิมพ์:
-
 ```text
 token thai auto
-```
-
-โหมดอื่น:
-
-```text
 token thai lite
 token thai full
 token thai safe
 token thai off
+/tto spec
+/tto nospec
+/tto nointeractive
 ```
 
-## ตรวจสอบ plugin.json
+## คำสั่ง v2 สำคัญ
+
+```bash
+tto status --pretty
+tto dashboard --view overview
+tto compress --pretty --level auto --target codex --budget 500 --check prompt.txt
+tto compress --speculative --diagnostics --check --target codex prompt.txt
+tto benchmark --pretty --strict --default-policy --mtp
+tto quality --pretty
+tto coach --pretty
+tto ops --pretty
+tto fleet --pretty --doctor --calibration --session-scan
+tto checkpoint status --pretty
+tto cache stats --pretty
+tto context --pretty
+tto calibration status --pretty
+```
+
+## ตรวจ plugin/hook files
 
 ```bash
 node -e "JSON.parse(require('fs').readFileSync('.codex-plugin/plugin.json','utf8')); console.log('plugin.json OK')"
-```
-
-## ตรวจสอบ hooks.json
-
-```bash
 node -e "JSON.parse(require('fs').readFileSync('.codex-plugin/hooks/hooks.json','utf8')); console.log('hooks.json OK')"
-```
-
-## ตรวจสุขภาพระบบ
-
-```bash
-tto doctor --pretty
-```
-
-## ตรวจ UI
-
-```bash
-tto ui
-tto status --pretty
-tto doctor --pretty
+find .codex-plugin/hooks -name '*.js' -print0 | xargs -0 -n1 node --check
+node --test tests/test_codex_triggers.js tests/test_pretty_ui.js
 ```
 
 ## Rollback
@@ -165,24 +123,12 @@ tto rollback codex
 tto uninstall codex
 ```
 
-หรือ uninstall ทุก integration:
-
-```bash
-tto uninstall all
-```
-
 ## ข้อควรระวัง
 
-- ห้ามเปลี่ยน `package version: 1.0.0`
-- ห้ามลบ safety checks
-- ห้ามลบ backup/rollback behavior
+- ห้ามเปลี่ยน `Thai Token Optimizer v2.0` และ `package version: 2.0.0`
+- ห้ามลบ safety checks, preservation checks, backup หรือ rollback behavior
 - ห้ามใส่ API key, token, password หรือ secret ใน `.codex-plugin`
-- ถ้าแก้ hook หรือ plugin metadata ให้รัน `npm test` และ `npm run ci`
+- hook ที่ Codex parse เป็น JSON ต้องพิมพ์ valid JSON ใน stdout เท่านั้น
 - `codex_hooks = true` ต้องอยู่เพียงครั้งเดียวใน `~/.codex/config.toml`
+- `doctor --pretty` อาจเป็น `WARN` ถ้า optional integration footprint ยังไม่ครบในเครื่อง
 
-## ผู้จัดทำ
-
-```text
-Author: Dr.Kittimasak Naijit
-Repository: https://github.com/kittimasak/thai-token-optimizer
-```

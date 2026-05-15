@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -29,7 +29,7 @@ process.stdin.on('end', () => {
     process.stdout.write(JSON.stringify({
       hookSpecificOutput: {
         additionalContext:
-          'THAI TOKEN OPTIMIZER v1.0 GEMINI PRE-COMPRESS: preserve current task, decisions, changed files, commands, errors, constraints, versions, and next action. Summarize Thai compactly.'
+          'THAI TOKEN OPTIMIZER v2.0.0 GEMINI PRE-COMPRESS: Systematically compress previous conversation history. Discard narrative filler, keep only the latest technical state, decisions, changed files, commands, and errors. Summarize Thai compactly to prevent context bloat.'
       }
     }));
   } catch (e) { logError(`gemini-precompress: ${e.message}`); }

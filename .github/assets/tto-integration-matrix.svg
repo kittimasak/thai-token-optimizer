@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-label="Thai Token Optimizer diagram">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="45%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#0f766e"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.06"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="50%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#020617" flood-opacity="0.35"/>
+    </filter>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <style>
+      .title { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 800; fill: #f8fafc; }
+      .subtitle { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 500; fill: #cbd5e1; }
+      .label { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 700; fill: #f8fafc; }
+      .small { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 500; fill: #cbd5e1; }
+      .mono { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; fill: #e2e8f0; }
+      .chip { fill: rgba(255,255,255,0.11); stroke: rgba(255,255,255,0.22); stroke-width: 1; }
+      .card { fill: url(#card); stroke: rgba(255,255,255,0.20); stroke-width: 1.2; }
+      .line { stroke: #67e8f9; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; fill: none; opacity: 0.86; }
+      .arrow { fill: #67e8f9; }
+    </style>
+    
+  </defs>
+  <rect width="1200" height="760" rx="28" fill="url(#bg)"/>
+  <circle cx="984" cy="137" r="170" fill="#22d3ee" opacity="0.10"/>
+  <circle cx="180" cy="570" r="190" fill="#a78bfa" opacity="0.12"/>
+  <text x="60" y="70" font-size="40" text-anchor="start" class="title">Integration Matrix</text><text x="60" y="106" font-size="18" text-anchor="start" class="subtitle">One optimizer layer for multiple AI coding agents and rule adapters</text><rect x="80" y="150" width="480" height="70" rx="18" class="card" filter="url(#shadow)"/><circle cx="124" cy="185" r="22" fill="url(#accent)" opacity="0.35"/><text x="164" y="181" font-size="21" text-anchor="start" class="label">Codex</text><text x="164" y="206" font-size="15" text-anchor="start" class="small">hooks + AGENTS • `tto install`</text><rect x="610" y="150" width="480" height="70" rx="18" class="card" filter="url(#shadow)"/><circle cx="654" cy="185" r="22" fill="url(#accent)" opacity="0.35"/><text x="694" y="181" font-size="21" text-anchor="start" class="label">Claude Code</text><text x="694" y="206" font-size="15" text-anchor="start" class="small">settings hooks • `tto install`</text><rect x="80" y="246" width="480" height="70" rx="18" class="card" filter="url(#shadow)"/><circle cx="124" cy="281" r="22" fill="url(#accent)" opacity="0.35"/><text x="164" y="277" font-size="21" text-anchor="start" class="label">Gemini CLI</text><text x="164" y="302" font-size="15" text-anchor="start" class="small">extension + hooks • `tto install`</text><rect x="610" y="246" width="480" height="70" rx="18" class="card" filter="url(#shadow)"/><circle cx="654" cy="281" r="22" fill="url(#accent)" opacity="0.35"/><text x="694" y="277" font-size="21" text-anchor="start" class="label">OpenCode</text><text x="694" y="302" font-size="15" text-anchor="start" class="small">native plugin • `tto install`</text><rect x="80" y="342" width="480" height="70" rx="18" class="card" filter="url(#shadow)"/><circle cx="124" cy="377" r="22" fill="url(#accent)" opacity="0.35"/><text x="164" y="373" font-size="21" text-anchor="start" class="label">OpenClaw</text><text x="164" y="398" font-size="15" text-anchor="start" class="small">managed hook • `tto install`</text><rect x="610" y="342" width="480" height="70" rx="18" class="card" filter="url(#shadow)"/><circle cx="654" cy="377" r="22" fill="url(#accent)" opacity="0.35"/><text x="694" y="373" font-size="21" text-anchor="start" class="label">Hermes Agent</text><text x="694" y="398" font-size="15" text-anchor="start" class="small">shell/plugin hooks • `tto install`</text><rect x="80" y="438" width="480" height="70" rx="18" class="card" filter="url(#shadow)"/><circle cx="124" cy="473" r="22" fill="url(#accent)" opacity="0.35"/><text x="164" y="469" font-size="21" text-anchor="start" class="label">Cursor</text><text x="164" y="494" font-size="15" text-anchor="start" class="small">rule adapter • `tto install`</text><rect x="610" y="438" width="480" height="70" rx="18" class="card" filter="url(#shadow)"/><circle cx="654" cy="473" r="22" fill="url(#accent)" opacity="0.35"/><text x="694" y="469" font-size="21" text-anchor="start" class="label">Aider</text><text x="694" y="494" font-size="15" text-anchor="start" class="small">rule adapter • `tto install`</text><rect x="80" y="534" width="480" height="70" rx="18" class="card" filter="url(#shadow)"/><circle cx="124" cy="569" r="22" fill="url(#accent)" opacity="0.35"/><text x="164" y="565" font-size="21" text-anchor="start" class="label">Cline</text><text x="164" y="590" font-size="15" text-anchor="start" class="small">rule adapter • `tto install`</text><rect x="610" y="534" width="480" height="70" rx="18" class="card" filter="url(#shadow)"/><circle cx="654" cy="569" r="22" fill="url(#accent)" opacity="0.35"/><text x="694" y="565" font-size="21" text-anchor="start" class="label">Roo Code</text><text x="694" y="590" font-size="15" text-anchor="start" class="small">rule adapter • `tto install`</text><rect x="355" y="655" width="490" height="54" rx="27" fill="#020617" opacity="0.50" stroke="#67e8f9" stroke-opacity="0.55"/><text x="600" y="690" font-size="20" text-anchor="middle" class="mono">Install all:  tto install all</text>
+</svg>

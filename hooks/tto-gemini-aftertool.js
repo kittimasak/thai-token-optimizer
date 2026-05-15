@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -29,7 +29,7 @@ process.stdin.on('end', () => {
     process.stdout.write(JSON.stringify({
       hookSpecificOutput: {
         additionalContext:
-          'THAI TOKEN OPTIMIZER v1.0 GEMINI AFTER-TOOL: summarize compactly in Thai. Include changed files, key result, errors, and next action only. Keep exact paths/errors.'
+          '[TTO Stage 4/4] Output Compact\nGemini tool result received. If the output is a long log, progress bar, or stack trace, aggressively mask it in your thought process. Extract only the start, end, and core errors. Keep exact paths/errors. Discard redundant structural waste.'
       }
     }));
   } catch (e) { logError(`gemini-aftertool: ${e.message}`); }

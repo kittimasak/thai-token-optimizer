@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -68,9 +68,9 @@ test('activate emits reminder when enabled=true level=full', () => {
       JSON.stringify({ enabled: true, level: 'full', version: 1 }));
     const result = runActivate({ TTO_HOME: home });
     assert.equal(result.status, 0);
-    assert.match(result.stdout, /THAI TOKEN OPTIMIZER ACTIVE/);
-    assert.match(result.stdout, /level: full/);
-    assert.match(result.stdout, /Thai/);
+    assert.match(result.stdout, /TTO v2 active/);
+    assert.match(result.stdout, /full:coding/);
+    assert.match(result.stdout, /ตอบไทยกระชับ/);
   } finally {
     fs.rmSync(home, { recursive: true, force: true });
   }
@@ -83,7 +83,7 @@ test('activate emits reminder when enabled=true level=lite', () => {
       JSON.stringify({ enabled: true, level: 'lite', version: 1 }));
     const result = runActivate({ TTO_HOME: home });
     assert.equal(result.status, 0);
-    assert.match(result.stdout, /level: lite/);
+    assert.match(result.stdout, /lite:coding/);
   } finally {
     fs.rmSync(home, { recursive: true, force: true });
   }

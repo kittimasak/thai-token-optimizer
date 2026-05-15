@@ -1,6 +1,6 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
 A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -18,14 +18,11 @@ Notes:
 
 # /tto-status
 
-Show Thai Token Optimizer status.
-
-```bash
-tto status
-```
-
-Pretty UI:
+Show TTO status.
 
 ```bash
 tto status --pretty
 ```
+
+Use to verify enabled state, mode, profile, safety mode, and quick commands.
+

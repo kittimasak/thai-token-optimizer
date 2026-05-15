@@ -1,9 +1,9 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
-A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
+Codex plugin package documentation for Thai Token Optimizer v2.0.
 
 Author      : Dr.Kittimasak Naijit
 Repository  : https://github.com/kittimasak/thai-token-optimizer
@@ -16,22 +16,29 @@ Notes:
 ============================================================================
 -->
 
-# Codex Plugin — Thai Token Optimizer v1.0
+# Codex Plugin — Thai Token Optimizer v2.0
 
-> Codex plugin metadata, hook mapping, command templates, and agent guidance for **Thai Token Optimizer v1.0**
+Codex plugin metadata, lifecycle hooks, command templates, and skill guidance for **Thai Token Optimizer v2.0**.
 
 ```text
-Thai Token Optimizer v1.0
-package version: 1.0.0
+Thai Token Optimizer v2.0
+package version: 2.0.0
 ```
 
 ## Purpose
 
-This `.codex-plugin` directory provides a complete Codex plugin package for Thai Token Optimizer.
+The `.codex-plugin` directory packages TTO behavior for Codex:
 
-Thai Token Optimizer helps Codex respond in compact Thai while preserving technical accuracy, commands, code, paths, versions, errors, safety constraints, and rollback behavior.
+- compact Thai responses
+- code-aware preservation
+- safety-aware tool guidance
+- mode/profile tracking
+- MTP/speculative compression guidance
+- quality/coach/ops/fleet command templates
+- checkpoint/cache/context operational visibility
+- rollback-first installation discipline
 
-## Directory structure
+## Directory Structure
 
 ```text
 .codex-plugin/
@@ -40,7 +47,8 @@ Thai Token Optimizer helps Codex respond in compact Thai while preserving techni
 ├── INSTALL_TH.md
 ├── VALIDATION.md
 ├── hooks/
-│   └── hooks.json
+│   ├── hooks.json
+│   └── tto-*.js
 ├── commands/
 │   ├── tto-auto.md
 │   ├── tto-lite.md
@@ -48,67 +56,43 @@ Thai Token Optimizer helps Codex respond in compact Thai while preserving techni
 │   ├── tto-safe.md
 │   ├── tto-off.md
 │   ├── tto-status.md
+│   ├── tto-dashboard.md
 │   ├── tto-doctor.md
-│   └── tto-dashboard.md
+│   ├── tto-benchmark.md
+│   ├── tto-quality.md
+│   ├── tto-coach.md
+│   ├── tto-ops.md
+│   ├── tto-fleet.md
+│   ├── tto-compress.md
+│   └── tto-context.md
 └── skills/
     └── thai-token-optimizer/
         ├── SKILL.md
         └── AGENT_GUIDE.md
 ```
 
-## Files
+## Hook Events
 
-| File | Purpose |
-|---|---|
-| `plugin.json` | Codex plugin metadata and interface information |
-| `hooks/hooks.json` | Lifecycle hook mapping |
-| `README.md` | English usage and maintenance guide |
-| `INSTALL_TH.md` | Thai installation guide |
-| `commands/*.md` | Command templates for users and agents |
-| `skills/thai-token-optimizer/SKILL.md` | Skill-style behavior guide |
-| `skills/thai-token-optimizer/AGENT_GUIDE.md` | Agent-specific operational guidance |
-| `VALIDATION.md` | JSON validation and checklist |
+| Event | Script | Stage | Purpose |
+|---|---|---|---|
+| `SessionStart` | `hooks/tto-activate.js` | `[TTO Stage 1/4]` | Load compact Thai context |
+| `UserPromptSubmit` | `hooks/tto-mode-tracker.js` | `[TTO Stage 1/4]` | Track mode/profile/safety |
+| `PreToolUse` | `hooks/tto-pretool-guard.js` | `[TTO Stage 3/4]` | Preserve critical safety details |
+| `PostToolUse` | `hooks/tto-posttool-summary.js` | `[TTO Stage 4/4]` | Encourage compact tool summary |
+| `Stop` | `hooks/tto-stop-summary.js` | `[TTO Stage 4/4]` | Return valid minimal stop JSON |
 
-## Hook events
+Hooks must preserve valid JSON output when Codex expects structured hook output. Debug text must not leak into stdout.
 
-| Event | Script | Purpose |
-|---|---|---|
-| `SessionStart` | `hooks/tto-activate.js` | Inject compact Thai rules at session start |
-| `UserPromptSubmit` | `hooks/tto-mode-tracker.js` | Detect mode controls and classify safety |
-| `PreToolUse` | `hooks/tto-pretool-guard.js` | Add safety guidance before risky tools |
-| `PostToolUse` | `hooks/tto-posttool-summary.js` | Encourage compact Thai tool summaries |
-| `Stop` | `hooks/tto-stop-summary.js` | Encourage compact final answer |
-
-The plugin hook manifest references scripts through:
-
-```text
-${CODEX_PLUGIN_ROOT:-.}/hooks/<script>.js
-```
-
-When used from this repository, the actual runtime hook scripts live in the repository root `hooks/` directory.
-
-## Install from GitHub
-
-```bash
-git clone https://github.com/kittimasak/thai-token-optimizer.git
-cd thai-token-optimizer
-
-npm install
-npm test
-npm run ci
-npm link
-```
-
-## Install Codex integration
+## Install Codex Integration
 
 ```bash
 tto backup codex
 tto install codex
 tto install-agents
-tto doctor --pretty
+tto doctor codex --pretty
 ```
 
-## Install all integrations
+## Install All Integrations
 
 ```bash
 tto backup all
@@ -117,9 +101,7 @@ tto install-agents
 tto doctor --pretty
 ```
 
-## Codex chat controls
-
-Inside Codex, use:
+## Codex Chat Controls
 
 ```text
 token thai auto
@@ -127,35 +109,67 @@ token thai lite
 token thai full
 token thai safe
 token thai off
+/tto spec
+/tto nospec
+/tto nointeractive
 ```
 
-Recommended default:
+## Core v2 Commands
 
-```text
-token thai auto
+```bash
+# status/dashboard
+tto status --pretty
+tto dashboard --view overview
+tto dashboard --view quality
+tto dashboard --view waste
+tto dashboard --view trend
+
+# compression/MTP
+tto compress --pretty --level auto --target codex --budget 500 --check prompt.txt
+tto compress --speculative --diagnostics --check --target codex prompt.txt
+tto benchmark --pretty --strict --default-policy --mtp
+
+# quality/ops/fleet
+tto quality --pretty
+tto coach --pretty
+tto ops --pretty
+tto fleet --pretty --doctor --calibration --session-scan
+
+# continuity/cache/context
+tto checkpoint status --pretty
+tto cache stats --pretty
+tto context --pretty
+tto calibration status --pretty
 ```
 
-## CLI verification
+## Supported Targets
+
+| Target | Integration | Command |
+|---|---|---|
+| Codex | hooks + `AGENTS.md` | `tto install codex` |
+| Claude Code | settings hooks | `tto install claude` |
+| Gemini CLI | extension + hooks | `tto install gemini` |
+| OpenCode | native plugin + config | `tto install opencode` |
+| OpenClaw | managed hook + config | `tto install openclaw` |
+| Hermes Agent | shell hooks + plugin hooks | `tto install hermes` |
+| Cursor | rule file | `tto install cursor` |
+| Aider | instruction file | `tto install aider` |
+| Cline | rule file | `tto install cline` |
+| Roo Code | rule file | `tto install roo` |
+
+## Validation
 
 ```bash
 node -e "JSON.parse(require('fs').readFileSync('.codex-plugin/plugin.json','utf8')); console.log('plugin.json OK')"
 node -e "JSON.parse(require('fs').readFileSync('.codex-plugin/hooks/hooks.json','utf8')); console.log('hooks.json OK')"
-npm test
-npm run ci
-tto doctor --pretty
+find .codex-plugin/hooks -name '*.js' -print0 | xargs -0 -n1 node --check
+node --test tests/test_pretty_ui.js
+node --test tests/test_codex_triggers.js
 ```
 
-## Safety behavior
+## Safety Behavior
 
-Thai Token Optimizer must use safe behavior for:
-
-- destructive shell commands
-- database migration
-- production deploy
-- auth/security/payment work
-- secrets/API keys/tokens
-- backup/rollback/uninstall
-- global config edits
+Use safe behavior for destructive shell commands, database migration, production deploy, auth/security/payment work, secrets/API keys/tokens, backup/rollback/uninstall, and global config edits.
 
 Safe answer pattern:
 
@@ -163,21 +177,14 @@ Safe answer pattern:
 risk → backup → dry-run/preview → exact command → verify → rollback
 ```
 
-## Version lock
+## Version Lock
 
-Do not change:
-
-```text
-Thai Token Optimizer v1.0
-package version: 1.0.0
-```
-
-Do not introduce `v1.1`, `1.1.0`, or unrelated branding.
-
-## Author
+Keep exact:
 
 ```text
-Author: Dr.Kittimasak Naijit
-GitHub: https://github.com/kittimasak
-Repository: https://github.com/kittimasak/thai-token-optimizer
+Thai Token Optimizer v2.0
+package version: 2.0.0
 ```
+
+Do not introduce older version labels or unrelated branding.
+

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -19,23 +19,17 @@
 
 
 
-const { getState, logError } = require('./tto-config');
+const { logError } = require('./tto-config');
 
-let input = '';
-process.stdin.on('data', c => input += c);
-process.stdin.on('end', () => {
-  try {
-    const state = getState();
-    if (!state.enabled) process.exit(0);
-    process.stdout.write(JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: 'Stop',
-        additionalContext:
-          'THAI TOKEN OPTIMIZER v1.0 FINAL: final answer must be compact Thai. Include completed items, test result, output artifact path/link if any, and caveats only if needed.'
-      }
-    }));
-  } catch (e) {
-    logError(`stop-summary: ${e.message}`);
-  }
-  process.exit(0);
-});
+function emitSafeStopPayload() {
+  // Stop hook in Codex expects minimal valid JSON payload.
+  // Keep this strict to avoid "invalid stop hook JSON output".
+  process.stdout.write(JSON.stringify({ continue: true }));
+}
+
+try {
+  emitSafeStopPayload();
+} catch (e) {
+  logError(`stop-summary: ${e.message}`);
+  emitSafeStopPayload();
+}

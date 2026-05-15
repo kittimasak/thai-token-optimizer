@@ -1,9 +1,9 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 คำอธิบาย :
-เครื่องมือเพิ่มประสิทธิภาพ token ภาษาไทยสำหรับ AI coding agents โดยยังคงความถูกต้องของคำสั่ง โค้ด และรายละเอียดทางเทคนิค
+เครื่องมือเพิ่มประสิทธิภาพ token ภาษาไทยสำหรับ AI coding agents ที่ยังคงรักษาความถูกต้องของคำสั่ง โค้ด และรายละเอียดทางเทคนิค
 
 ผู้เขียน     : Dr.Kittimasak Naijit
 Repository  : https://github.com/kittimasak/thai-token-optimizer
@@ -11,110 +11,142 @@ Repository  : https://github.com/kittimasak/thai-token-optimizer
 Copyright (c) 2026 Dr.Kittimasak Naijit
 
 หมายเหตุ:
-- ห้ามลบการรักษาโค้ดแบบ code-aware preservation, safety checks หรือ rollback behavior
-- ไฟล์นี้เป็นส่วนหนึ่งของระบบ Thai Token Optimizer แบบ local-first CLI/hook
+- ห้ามลบการรักษาส่วนสำคัญแบบ code-aware, การตรวจสอบความปลอดภัย หรือพฤติกรรม rollback
+- ไฟล์นี้เป็นส่วนหนึ่งของระบบ Thai Token Optimizer แบบ local-first สำหรับ CLI/hook
 ============================================================================
 -->
 
-# ⚡ Thai Token Optimizer
+# Thai Token Optimizer
+
+<!-- Responsive images: local SVG diagrams use HTML <img> tags with width="100%" and max-width:100% so they fit browser/GitHub containers. -->
+
 
 <div align="center">
 
-## คำตอบภาษาไทยแบบกระชับสำหรับ AI coding agents
+## ภาษาไทยแบบกระชับสำหรับ AI Coding Agents
 
-**Thai Token Optimizer v1.0** คือชุดเครื่องมือแบบ local-first ประกอบด้วย **CLI + hook + adapter pack** ที่ช่วยให้ AI coding assistants ตอบภาษาไทยแบบกระชับ โดยยังรักษาความถูกต้องทางเทคนิค คำสั่ง path เวอร์ชัน error ข้อจำกัดด้านความปลอดภัย และความสามารถในการทำซ้ำได้
+**Thai Token Optimizer (TTO) v2.0** คือระบบแบบ local-first ในรูปแบบ `CLI + hooks + adapters` สำหรับลดการใช้ token ภาษาไทย พร้อมรักษาความถูกต้องทางเทคนิค ข้อจำกัดด้านความปลอดภัย และความสามารถในการทำซ้ำผลลัพธ์
 
 ```text
-Thai Token Optimizer v1.0
-package version: 1.0.0
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Thai Token Optimizer v2.0                                                 │
+│ package version: 2.0.0                                                    │
+│ principle: reduce token without losing safety/correctness/constraints     │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**ภาษาไทยกระชับ คำสั่งปลอดภัย ความหมายไม่หาย**
-
-<br/>
-
-![Version](https://img.shields.io/badge/version-v1.0-blue)
-![Package](https://img.shields.io/badge/package-1.0.0-green)
+![Version](https://img.shields.io/badge/version-v2.0-blue)
+![Package](https://img.shields.io/badge/package-2.0.0-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
-![Local First](https://img.shields.io/badge/local--first-yes-success)
-![CLI](https://img.shields.io/badge/UI-CLI%20%2B%20Agent%20Hooks-purple)
+![UI](https://img.shields.io/badge/UI-Terminal%20CLI-orange)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
+
+</div>
+
+<div align="center">
+
+<p align="center">
+  <img src="assets/tto-hero.svg" alt="Thai Token Optimizer Hero" width="100%" style="max-width: 100%; height: auto; display: block;" loading="lazy">
+</p>
 
 </div>
 
 ---
 
-## 🔥 Thai Token Optimizer คืออะไร?
+## สารบัญ
 
-Thai Token Optimizer คือชั้นการสื่อสารภาษาไทยที่ประหยัด token สำหรับเครื่องมือ AI coding เช่น **Codex**, **Claude Code**, **Gemini CLI**, **OpenCode**, **OpenClaw**, **Hermes Agent**, **Cursor**, **Aider**, **Cline** และ **Roo Code**
+```text
+┌─ เริ่มต้นที่นี่ ──────────────────────────────────────────────────────────┐
+│ 1) คุณค่าหลักของระบบ     4) การติดตั้ง          5) เส้นทางเริ่มต้นเร็ว │
+│ 2) ตารางการผสานระบบ     6) ชุดคำสั่ง            7) Workflow แบบภาพ    │
+│ 3) สถาปัตยกรรมระบบ      8) โหมดและโปรไฟล์       9) การปรับเฉพาะบุคคล │
+├─ ขั้นสูง ─────────────────────────────────────────────────────────────────┤
+│ 10) MTP / Speculative     11) Fleet Analytics      12) Backup/Rollback   │
+│ 13) Terminal UI           14) Policy and Config    15) CI Pipeline        │
+├─ การปฏิบัติการ ───────────────────────────────────────────────────────────┤
+│ 16) การลด token จริง      17) Runtime Artifacts    18) การแก้ปัญหา      │
+│ 19) การพัฒนา              20) Safety Checklist     21) License           │
+└────────────────────────────────────────────────────────────────────────────┘
+```
 
-เครื่องมือนี้ช่วยให้ agents ตอบภาษาไทยได้กระชับขึ้น โดยตัดคำฟุ่มเฟือย การอธิบายซ้ำ คำสุภาพที่ไม่จำเป็น และสำนวนที่ยาวเกินไป พร้อมปกป้องรายละเอียดทางเทคนิคที่ห้ามผิดเพี้ยนเด็ดขาด
+## 1) คุณค่าหลักของระบบ
 
-เหมาะเมื่อ prompt ภาษาไทยและคำตอบภาษาไทยยาวเกินไป ซ้ำเกินไป หรือมีต้นทุน token สูงใน workflow งาน coding ที่ใช้ token จำนวนมาก
+<p align="center">
+  <img src="assets/tto-value-flow.svg" alt="TTO Value Flow" width="100%" style="max-width: 100%; height: auto; display: block;" loading="lazy">
+</p>
 
----
+```text
+┌────────────────────────────── ก่อนใช้ ────────────────────────────────────┐
+│ prompt/คำตอบภาษาไทยยาว ซ้ำ เปลืองค่าใช้จ่าย และปะปนกับคำสั่ง            │
+└───────────────────────────────────┬────────────────────────────────────────┘
+                                    v
+┌─────────────────────────────── TTO v2 ─────────────────────────────────────┐
+│ ภาษาไทยกระชับ + รักษาโค้ดแบบ code-aware + safety mode + วินัย rollback │
+└───────────────────────────────────┬────────────────────────────────────────┘
+                                    v
+┌────────────────────────────── หลังใช้ ────────────────────────────────────┐
+│ token น้อยลง โดยคำสั่ง path version และ constraints ยังถูกต้องครบถ้วน   │
+└────────────────────────────────────────────────────────────────────────────┘
+```
 
-## ✨ แนวคิดหลัก
+TTO ลด token ที่สูญเปล่า พร้อมปกป้องสิ่งต่อไปนี้:
+
+- คำสั่งที่ต้องตรงทุกตัวอักษร
+- code fences และ inline code
+- path และ URL
+- version และ config keys
+- hard constraints
+- คำสั่งที่สำคัญด้านความปลอดภัย
+- ความสามารถในการ rollback เพื่อทำซ้ำได้
+
+กฎหลัก:
 
 ```text
 ลด token ได้ แต่ห้ามลดความถูกต้อง ความปลอดภัย หรือเงื่อนไขสำคัญ
 ```
 
-Thai Token Optimizer ไม่ใช่แค่ “ภาษาไทยสั้น ๆ”
+---
 
-แต่ถูกออกแบบมาเพื่อรักษาสิ่งต่อไปนี้:
+## แผนที่ความสามารถ
 
-- คำสั่ง
-- โค้ด
-- file paths
-- URLs
-- เลขเวอร์ชัน
-- config keys
-- error แบบตรงตัว
-- API names
-- database names
-- model names
-- hard constraints
-- safety warnings
-- ขั้นตอน backup / rollback
+```text
+┌─ การบีบอัด ───────────────┬─ ความปลอดภัย ────────────┬─ การปฏิบัติการ ───┐
+│ ลบคำฟุ่มเฟือย             │ ตัวจำแนกประเภทงาน        │ doctor            │
+│ ลบความหมายซ้ำ             │ safe mode                 │ quality score     │
+│ หน้าต่าง context แบบเลือก │ hard-constraint lock      │ coach mode        │
+│ budget optimizer           │ preservation checker      │ ops scan          │
+│ MTP speculative candidates │ rollback-first workflow   │ fleet audit       │
+├─ การผสานระบบ ────────────┼─ การปรับเฉพาะบุคคล ─────┼─ CI / Research ───┤
+│ Codex hooks                │ tto keep                  │ strict benchmark  │
+│ Claude Code hooks          │ tto forget                │ MTP gate          │
+│ Gemini extension           │ user dictionary           │ drift history     │
+│ OpenCode plugin            │ code-aware protection     │ calibration gate  │
+│ OpenClaw / Hermes adapters │ local persistent state    │ detector routing  │
+└────────────────────────────┴──────────────────────────┴──────────────────┘
+```
 
 ---
 
-## 🧠 ทำไมต้องมีเครื่องมือนี้?
+## 2) ตารางการผสานระบบ
 
-ภาษาไทยสามารถใช้ token จำนวนมากใน workflow ของ LLM โดยเฉพาะเมื่อ prompt มีบริบทซ้ำ คำสุภาพ คำอธิบายยาว และรายละเอียดทางเทคนิคที่ผสมไทย-อังกฤษ
+<p align="center">
+  <img src="assets/tto-integration-matrix.svg" alt="TTO Integration Matrix" width="100%" style="max-width: 100%; height: auto; display: block;" loading="lazy">
+</p>
 
-Thai Token Optimizer แก้ปัญหานี้ด้วยการเพิ่ม:
-
-| ปัญหา | วิธีแก้ |
-|---|---|
-| คำตอบภาษาไทยยืดยาวเกินไป | กฎการตอบภาษาไทยแบบกระชับ |
-| Prompt มีบริบทซ้ำมากเกินไป | การบีบอัด prompt แบบ local |
-| คำสั่งหรือเวอร์ชันผิดเพี้ยน | การรักษารายละเอียดแบบ code-aware |
-| งานเสี่ยงถูกบีบอัดมากเกินไป | Safety classifier + safe mode |
-| Config ของ AI tool จัดการยาก | Installer + backup + rollback |
-| Output ของ CLI อ่านยาก | Pretty terminal UI |
-| การตั้งค่าหลาย agents ไม่สอดคล้องกัน | Adapters สำหรับหลายเครื่องมือ |
-| จับ regression ได้ยาก | Strict benchmark + CI gate |
-
----
-
-## ✅ เครื่องมือที่รองรับ
-
-| เครื่องมือ | ประเภทการเชื่อมต่อ | คำสั่งติดตั้งหลัก |
+| เป้าหมาย | ประเภทการผสานระบบ | คำสั่งติดตั้ง |
 |---|---|---|
-| **Codex** | Hooks + `AGENTS.md` แบบเลือกใช้ได้ | `tto install codex` |
-| **Claude Code** | Hooks ใน `settings.json` | `tto install claude` |
-| **Gemini CLI** | Extension + commands + hooks | `tto install gemini` |
-| **OpenCode** | Native plugin + config | `tto install opencode` |
-| **OpenClaw** | Managed hook + `openclaw.json` config | `tto install openclaw` |
-| **Hermes Agent** | Shell hooks + plugin hooks + `config.yaml` | `tto install hermes` |
-| **Cursor** | Rule file adapter | `tto install cursor` |
-| **Aider** | Guidance file adapter | `tto install aider` |
-| **Cline** | Rule file adapter | `tto install cline` |
-| **Roo Code** | Rule file adapter | `tto install roo` |
+| Codex | hooks + AGENTS injection | `tto install codex` |
+| Claude Code | hooks ใน settings | `tto install claude` |
+| Gemini CLI | extension + hooks | `tto install gemini` |
+| OpenCode | native plugin + config | `tto install opencode` |
+| OpenClaw | managed hook + config | `tto install openclaw` |
+| Hermes Agent | shell hooks + plugin hooks + config | `tto install hermes` |
+| Cursor | rule adapter | `tto install cursor` |
+| Aider | rule adapter | `tto install aider` |
+| Cline | rule adapter | `tto install cline` |
+| Roo Code | rule adapter | `tto install roo` |
 
-ติดตั้งทุก target ที่รองรับ:
+ติดตั้งทั้งหมด:
 
 ```bash
 tto install all
@@ -122,853 +154,266 @@ tto install all
 
 ---
 
-## 🖥️ UI: CLI UI + Agent/Hook UI
+## 3) สถาปัตยกรรมระบบ (v2)
 
-Thai Token Optimizer **ไม่ได้ใช้ web dashboard**
-
-ระบบนี้มี interface จริง 2 แบบ:
+<p align="center">
+  <img src="assets/tto-architecture.svg" alt="TTO System Architecture" width="100%" style="max-width: 100%; height: auto; display: block;" loading="lazy">
+</p>
 
 ```text
-Thai Token Optimizer UI
-├── CLI UI
-│   ├── คำสั่งใน Terminal: tto ...
-│   ├── output แบบ JSON/text สำหรับ automation
-│   └── Pretty Terminal UI สำหรับมนุษย์
-│
-└── Agent/Hook UI
-    ├── คำสั่งในแชต: token thai auto
-    ├── การ inject behavior ผ่าน hook
-    └── คำตอบภาษาไทยแบบกระชับภายใน AI tools
+┌────────────────────────────────────────────────────────────────────────────┐
+│                           USER / AGENT INPUT                              │
+│  prompt text | hook payload | file input | benchmark corpus | session log  │
+└───────────────────────────────────┬────────────────────────────────────────┘
+                                    v
+┌────────────────────────────────────────────────────────────────────────────┐
+│                         CONTROL AND RISK LAYER                             │
+│  mode tracker -> profile selector -> safety classifier -> policy defaults  │
+└───────────────────────────────────┬────────────────────────────────────────┘
+                                    v
+┌────────────────────────────────────────────────────────────────────────────┐
+│                         COMPRESSION PIPELINE                               │
+│  code-aware parser                                                         │
+│  semantic analyzer                                                         │
+│  personalization dictionary                                                │
+│  semantic dedup + repeated phrase collapse                                 │
+│  selective window + budget optimizer                                       │
+│  MTP speculative candidate families                                        │
+└───────────────────────────────────┬────────────────────────────────────────┘
+                                    v
+┌────────────────────────────────────────────────────────────────────────────┐
+│                         VERIFICATION LAYER                                 │
+│  constraint locker -> preservation checker -> safety fallback -> reports   │
+└───────────────────────────────────┬────────────────────────────────────────┘
+                                    v
+┌────────────────────────────────────────────────────────────────────────────┐
+│                         OUTPUT AND OPERATIONS                              │
+│  CLI text/json/pretty | hook context | dashboard | fleet | ci artifacts    │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
+
+ไฟล์ runtime หลัก:
+
+- `bin/thai-token-optimizer.js`
+- `hooks/tto-compressor.js`
+- `hooks/tto-budget-compressor.js`
+- `hooks/tto-code-aware-parser.js`
+- `hooks/tto-constraint-locker.js`
+- `hooks/tto-preservation-checker.js`
+- `hooks/tto-safety-classifier.js`
+- `hooks/tto-ui.js`
+- `hooks/tto-runtime-analytics.js`
+- `hooks/tto-fleet-audit.js`
 
 ---
 
-## 🎨 Pretty CLI UI
+## 4) การติดตั้ง
 
-Thai Token Optimizer v1.0 มี terminal UI renderer แบบไม่ต้องพึ่ง dependency โดยใช้กรอบ Unicode และ progress bars
+### ข้อกำหนด
 
-```bash
-tto ui
-```
+- Node.js `>=18`
 
-ตัวอย่าง:
-
-```text
-╭────────────────────────────────────────────────────────────────────────────╮
-│ ⚡ Thai Token Optimizer v1.0                              ● ACTIVE          │
-├────────────────────────────────────────────────────────────────────────────┤
-│ Token-efficient Thai workflow for Codex / Claude / Gemini / OpenCode / OpenClaw / Hermes       │
-│                                                                            │
-│ Mode          auto            Profile   coding                             │
-│ Safety        strict          Version   1.0.0                              │
-│                                                                            │
-│ Doctor        PASS            Checks    17/17                              │
-│ Saving        ██████████░░░░░░ 63%                                         │
-│                                                                            │
-│ Agents                                                                     │
-│ ✓ Codex         hooks + AGENTS.md                                          │
-│ ✓ Claude Code   settings hooks                                             │
-│ ✓ Gemini CLI    extension                                                  │
-│ ✓ OpenCode      native plugin                                              │
-│ ✓ OpenClaw      managed hook                                               │
-│ ✓ Hermes Agent  shell + plugin hooks                                       │
-│ ✓ Cursor/Aider/Cline/Roo rules                                             │
-│                                                                            │
-│ Quick Commands                                                             │
-│ tto ui          tto doctor --pretty                                        │
-│ tto compress --pretty --budget 500 prompt.txt                              │
-│ tto rollback latest --dry-run                                              │
-╰────────────────────────────────────────────────────────────────────────────╯
-```
-
-คำสั่ง pretty อื่น ๆ:
+### ติดตั้งแบบ local
 
 ```bash
+npm install
+npm test
+```
+
+### รันผ่าน node
+
+```bash
+node bin/thai-token-optimizer.js status --pretty
+```
+
+### คำสั่ง global แบบเลือกใช้ได้
+
+```bash
+npm link
 tto status --pretty
+```
+
+---
+
+## 5) เส้นทางเริ่มต้นเร็ว
+
+```text
+┌────────────┐   ┌────────────┐   ┌───────────────┐   ┌────────────┐
+│  backup    │ > │  install   │ > │ install-agents│ > │   doctor   │
+└────────────┘   └────────────┘   └───────────────┘   └──────┬─────┘
+                                                               v
+                                                        ┌────────────┐
+                                                        │  tto auto  │
+                                                        └──────┬─────┘
+                                                               v
+                                                        ┌────────────┐
+                                                        │ agent chat │
+                                                        └────────────┘
+```
+
+```bash
+tto backup all
+tto install all
+tto install-agents
 tto doctor --pretty
-tto compress --pretty --level auto --budget 500 --target codex --check prompt.txt
+tto auto
+```
+
+ใน chat/session:
+
+```text
+token thai auto
+```
+
+---
+
+## 6) ชุดคำสั่ง
+
+```text
+MODE
+  on|auto | lite | full | safe | off|stop
+
+STATUS/UI
+  status [--pretty]
+  ui
+  dashboard [--view overview|quality|waste|trend|agents|doctor|fleet]
+
+COMPRESSION
+  compress [--pretty] [--level auto|lite|full|safe] [--budget N]
+           [--target codex|claude] [--check] [--speculative|--no-speculative]
+           [--diagnostics] [text|file]
+  rewrite
+  estimate [--target codex|claude] [--exact] <text>
+  preserve <originalFile> <optimizedFile>
+  classify [--pretty] <text>
+
+HEALTH / QUALITY
+  doctor [target] [--pretty]
+  quality [--pretty]
+  coach [--pretty] [--apply quick|safe]
+
+OPS / FLEET
+  ops [--pretty] | scan|audit|context|quality|drift|validate [options]
+  fleet [--roots dir1,dir2] [--pretty] [--doctor]
+        [--doctor-target all|codex|claude|gemini|opencode|openclaw|hermes]
+        [--calibration] [--calibration-limit N] [--session-scan]
+  context [--pretty]
+
+CALIBRATION / CHECKPOINT / CACHE
+  calibration status|record|from-stats|clear [--pretty]
+  checkpoint status|list|capture|restore|precompact|postcompact [--pretty]
+  cache stats|clear [--pretty]
+
+BACKUP / INSTALL
+  backup [target]
+  backups
+  rollback [latest|id|target] [--dry-run]
+  install <target|all>
+  uninstall <target|all>
+  install-agents [codex]
+
+PERSONALIZATION
+  keep <word>
+  forget <word>
+  dictionary
+
+BENCHMARK
+  benchmark [--pretty] [--strict] [--default-policy] [--mtp]
+```
+
+---
+
+## 7) Workflow แบบภาพ
+
+### 7.1 เส้นทางการบีบอัด
+
+<p align="center">
+  <img src="assets/tto-compression-workflow.svg" alt="TTO Compression Workflow" width="100%" style="max-width: 100%; height: auto; display: block;" loading="lazy">
+</p>
+
+```text
+┌────────┐   ┌──────────┐   ┌──────────────────┐   ┌──────────────┐   ┌────────┐
+│ input  │ > │ classify │ > │ compress / MTP   │ > │ preservation │ > │ output │
+└────────┘   └──────────┘   └──────────────────┘   └──────────────┘   └────────┘
+```
+
+```bash
+tto compress --pretty --level auto --target codex --budget 500 --check prompt.txt
+```
+
+```bash
+tto compress --speculative --diagnostics "..."
+```
+
+```bash
+tto compress --no-speculative "..."
+```
+
+### 7.2 เส้นทางความปลอดภัย
+
+```bash
 tto classify --pretty "DROP TABLE users production secret"
-tto benchmark --pretty --strict --default-policy
 ```
 
-ใช้ `--pretty` สำหรับมนุษย์  
-ใช้ output แบบ JSON/text ปกติสำหรับ scripts และ automation
-
----
-
-## 🚀 เริ่มใช้งานอย่างรวดเร็ว
-
-### 1. ติดตั้ง dependencies
-
-```bash
-npm install
-```
-
-### 2. รัน tests
-
-```bash
-npm test
-npm run ci
-```
-
-ผลลัพธ์ที่คาดหวัง:
-
-```text
-75 tests passed
-0 failed
-package version: 1.0.0
-```
-
-### 3. ติดตั้ง integrations
-
-```bash
-tto install all
-```
-
-หรือใช้คำสั่ง Node โดยตรง:
-
-```bash
-node bin/thai-token-optimizer.js install all
-```
-
-### 4. ติดตั้ง Codex AGENTS.md integration
-
-```bash
-tto install-agents
-```
-
-### 5. ตรวจสุขภาพระบบ
+### 7.3 เส้นทางตรวจสุขภาพ
 
 ```bash
 tto doctor --pretty
+tto doctor codex --pretty
+tto doctor --ci
 ```
 
-### 6. เปิด auto mode
+### 7.4 เส้นทาง benchmark
 
 ```bash
-tto auto
+tto benchmark --pretty --strict --default-policy --mtp
 ```
 
-### 7. Restart AI CLI tool ของคุณ
+### 7.5 เส้นทาง fleet
 
-จากนั้นพิมพ์ภายใน Codex / Claude Code / Gemini CLI / OpenCode / OpenClaw / Hermes Agent:
-
-```text
-token thai auto
+```bash
+tto fleet --pretty --roots /path/repoA,/path/repoB --doctor --calibration --session-scan
 ```
 
-หรือ:
+### 7.6 เส้นทาง ops
 
-```text
-ลด token ไทย
+```bash
+tto ops --pretty
+tto ops scan --pretty
+```
+
+### 7.7 เส้นทาง calibration
+
+```bash
+tto calibration status --pretty
+tto calibration record --estimated 1000 --real 1200 --target codex
+tto calibration from-stats --real-total 24000 --samples 20 --target codex
+```
+
+### 7.8 เส้นทาง checkpoint และ cache
+
+```bash
+tto checkpoint status --pretty
+tto checkpoint capture --pretty "before major rewrite"
+tto checkpoint restore latest --pretty
+
+tto cache stats --pretty
+tto cache clear
 ```
 
 ---
 
-## 📦 สิ่งที่ต้องมี
+## 8) โหมดและโปรไฟล์
 
-- Node.js **18.0.0 หรือใหม่กว่า**
-- npm
-- Optional tokenizer packages:
-  - `@dqbd/tiktoken`
-  - `gpt-tokenizer`
+โหมด:
 
-เครื่องมือนี้ทำงานได้โดยไม่ต้องมี optional tokenizer packages โดยจะ fallback ไปใช้ built-in heuristic estimator
+- `auto`: ค่าเริ่มต้นแบบปรับตัวได้
+- `lite`: กระชับ แต่มีคำอธิบายเพิ่มเล็กน้อย
+- `full`: ผลลัพธ์แน่นขึ้นสำหรับงานความเสี่ยงต่ำ
+- `safe`: ผลลัพธ์ที่ให้ความปลอดภัยเป็นอันดับแรก
+- `off`: ปิดพฤติกรรม optimizer
 
----
-
-## 🚀 ติดตั้งจาก GitHub
-
-ใช้ส่วนนี้เมื่อต้องการติดตั้งโดยตรงจาก GitHub repository:
-
-```text
-https://github.com/kittimasak/thai-token-optimizer
-```
-
-### 1. Clone repository
-
-```bash
-git clone https://github.com/kittimasak/thai-token-optimizer.git
-cd thai-token-optimizer
-```
-
-### 2. ตรวจ Node.js และ npm
-
-Thai Token Optimizer ต้องใช้ **Node.js 18.0.0 หรือใหม่กว่า**
-
-```bash
-node -v
-npm -v
-```
-
-ถ้า Node.js ต่ำกว่า 18 ให้ upgrade Node.js ก่อนดำเนินการต่อ
-
-### 3. ติดตั้ง dependencies
-
-```bash
-npm install
-```
-
-### 4. รัน tests
-
-```bash
-npm test
-npm run ci
-```
-
-ผลลัพธ์ที่คาดหวัง:
-
-```text
-75 tests passed
-0 failed
-package version: 1.0.0
-```
-
-### 5. ใช้ CLI โดยตรงจาก repository
-
-คุณสามารถรันเครื่องมือได้โดยไม่ต้องติดตั้ง global:
-
-```bash
-node bin/thai-token-optimizer.js status
-node bin/thai-token-optimizer.js ui
-node bin/thai-token-optimizer.js doctor --pretty
-```
-
-### 6. ลงทะเบียน global CLI commands
-
-เพื่อใช้คำสั่งสั้น ๆ `tto` และ `thai-token-optimizer` ได้ทั่วระบบ:
-
-```bash
-npm link
-```
-
-ตรวจสอบ:
-
-```bash
-tto status
-thai-token-optimizer status
-```
-
-ถ้าไม่พบคำสั่ง `tto` ให้ restart terminal หรือเช็ก npm global binary path:
-
-```bash
-npm bin -g
-```
-
-### 7. Backup configuration เดิมของ AI tool
-
-ก่อนติดตั้ง integrations ให้สร้าง backup ก่อน:
-
-```bash
-tto backup all
-```
-
-ตรวจ backups:
-
-```bash
-tto backups
-```
-
-### 8. ติดตั้ง integrations ทั้งหมดที่รองรับ
-
-```bash
-tto install all
-```
-
-คำสั่งนี้ติดตั้ง integrations สำหรับ:
-
-- Codex
-- Claude Code
-- Gemini CLI
-- OpenCode
-- OpenClaw
-- Hermes Agent
-- Cursor
-- Aider
-- Cline
-- Roo Code
-
-ถ้าไม่ได้ใช้ global `tto` ให้รัน:
-
-```bash
-node bin/thai-token-optimizer.js install all
-```
-
-### 9. ติดตั้ง Codex AGENTS.md integration
-
-ถ้าคุณใช้ Codex ให้รันเพิ่ม:
-
-```bash
-tto install-agents
-```
-
-คำสั่งนี้จะเขียน managed block เข้าไปใน:
-
-```text
-~/.codex/AGENTS.md
-```
-
-Managed block:
-
-```text
-<!-- Thai Token Optimizer START -->
-...
-<!-- Thai Token Optimizer END -->
-```
-
-### 10. ตรวจสอบการติดตั้ง
-
-```bash
-tto doctor --pretty
-```
-
-ผลลัพธ์ที่คาดหวังควรแสดง `PASS` หรือ actionable warnings:
-
-```text
-╭────────────────────────────────────────────────────────────────────────────────╮
-│ 🩺 Thai Token Optimizer Doctor                                                  │
-├────────────────────────────────────────────────────────────────────────────────┤
-│ Mode          installed                                                        │
-│ Status        PASS                                                             │
-│ Package       1.0.0                                                            │
-│ ✓ Package version remains 1.0.0                                                │
-│ ✓ Node >= 18                                                                   │
-│ ✓ Codex hooks installed                                                        │
-│ ✓ Claude hooks installed                                                       │
-│ ✓ Gemini CLI extension installed                                               │
-│ ✓ OpenCode plugin installed                                                    │
-│ ✓ Backup directory writable                                                    │
-╰────────────────────────────────────────────────────────────────────────────────╯
-```
-
-### 11. เปิดใช้งาน Thai Token Optimizer
-
-โหมดเริ่มต้นที่แนะนำ:
-
-```bash
-tto auto
-```
-
-โหมดอื่น ๆ:
-
-```bash
-tto lite
-tto full
-tto safe
-tto off
-```
-
-### 12. แสดง Pretty CLI UI
-
-```bash
-tto ui
-```
-
-หรือ:
-
-```bash
-tto dashboard
-```
-
-### 13. Restart AI coding tools ของคุณ
-
-หลังติดตั้งแล้ว ให้ restart เครื่องมือที่คุณใช้:
-
-- Codex
-- Claude Code
-- Gemini CLI
-- OpenCode
-- Cursor
-- Aider
-- Cline
-- Roo Code
-
-จากนั้นพิมพ์ภายใน AI tool:
-
-```text
-token thai auto
-```
-
-หรือ:
-
-```text
-ลด token ไทย
-```
-
-ปิดจากภายใน AI tool:
-
-```text
-token thai off
-```
-
-### 14. ติดตั้งเฉพาะ integration เดียว
-
-ใช้คำสั่งเหล่านี้ถ้าคุณไม่ต้องการติดตั้งทุกอย่าง
-
-#### Codex
-
-```bash
-tto backup codex
-tto install codex
-tto install-agents
-tto doctor --pretty
-```
-
-ไฟล์ที่เกี่ยวข้อง:
-
-```text
-~/.codex/hooks.json
-~/.codex/config.toml
-~/.codex/AGENTS.md
-```
-
-#### Claude Code
-
-```bash
-tto backup claude
-tto install claude
-tto doctor --pretty
-```
-
-ไฟล์ที่เกี่ยวข้อง:
-
-```text
-~/.claude/settings.json
-```
-
-#### Gemini CLI
-
-```bash
-tto backup gemini
-tto install gemini
-tto doctor --pretty
-```
-
-ไฟล์ที่เกี่ยวข้อง:
-
-```text
-~/.gemini/extensions/thai-token-optimizer/gemini-extension.json
-~/.gemini/extensions/thai-token-optimizer/GEMINI.md
-~/.gemini/extensions/thai-token-optimizer/commands/tto/*.toml
-~/.gemini/settings.json
-```
-
-#### OpenCode
-
-```bash
-tto backup opencode
-tto install opencode
-tto doctor --pretty
-```
-
-ไฟล์ที่เกี่ยวข้อง:
-
-```text
-~/.config/opencode/plugins/thai-token-optimizer.js
-~/.config/opencode/opencode.json
-```
-
-#### OpenClaw
-
-```bash
-tto backup openclaw
-tto install openclaw
-tto doctor openclaw --pretty
-```
-
-ไฟล์ที่เกี่ยวข้อง:
-
-```text
-~/.openclaw/openclaw.json
-~/.openclaw/hooks/thai-token-optimizer/HOOK.md
-~/.openclaw/hooks/thai-token-optimizer/handler.ts
-~/.openclaw/hooks/thai-token-optimizer/simulate.cjs
-```
-
-OpenClaw adapter ใช้ managed hook ตาม model ของ OpenClaw: hook ถูก discover จาก `~/.openclaw/hooks/`, เปิดผ่าน `hooks.internal.entries["thai-token-optimizer"]`, และ `tto doctor openclaw` จะตรวจ metadata, handler, config entry, command events และ simulation ของ safety event.
-
-**จุดเด่นการทำงานร่วมกับ OpenClaw:**
-- **Managed Lifecycle**: รองรับเหตุการณ์ `gateway:startup`, `agent:bootstrap` และ `command:*` เพื่อแทรกคำแนะนำภาษาไทยแบบกระชับ (Compact Thai) ได้ทันท่วงที
-- **Enhanced Thai Safety**: ระบบตรวจจับความเสี่ยงรองรับคีย์เวิร์ดภาษาไทย (เช่น "ลบไฟล์ทั้งหมด", "โปรดักชัน", "ฐานข้อมูล") ทำให้สลับเข้าสู่ Safe Mode ได้แม่นยำแม้สั่งงานเป็นภาษาไทย
-- **Automated Validation**: มี Simulator ในตัวเพื่อให้ตรวจสอบความถูกต้องของ Hook ได้โดยไม่ต้องรัน OpenClaw จริง
-
-#### Hermes Agent
-
-```bash
-tto backup hermes
-tto install hermes
-tto doctor hermes --pretty
-```
-
-ไฟล์ที่เกี่ยวข้อง:
-
-```text
-~/.hermes/config.yaml
-~/.hermes/plugins/thai-token-optimizer/
-~/.hermes/agent-hooks/
-```
-
-**จุดเด่นการทำงานร่วมกับ Hermes Agent (Hybrid Integration):**
-- **Native Python Plugin**: ทำงานที่เลเยอร์สูงสุดของ Agent ผ่านระบบ Plugin ของ Hermes ทำให้สามารถแทรกแซงการเรียก LLM และการใช้เครื่องมือ (Tool Use) ได้อย่างสมบูรณ์
-- **Terminal Output Truncation**: มีระบบอัจฉริยะที่ช่วยตัดผลลัพธ์จาก Terminal ที่ยาวเกินไป (เกิน 50,000 ตัวอักษร) ให้เหลือเพียงบทสรุปที่สำคัญ เพื่อประหยัด Token มหาศาลแต่ยังคงบริบทงานไว้ได้
-- **Multi-layer Protection**: ใช้ทั้ง Shell Hooks (Node.js) และ Plugin Hooks (Python) ร่วมกันเพื่อป้องกันคำสั่งอันตราย (Block risky tool calls) และรักษาความแม่นยำทางเทคนิค (Preserve commands/paths/versions)
-- **Thai-Aware Guard**: ระบบ Guard ตรวจจับทั้งภาษาอังกฤษและภาษาไทย ครอบคลุมงานด้าน Destructive commands, Database, Production, Secrets และ Payment
-
-#### Cursor / Aider / Cline / Roo Code
-
-```bash
-tto install cursor
-tto install aider
-tto install cline
-tto install roo
-```
-
-### 15. ทดสอบ prompt compression
-
-```bash
-tto compress --pretty --level auto --budget 80 --target codex --check \
-"ช่วยอธิบายรายละเอียดเกี่ยวกับการติดตั้ง Thai Token Optimizer v1.0 โดยห้ามเปลี่ยน package version 1.0.0"
-```
-
-### 16. ทดสอบ safety classifier
-
-```bash
-tto classify --pretty "DROP TABLE users production secret token"
-```
-
-พฤติกรรมที่คาดหวัง:
-
-- Risk level ควรเป็น high
-- Compression ควร relax ไปใช้ safe behavior
-- Recommended action ควรรวม backup, dry-run, verification และ rollback readiness
-
-### 17. Rollback หากจำเป็น
-
-Preview rollback ก่อน:
-
-```bash
-tto rollback latest --dry-run
-```
-
-Rollback backup ล่าสุด:
-
-```bash
-tto rollback latest
-```
-
-Rollback เฉพาะ target เดียว:
-
-```bash
-tto rollback gemini --dry-run
-tto rollback gemini
-```
-
-### 18. Uninstall หากจำเป็น
-
-Uninstall integrations ทั้งหมด:
-
-```bash
-tto uninstall all
-```
-
-หรือ uninstall target เดียว:
-
-```bash
-tto uninstall codex
-tto uninstall claude
-tto uninstall gemini
-tto uninstall opencode
-tto uninstall openclaw
-tto uninstall hermes
-tto uninstall cursor
-tto uninstall aider
-tto uninstall cline
-tto uninstall roo
-```
-
-### ชุดคำสั่งติดตั้งจาก GitHub แบบครบถ้วน
-
-```bash
-git clone https://github.com/kittimasak/thai-token-optimizer.git
-cd thai-token-optimizer
-
-npm install
-npm test
-npm run ci
-
-npm link
-
-tto backup all
-tto install all
-tto install-agents
-tto doctor --pretty
-
-tto auto
-tto ui
-```
-
-จากนั้น restart AI coding tool ของคุณ แล้วพิมพ์:
-
-```text
-token thai auto
-```
-
-
-
----
-
-## 🧭 หลักการออกแบบหลัก
-
-| หลักการ | ความหมาย |
-|---|---|
-| **ภาษาไทยกระชับ แต่ไม่กำกวม** | คำตอบที่สั้นลงต้องยังมีประโยชน์ |
-| **ความถูกต้องสำคัญกว่าการประหยัด token** | ห้ามทำให้คำสั่ง โค้ด path เวอร์ชัน หรือ config ผิดเพี้ยน |
-| **ความปลอดภัยสำคัญกว่าความสั้น** | งานเสี่ยงต้องมี backup, dry-run, verify, rollback |
-| **Local-first** | CLI, hooks, compression, backup, benchmark และ doctor หลักทำงานแบบ local |
-| **ติดตั้งย้อนกลับได้** | Installer สร้าง backups ก่อนเปลี่ยน configs |
-| **ความเสถียรของเวอร์ชัน** | โปรเจกต์นี้คงอยู่ที่ `v1.0 / 1.0.0` |
-
-ลำดับความสำคัญ:
-
-```text
-1. Safety
-2. Correctness
-3. Constraint preservation
-4. Reproducibility
-5. Token reduction
-6. Brevity
-```
-
----
-
-## 🧩 คุณสมบัติ
-
-### การเพิ่มประสิทธิภาพคำตอบ
-
-- `auto`, `lite`, `full`, `safe`, `off`
-- trigger ในแชต เช่น `token thai auto`
-- behavior ตาม profile
-- การ inject context ผ่าน hook
-- output ภาษาไทยแบบกระชับพร้อมรักษารายละเอียดทางเทคนิค
-
-### การเพิ่มประสิทธิภาพ Prompt
-
-- `tto compress`
-- `tto rewrite`
-- `--budget` token target
-- `--check` semantic preservation
-- Code-aware compression
-- Constraint lock สำหรับคำอย่าง `ต้อง`, `ห้าม`, `เด็ดขาด`, `v1.0`, `1.0.0`
-- Adaptive Compression Learning ด้วย `tto keep`, `tto forget`, `tto dictionary`
-- User-specific Dictionary สำหรับศัพท์เฉพาะและสไตล์ที่ต้องคงไว้
-
-### ความปลอดภัย
-
-- Rule-based safety classifier
-- Pre-tool guard hooks
-- Safe mode override
-- คำแนะนำ backup / rollback
-- การตรวจจับ production, database, auth, secret และ destructive-command
-
-### ความน่าเชื่อถือ
-
-- `tto doctor`
-- `tto doctor codex`
-- `tto doctor claude`
-- `tto doctor gemini`
-- `tto doctor opencode`
-- `tto doctor openclaw`
-- `tto doctor hermes`
-- `tto backup`
-- `tto backups`
-- `tto rollback`
-- `rollback --dry-run`
-- automatic pre-rollback backup
-- strict benchmark gate
-- `npm test`
-- `npm run ci`
-
-### Pretty terminal UI
-
-- `tto ui`
-- `tto dashboard`
-- `tto status --pretty`
-- `tto doctor --pretty`
-- `tto compress --pretty`
-- `tto classify --pretty`
-- `tto benchmark --pretty`
-
----
-
-## ⚙️ Installation targets
-
-### ติดตั้งทุกอย่าง
-
-```bash
-tto install all
-```
-
-คำสั่งนี้ติดตั้ง integrations สำหรับ:
-
-- Codex
-- Claude Code
-- Gemini CLI
-- OpenCode
-- Cursor
-- Aider
-- Cline
-- Roo Code
-
-ระบบจะสร้าง backup ก่อนเขียน configuration files
-
-### ติดตั้งเฉพาะ Codex
-
-```bash
-tto install codex
-```
-
-อัปเดต:
-
-```text
-~/.codex/hooks.json
-~/.codex/config.toml
-```
-
-ทำให้แน่ใจว่า:
-
-```toml
-[features]
-codex_hooks = true
-```
-
-ถ้ามี `codex_hooks = false` อยู่แล้ว ระบบจะแทนที่แทนการสร้าง key ซ้ำ
-
-### ติดตั้ง Codex AGENTS.md block
-
-```bash
-tto install-agents
-```
-
-เขียน managed content เข้าไปใน:
-
-```text
-~/.codex/AGENTS.md
-```
-
-ภายใน:
-
-```text
-<!-- Thai Token Optimizer START -->
-...
-<!-- Thai Token Optimizer END -->
-```
-
-### ติดตั้งเฉพาะ Claude Code
-
-```bash
-tto install claude
-```
-
-อัปเดต:
-
-```text
-~/.claude/settings.json
-```
-
-### ติดตั้งเฉพาะ Gemini CLI
-
-```bash
-tto install gemini
-```
-
-สร้าง:
-
-```text
-~/.gemini/extensions/thai-token-optimizer/gemini-extension.json
-~/.gemini/extensions/thai-token-optimizer/GEMINI.md
-~/.gemini/extensions/thai-token-optimizer/commands/tto/*.toml
-~/.gemini/settings.json
-```
-
-### ติดตั้งเฉพาะ OpenCode
-
-```bash
-tto install opencode
-```
-
-สร้าง:
-
-```text
-~/.config/opencode/plugins/thai-token-optimizer.js
-~/.config/opencode/opencode.json
-~/.config/opencode/agents/thai-token-optimizer.md
-~/.config/opencode/skills/thai-token-optimizer.md
-~/.config/opencode/commands/tto-auto.md
-~/.config/opencode/commands/tto-safe.md
-```
-
-### ติดตั้งเฉพาะ OpenClaw
-
-```bash
-tto install openclaw
-tto doctor openclaw --pretty
-```
-
-ไฟล์ที่ติดตั้ง:
-
-```text
-~/.openclaw/openclaw.json
-~/.openclaw/hooks/thai-token-optimizer/HOOK.md
-~/.openclaw/hooks/thai-token-optimizer/handler.ts
-~/.openclaw/hooks/thai-token-optimizer/simulate.cjs
-```
-
-### ติดตั้งเฉพาะ Hermes Agent
-
-```bash
-tto backup hermes
-tto install hermes
-tto doctor hermes --pretty
-```
-
-ไฟล์ที่ติดตั้ง:
-
-```text
-~/.hermes/config.yaml
-~/.hermes/plugins/thai-token-optimizer/plugin.yaml
-~/.hermes/plugins/thai-token-optimizer/__init__.py
-~/.hermes/agent-hooks/thai-token-optimizer-pre_llm_call.cjs
-~/.hermes/agent-hooks/thai-token-optimizer-pre_tool_call.cjs
-~/.hermes/agent-hooks/thai-token-optimizer-post_tool_call.cjs
-~/.hermes/agent-hooks/thai-token-optimizer-on_session_start.cjs
-~/.hermes/agent-hooks/thai-token-optimizer-on_session_reset.cjs
-~/.hermes/agent-hooks/thai-token-optimizer-on_session_finalize.cjs
-~/.hermes/agent-hooks/thai-token-optimizer-subagent_stop.cjs
-```
-
-Hermes adapter ใช้ 2 ชั้นพร้อมกัน: Shell hooks ผ่าน `hooks:` ใน `~/.hermes/config.yaml` สำหรับ context injection และ tool guard แบบ subprocess, และ Plugin hooks ผ่าน `ctx.register_hook()` เพื่อทำงานใน CLI + Gateway sessions.
-### ติดตั้ง portable adapters
-
-```bash
-tto install cursor
-tto install aider
-tto install cline
-tto install roo
-```
-
----
-
-## 🎛️ Modes
-
-| Mode | คำสั่ง | Behavior | เหมาะกับ |
-|---|---|---|---|
-| Auto | `tto auto` | เลือกระดับเองโดยอัตโนมัติ | การใช้งานประจำวัน |
-| Lite | `tto lite` | กระชับแต่ยังอธิบายได้ | การสอน, concepts, research |
-| Full | `tto full` | ภาษาไทยที่สั้นที่สุดแต่ยังใช้ได้ | คำสั่ง, debugging, code fixes |
-| Safe | `tto safe` | warning + backup + verify + rollback | Production, DB, security, destructive ops |
-| Off | `tto off` | ปิด optimizer | พฤติกรรมปกติ |
-
-ตัวอย่าง:
+คำสั่ง:
 
 ```bash
 tto auto
@@ -978,270 +423,242 @@ tto safe
 tto off
 ```
 
-State ถูกเก็บไว้ที่:
-
-```text
-~/.thai-token-optimizer/state.json
-```
-
----
-
-## 🧑‍💻 Profiles
-
-Profiles ใช้ปรับ optimizer ให้เหมาะกับงานต่าง ๆ
+โปรไฟล์:
 
 ```bash
 tto profile list
 tto profile show
 tto profile coding
-tto profile research
-tto profile teaching
-tto profile paper
-tto profile command
-tto profile ultra
-```
-
-| Profile | Bias | Behavior |
-|---|---|---|
-| `coding` | `full` | code/patch ก่อน รักษา paths/errors/commands |
-| `research` | `lite` | รักษา reasoning, variables, methodology |
-| `teaching` | `lite` | เป็นขั้นตอน กระชับ เหมาะกับผู้เรียน |
-| `paper` | `safe` | เป็นทางการ รักษาข้อจำกัดทางวิชาการ |
-| `command` | `full` | คำสั่ง terminal ก่อน |
-| `ultra` | `full` | ลดความยาวสูงสุดสำหรับงานที่ไม่เสี่ยง |
-
-ตัวอย่าง:
-
-```bash
-tto profile coding
-tto auto
 ```
 
 ---
 
-## 🧾 Policy configuration
-
-ไฟล์ policy ของผู้ใช้:
+## 9) การปรับเฉพาะบุคคล (Adaptive Compression Learning)
 
 ```text
-~/.thai-token-optimizer/config.json
+User dictionary = คำที่ห้ามถูกบีบอัดหรือตัดออก
 ```
+
+```bash
+tto keep "คำเฉพาะของทีม"
+tto forget "คำเฉพาะของทีม"
+tto dictionary
+```
+
+พฤติกรรม:
+
+- dictionary แบบ local ที่ถูกบันทึกคงอยู่
+- ผสานกับการปกป้องแบบ code-aware
+- รองรับอักขระพิเศษได้อย่างปลอดภัย
+
+---
+
+## 10) MTP / Speculative Decoding
+
+<p align="center">
+  <img src="assets/tto-mtp-selection.svg" alt="TTO MTP Selection" width="100%" style="max-width: 100%; height: auto; display: block;" loading="lazy">
+</p>
+
+กลุ่ม candidate:
+
+- `baseline`
+- `semantic_dedup`
+- `selective_window`
+- `dedup_plus_selective`
+
+```text
+┌────────────┐  ┌────────────────┐  ┌──────────────────┐  ┌──────────────────────┐
+│ baseline   │  │ semantic_dedup │  │ selective_window │  │ dedup_plus_selective │
+└─────┬──────┘  └────────┬───────┘  └────────┬─────────┘  └──────────┬───────────┘
+      └──────────────────┴──────────────────┴───────────────────────┘
+                                  v
+                    ┌─────────────────────────────┐
+                    │ preservation + budget score │
+                    └──────────────┬──────────────┘
+                                   v
+                    ┌─────────────────────────────┐
+                    │ selected candidate + reason │
+                    └─────────────────────────────┘
+```
+
+พฤติกรรมสำคัญ:
+
+- ลำดับความสำคัญของ `--speculative` และ `--no-speculative`
+- diagnostics พร้อม selected family/level/reason
+- กรณีคะแนน preservation เท่ากัน จะให้ความสำคัญกับ `dedup_plus_selective`
+- benchmark gates สำหรับ preservation, hit-rate, slowdown, enhanced gain, fixture guard, action routing
 
 คำสั่ง:
 
 ```bash
-tto config init
-tto config path
-tto config get
-tto config set defaultProfile coding
-tto config set safetyMode strict
-tto config set exactTokenizer true
-tto config set benchmarkStrict.minAverageSavingPercent 10
-```
-
-รูปแบบ default policy:
-
-```json
-{
-  "defaultMode": "auto",
-  "defaultProfile": "coding",
-  "safetyMode": "strict",
-  "preservePoliteness": false,
-  "preserveTechnicalTerms": true,
-  "maxCompressionRatio": 0.6,
-  "targetAgent": "auto",
-  "exactTokenizer": false,
-  "benchmarkStrict": {
-    "minAverageSavingPercent": 10,
-    "minTechnicalTermPreservationPercent": 95,
-    "requireConstraintPreservationPercent": 100,
-    "requireCodeBlockPreservationPercent": 100
-  },
-  "version": 1
-}
-```
-
-ใช้ default policy เพื่อให้ CI reproducible:
-
-```bash
-tto benchmark --strict --default-policy
+tto compress --speculative --diagnostics "..."
+tto benchmark --strict --default-policy --mtp
 ```
 
 ---
 
-## 📚 CLI reference
+## 11) Fleet และ Session Analytics
 
-### Help
+`fleet` รวมสัญญาณข้ามโปรเจกต์:
 
-```bash
-tto help
-```
+- สถานะ benchmark
+- สุขภาพจาก doctor
+- ช่องว่าง calibration
+- ผลรวม session scan
+- สิ่งที่ detector พบ และ waste/cost โดยประมาณ
 
-### Status
+adapter สำหรับ parser ของ session:
 
-```bash
-tto status
-tto status --pretty
-```
+- Codex
+- Claude
+- OpenClaw
+- Hermes
+- OpenCode
 
-### Mode commands
-
-```bash
-tto on
-tto auto
-tto lite
-tto full
-tto safe
-tto off
-tto stop
-```
-
-### Install
+สคริปต์ที่เกี่ยวข้อง:
 
 ```bash
-tto install codex
-tto install claude
-tto install gemini
-tto install opencode
-tto install cursor
-tto install aider
-tto install cline
-tto install roo
-tto install all
-tto install-agents
+npm run fleet:fixtures
+npm run fleet:history
+npm run fleet:gate
 ```
 
-### Uninstall
+---
 
-```bash
-tto uninstall codex
-tto uninstall claude
-tto uninstall gemini
-tto uninstall opencode
-tto uninstall cursor
-tto uninstall aider
-tto uninstall cline
-tto uninstall roo
-tto uninstall all
-```
+## 12) Backup / Rollback / Uninstall
 
-### Token estimation
-
-```bash
-tto estimate "ข้อความภาษาไทย"
-tto estimate --target codex "ข้อความภาษาไทย"
-tto estimate --target claude "ข้อความภาษาไทย"
-tto estimate --target gemini "ข้อความภาษาไทย"
-tto estimate --exact --target codex "ข้อความภาษาไทย"
-```
-
-### Prompt compression
-
-```bash
-tto compress "ช่วยอธิบายแนวทางการพัฒนาระบบอย่างละเอียด"
-tto rewrite "ช่วยอธิบายแนวทางการพัฒนาระบบอย่างละเอียด"
-tto compress --level auto prompt.txt
-tto compress --level full prompt.txt
-cat prompt.txt | tto compress --level auto
-```
-
-### Personalization
-
-```bash
-tto keep "รบกวนช่วย"
-tto keep "API_KEY(foo)[bar]*"
-tto dictionary
-tto forget "รบกวนช่วย"
-```
-
-### Budget compression
-
-```bash
-tto compress --budget 500 --target codex prompt.txt
-tto compress --level auto --budget 500 --target claude --check prompt.txt
-tto compress --exact --budget 300 --target codex "ข้อความ..."
-```
-
-### Semantic preservation
-
-```bash
-tto preserve original.txt optimized.txt
-```
-
-### Safety classification
-
-```bash
-tto classify "DROP TABLE users production secret token"
-tto classify --pretty "DROP TABLE users production secret token"
-```
-
-### Backup and rollback
+<p align="center">
+  <img src="assets/tto-safety-rollback-loop.svg" alt="TTO Safety Rollback Loop" width="100%" style="max-width: 100%; height: auto; display: block;" loading="lazy">
+</p>
 
 ```bash
 tto backup all
 tto backup codex
-tto backup gemini
+```
+
+```bash
 tto backups
+```
+
+```bash
 tto rollback latest --dry-run
 tto rollback latest
-tto rollback gemini --dry-run
-tto rollback gemini
-tto rollback latest --no-prebackup
+tto rollback codex
 ```
 
-### Doctor
-
 ```bash
-tto doctor
-tto doctor codex
-tto doctor codex --pretty
-tto doctor --pretty
-tto doctor --ci
-```
-
-### Benchmark
-
-```bash
-tto benchmark
-tto benchmark --strict
-tto benchmark --strict --default-policy
-tto benchmark --pretty --strict --default-policy
+tto uninstall codex
+tto uninstall all
 ```
 
 ---
 
-## 💬 In-chat controls
+## 13) Terminal UI (ไม่มี Web Dashboard)
 
-ใช้ภายใน Codex, Claude Code, Gemini CLI, OpenCode, OpenClaw, Hermes Agent หรือ compatible tools
-
-| User message | ผลลัพธ์ |
-|---|---|
-| `token thai on` | เปิด full mode |
-| `token thai auto` | เปิด auto mode |
-| `token thai lite` | เปิด lite mode |
-| `token thai full` | เปิด full mode |
-| `token thai safe` | เปิด safe mode |
-| `token thai off` | ปิด optimizer |
-| `thai compact on` | เปิด full mode |
-| `ลด token ไทย` | เปิด full mode |
-| `ลด token ไทย auto` | เปิด auto mode |
-| `หยุดลด token` | ปิด optimizer |
-| `พูดปกติ` | ปิด optimizer |
-
-แนะนำให้ใช้ plain text triggers สำหรับ Codex เพราะ Codex อาจ reserve slash commands ไว้ใช้เอง
-
----
-
-## ✂️ Prompt compression
-
-ตัวอย่าง:
-
-```bash
-tto compress --pretty --level auto --budget 80 --target codex --check \
-"ช่วยอธิบายรายละเอียดเกี่ยวกับการติดตั้ง Thai Token Optimizer v1.0 โดยห้ามเปลี่ยน package version 1.0.0"
+```text
+tto ui
+  ├─ overview
+  ├─ quality
+  ├─ waste
+  ├─ trend
+  ├─ agents
+  ├─ doctor
+  └─ fleet
 ```
 
-ตัวอย่าง output:
+ตัวอย่างรูปแบบ dashboard:
+
+```text
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Thai Token Optimizer v2.0.0                                                │
+├────────────────────────────────────────────────────────────────────────────┤
+│ Mode      auto        Profile   coding        Safety   strict              │
+│ Doctor    PASS/WARN   Quality   S/A/B/C/F     MTP      PASS/FAIL           │
+│ Saving    tokens reduced while preserving commands, paths, versions        │
+├────────────────────────────────────────────────────────────────────────────┤
+│ Commands   tto doctor --pretty | tto benchmark --strict --default-policy   │
+│ Views      overview | quality | waste | trend | agents | doctor | fleet    │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+```bash
+tto ui
+tto dashboard --view overview
+tto dashboard --view quality
+tto dashboard --view waste
+tto dashboard --view trend
+tto dashboard --view agents
+tto dashboard --view doctor
+tto dashboard --view fleet
+```
+
+### 13.1 ตัวอย่าง UI จริง
+
+ตัวอย่างต่อไปนี้มาจากการรันคำสั่งจริงของ TTO v2 ผ่าน terminal renderer ปัจจุบัน ไม่ใช่ mock UI ค่าในแต่ละเครื่องอาจเปลี่ยนตาม local state, adapter ที่ติดตั้ง, benchmark artifacts และ policy ที่ใช้งาน
+
+#### Status UI
+
+ใช้ตรวจสถานะเร็วที่สุดว่า TTO เปิดอยู่หรือไม่ อยู่ mode/profile/safety ใด และควรรันคำสั่งถัดไปอะไร
+
+```bash
+tto status --pretty
+```
+
+```text
+╭──────────────────────────────────────────────────────────────────────╮
+│ ⚡ Thai Token Optimizer v2.0.0                                        │
+├──────────────────────────────────────────────────────────────────────┤
+│ Compact Thai responses for AI coding agents                          │
+│                                                                      │
+│ Status        ● ACTIVE                                               │
+│ Mode          auto                                                   │
+│ Profile       coding                                                 │
+│ Safety        strict                                                 │
+│ Version       2.0.0                                                  │
+│                                                                      │
+│ Token Saving  ░░░░░░░░░░░░░░░░░░░░    0%                             │
+│                                                                      │
+│ Quick Commands                                                       │
+│ tto auto       tto compress --pretty --budget 500 prompt.txt         │
+│ tto doctor     tto benchmark --pretty --strict --default-policy      │
+╰──────────────────────────────────────────────────────────────────────╯
+```
+
+#### Quality UI
+
+ใช้หลัง benchmark หรือ CI เพื่อดูคะแนนคุณภาพรวม พร้อมสถานะ strict gate, MTP gate, routing gate, weak signals และ suggested actions
+
+```bash
+tto quality --pretty
+```
+
+```text
+╭────────────────────────────────────────────────────────────────────────────────╮
+│ 🧠 TTO Quality Score                                                            │
+├────────────────────────────────────────────────────────────────────────────────┤
+│ Score         ███████████████░ 95.8/100                                        │
+│ Grade         S                                                                │
+│ Strict Gate   PASS                                                             │
+│ MTP Gate      PASS                                                             │
+│ Routing Gate  PASS                                                             │
+│                                                                                │
+│ Weak Signals                                                                   │
+│ • low_saving_cluster                                                           │
+│ • tool_cascade                                                                 │
+│                                                                                │
+│ Suggested Actions                                                              │
+│ • add_tool_circuit_breaker: After 2 consecutive tool failures, stop retri…     │
+│ • tune_selective_window: Increase selective-window aggressiveness for low…     │
+╰────────────────────────────────────────────────────────────────────────────────╯
+```
+
+#### Compression UI
+
+ใช้เมื่ออยากเห็นผลบีบอัดแบบอ่านง่าย มี token ก่อน/หลัง, จำนวน token ที่ประหยัด, preservation score, risk และตัวอย่าง optimized prompt
+
+```bash
+tto compress --pretty --level auto --target codex --budget 120 --check "..."
+```
 
 ```text
 ╭────────────────────────────────────────────────────────────────────────────────╮
@@ -1249,907 +666,291 @@ tto compress --pretty --level auto --budget 80 --target codex --check \
 ├────────────────────────────────────────────────────────────────────────────────┤
 │ Target        codex                                                            │
 │ Mode          auto                                                             │
-│ Budget        80 tokens                                                        │
+│ Budget        120 tokens                                                       │
 │                                                                                │
-│ Before        42 tokens                                                        │
-│ After         37 tokens                                                        │
+│ Before        53 tokens                                                        │
+│ After         48 tokens                                                        │
 │ Saved         5 tokens                                                         │
-│ Ratio         ██░░░░░░░░░░░░░░░░░░  11.9%                                      │
+│ Ratio         ██░░░░░░░░░░░░░░░░░░   9.4%                                      │
 │                                                                                │
 │ Preservation  ████████████████████   100%                                      │
 │ Risk          low                                                              │
 │ Missing       0                                                                │
+│                                                                                │
+│ Optimized                                                                      │
+│   อธิบายวิธีใช้งาน Thai Token Optimizer v2.0 ละเอียด โดยต้องคงคำสั่ง tto doct… │
 ╰────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-ถ้า budget ต่ำเกินไป compressor จะให้ความสำคัญกับ preservation มากกว่าการฝืนตัดให้สั้น
+#### Benchmark UI
 
----
-
-## 🧠 Adaptive Compression Learning
-
-ระบบ Personalization ทำให้ Thai Token Optimizer v1.0 ไม่ได้บีบอัดด้วยกฎ static ชุดเดียวสำหรับทุกคนอีกต่อไป แต่สามารถเรียนรู้คำสำคัญของผู้ใช้แต่ละคนผ่าน User-specific Dictionary ได้
-
-แนวคิดหลัก:
-
-```text
-Static filler rules + User-specific keep dictionary = personalized compression
-```
-
-### ใช้เมื่อไร
-
-ใช้เมื่อมีคำหรือสำนวนที่ดูเหมือน filler สำหรับระบบทั่วไป แต่มีความหมายสำคัญใน workflow ของคุณ เช่น:
-
-- ศัพท์เฉพาะทีม
-- ชื่อระบบภายใน
-- คำเรียก feature หรือ module
-- สไตล์การเขียนที่ต้องคงไว้
-- prompt phrase ที่มีผลต่อ agent behavior
-- token, config key, label หรือ identifier ที่ไม่ควรถูกแตะ
-
-ตัวอย่าง:
+ใช้เป็นหน้าจอหลักสำหรับ release/CI confidence เพราะรวม strict regression gate และ MTP comparison ในจุดเดียว
 
 ```bash
-tto keep "รบกวนช่วย"
-tto keep "ระบบเทพ"
-tto keep "API_KEY(foo)[bar]*"
-```
-
-หลังจากนั้น compressor จะปกป้องคำเหล่านี้ระหว่าง `tto compress` และ `tto rewrite`
-
-### คำสั่งหลัก
-
-| Command | Purpose |
-|---|---|
-| `tto keep <word>` | เพิ่มคำ/วลีลง personal dictionary เพื่อปกป้องไม่ให้ compressor เปลี่ยนหรือตัด |
-| `tto forget <word>` | ลบคำ/วลีออกจาก personal dictionary |
-| `tto dictionary` | แสดงรายการคำที่ระบบกำลังปกป้องให้ผู้ใช้นี้ |
-
-ตัวอย่าง workflow:
-
-```bash
-tto compress --level auto "รบกวนช่วยอธิบายขั้นตอนแบบละเอียดครับ"
-tto keep "รบกวนช่วย"
-tto compress --level auto "รบกวนช่วยอธิบายขั้นตอนแบบละเอียดครับ"
-tto forget "รบกวนช่วย"
-tto dictionary
-```
-
-ก่อน `keep` ระบบอาจตัด `รบกวนช่วย` เพราะเป็น filler ทั่วไป  
-หลัง `keep` ระบบจะคงคำนี้ไว้ตามสไตล์ผู้ใช้
-
-### Persistent storage
-
-Dictionary ถูกเก็บแบบ local-first ที่:
-
-```text
-~/.thai-token-optimizer/dictionary.json
-```
-
-หรือ path ภายใต้ `TTO_HOME` / `THAI_TOKEN_OPTIMIZER_HOME` ถ้าตั้งค่าไว้:
-
-```bash
-TTO_HOME=/tmp/tto-home tto keep "ระบบเทพ"
-```
-
-รูปแบบไฟล์:
-
-```json
-{
-  "keep": [
-    "รบกวนช่วย",
-    "ระบบเทพ",
-    "API_KEY(foo)[bar]*"
-  ],
-  "version": 1
-}
-```
-
-ระบบมี memory cache เพื่อลดการอ่านไฟล์ซ้ำระหว่าง process เดียวกัน และมี normalization เพื่อกันค่าว่าง, duplicate, type แปลก ๆ หรือไฟล์ที่ถูกแก้มือไม่ให้ทำให้ compression พัง
-
-### Parser-level protection
-
-Personal dictionary ถูกผูกเข้ากับ `tto-code-aware-parser.js` โดยตรง ไม่ได้ทำเป็น string replace ภายหลัง
-
-ลำดับการปกป้อง:
-
-1. Protected technical ranges เช่น code fences, inline code, URLs, paths, commands, versions, env/config lines
-2. User-specific keep dictionary
-3. Filler/replacement compression
-4. Constraint lock และ preservation check
-
-เหตุผลคือโครงสร้างเทคนิคต้องปลอดภัยก่อนเสมอ จากนั้นจึงปกป้องศัพท์ส่วนตัวของผู้ใช้
-
-### RegExp safety
-
-คำใน dictionary รองรับอักขระพิเศษได้ เช่น:
-
-```bash
-tto keep "API_KEY(foo)[bar]*"
-```
-
-ระบบ escape ค่าเหล่านี้ก่อนสร้าง dynamic RegExp จึงไม่ทำให้ parser พังหรือ match ผิดรูปแบบ
-
-### Overlapping terms
-
-ถ้ามีคำซ้อนกัน เช่น:
-
-```bash
-tto keep "ระบบ"
-tto keep "ระบบเทพ"
-```
-
-ระบบจะจัดเรียงคำที่ยาวกว่าก่อน เพื่อให้ `ระบบเทพ` ถูกปกป้องเป็นก้อนเดียวก่อนคำสั้นอย่าง `ระบบ`
-
-### Backup and rollback
-
-`dictionary.json` เป็นข้อมูลสำคัญของระบบเรียนรู้รายบุคคล จึงถูกเก็บใน backup/rollback ด้วย:
-
-```bash
-tto backup codex
-tto rollback codex --dry-run
-tto rollback codex
-```
-
-เมื่อ rollback แล้ว personal dictionary จะกลับไปตาม snapshot เดิมพร้อม state/config อื่น ๆ
-
-### ข้อจำกัด
-
-- ระบบเรียนรู้เฉพาะคำที่ผู้ใช้สั่งผ่าน `tto keep`
-- ยังไม่ auto-infer คำสำคัญจากพฤติกรรมโดยไม่ถามผู้ใช้
-- dictionary เป็น local ต่อเครื่อง/ต่อ `TTO_HOME`
-- ถ้าบันทึกคำกว้างเกินไป เช่น `ระบบ` อาจลด compression opportunity เพราะคำนั้นจะถูกปกป้องเสมอ
-
----
-
-## 🛡️ Safety classifier
-
-ตัวอย่าง:
-
-```bash
-tto classify --pretty "DROP TABLE users production secret token"
-```
-
-Output:
-
-```text
-╭────────────────────────────────────────────────────────────────────────────────╮
-│ 🛡️  Safety Classifier                                                          │
-├────────────────────────────────────────────────────────────────────────────────┤
-│ Risk Level     HIGH                                                            │
-│ Compression    relaxed / safe                                                  │
-│ Score          9                                                               │
-│                                                                                │
-│ Categories                                                                     │
-│ • database_migration                                                           │
-│ • production_deploy                                                            │
-│ • security_secret                                                              │
-│                                                                                │
-│ Recommended Action                                                             │
-│ 1. backup  2. dry-run  3. verify  4. rollback ready                            │
-╰────────────────────────────────────────────────────────────────────────────────╯
-```
-
-Risk categories ประกอบด้วย:
-
-| Category | Trigger examples |
-|---|---|
-| `database_migration` | `DROP TABLE`, `TRUNCATE`, `DELETE FROM`, migration |
-| `production_deploy` | production, deploy, release, rollback, hotfix |
-| `security_secret` | API key, secret, access token, password, private key |
-| `destructive_command` | `rm -rf`, `git reset --hard`, `git push --force` |
-| `auth_payment` | auth, permission, payment, billing |
-
----
-
-## 🩺 Doctor
-
-รัน:
-
-```bash
-tto doctor --pretty
-```
-
-ตัวอย่าง:
-
-```text
-╭────────────────────────────────────────────────────────────────────────────────╮
-│ 🩺 Thai Token Optimizer Doctor                                                  │
-├────────────────────────────────────────────────────────────────────────────────┤
-│ Mode          installed                                                        │
-│ Status        PASS                                                             │
-│ Package       1.0.0                                                            │
-│                                                                                │
-│ ✓ Package version remains 1.0.0  1.0.0                                         │
-│ ✓ Node >= 18                     22.16.0                                       │
-│ ✓ CLI entry exists               bin/thai-token-optimizer.js                   │
-│ ✓ Backup module exists           hooks/tto-backup.js                           │
-│ ✓ Adapter module exists          adapters/index.js                             │
-│ ✓ Benchmark golden cases exist   benchmarks/golden_cases.jsonl                 │
-│ ✓ Codex hooks installed          ~/.codex/hooks.json                           │
-│ ✓ Codex hooks feature flag       ~/.codex/config.toml                          │
-│ ✓ Claude hooks installed         ~/.claude/settings.json                       │
-│ ✓ Gemini CLI extension installed ~/.gemini/extensions/thai-token-optimizer     │
-│ ✓ OpenCode plugin installed      ~/.config/opencode/plugins/thai-token-optimizer.js │
-│ ✓ Backup directory writable      ~/.thai-token-optimizer/backups               │
-╰────────────────────────────────────────────────────────────────────────────────╯
-```
-
-ใช้ CI mode:
-
-```bash
-tto doctor --ci
-```
-
----
-
-## 📊 Benchmark
-
-รัน strict benchmark:
-
-```bash
-tto benchmark --pretty --strict --default-policy
 tto benchmark --pretty --strict --default-policy --mtp
 ```
 
-ตัวอย่าง:
-
 ```text
 ╭────────────────────────────────────────────────────────────────────────────────╮
-│ 📊 Thai Token Optimizer Benchmark                                               │
+│ 📊 Thai Token Optimizer v2.0.0 Benchmark                                        │
 ├────────────────────────────────────────────────────────────────────────────────┤
 │ Samples       8                                                                │
-│ Average Save  ██░░░░░░░░░░░░░░░░░░  10.8%                                      │
+│ Average Save  ██░░░░░░░░░░░░░░░░░░    12%                                      │
 │ Preservation  ████████████████████   100%                                      │
 │ Strict Gate   PASS                                                             │
 │                                                                                │
-│ Cases                                                                          │
-│ constraint-version            0%  preserve 100%                                │
-│ code-command                  0%  preserve 100%                                │
-│ db-safety                     0%  preserve 100%                                │
-│ thai-filler-debug          30.3%  preserve 100%                                │
+│ MTP Compare  ON                                                                │
+│ Normal ms    1.3 (p95 3.7)                                                     │
+│ Spec ms      11.3 (p95 16)                                                     │
+│ Delta ms     10                                                                │
+│ Spec Hits    7/8 (87.5%)                                                       │
+│ MTP Gate     PASS                                                              │
 ╰────────────────────────────────────────────────────────────────────────────────╯
 ```
 
-Strict benchmark ตรวจ:
+#### Fleet UI
 
-- average saving
-- preservation score
-- code/config preservation
-- constraint preservation
-- safety behavior
-- version preservation
-
-MTP/Speculative benchmark (`--mtp`) เพิ่ม:
-
-- repeated harness (N runs + warmup)
-- latency stats (`mean`, `p50`, `p95`, `stddev`)
-- spec hit rate
-- MTP gate สำหรับ quality/performance
-
-### Speculative precedence
-
-สำหรับ `tto compress`:
-
-```text
---no-speculative  >  --speculative  >  state.speculative
-```
-
-ตัวอย่าง:
+ใช้ audit หลายโปรเจกต์หรือหลาย agent พร้อมดู benchmark, calibration, session scan, detector, cost และ coverage ในมุมองค์กร
 
 ```bash
-tto compress --no-speculative --check "..."
-tto compress --speculative --diagnostics --check "..."
+tto fleet --pretty --calibration --session-scan
+```
+
+```text
+╭────────────────────────────────────────────────────────────────────────────────╮
+│ 🌐 Fleet / Organization View                                                    │
+├────────────────────────────────────────────────────────────────────────────────┤
+│ Projects      1                                                                │
+│ Benchmarks    1                                                                │
+│ Strict PASS   1                                                                │
+│ MTP PASS      1                                                                │
+│ Route PASS    1                                                                │
+│ Avg Quality   90                                                               │
+│ Avg Saving    12%                                                              │
+│ Waste total   2                                                                │
+│ Calibration   ON (limit 50)                                                    │
+│ SessionScan   ON                                                               │
+│ Runs/Cost     0 runs | input 0 | cost ~$0                                      │
+│ Detectors    0 findings | waste 0 tok | ~$0/mo                                 │
+│                                                                                │
+│ Coverage      Codex:1 Claude:1 CI:1                                            │
+╰────────────────────────────────────────────────────────────────────────────────╯
+```
+
+#### Coach UI
+
+ใช้เมื่อระบบยังผ่านคุณภาพรวม แต่มี weak signals หรือ anti-patterns ที่ควรแก้ต่อแบบมีแผน ไม่ต้องเดาเองจากตัวเลขดิบ
+
+```bash
+tto coach --pretty
+```
+
+```text
+╭────────────────────────────────────────────────────────────────────────────────╮
+│ 🧭 TTO Coach Mode (Guided Remediation)                                          │
+├────────────────────────────────────────────────────────────────────────────────┤
+│ Health Score  ███████████████░ 95.8/100                                        │
+│ Health Grade  S                                                                │
+│ Summary       grade=S; weak=2; antiPatterns=2                                  │
+│                                                                                │
+│ Anti-patterns                                                                  │
+│ • tool_cascade | medium | agent-runtime-owner | Repeated tool cycles may add … │
+│ • low_saving_cluster | medium | compression-engine-owner | Low-value narrativ… │
+│                                                                                │
+│ Fix Plan                                                                       │
+│ • step-1 | medium | developer | Run `tto quality --pretty` and `tto…           │
+│ • step-2 | medium | developer | Capture checkpoint before optimizat…          │
+│ • step-3b | medium | agent-runtime-owner | After repeated tool cycles, stop a… │
+│ • step-3d | medium | compression-engine-owner | Tune selective compression fo… │
+│                                                                                │
+│ Applied       NO                                                               │
+│ • no auto-remediation                                                          │
+╰────────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ---
 
-## 💾 Backup and rollback
-
-### Backup
+## 14) Policy และ Config
 
 ```bash
-tto backup all
+tto config path
+tto config get
+tto config set benchmarkStrict.mtpRepeats 9
 ```
 
-ตัวอย่าง:
+policy controls ประกอบด้วย:
 
-```json
-{
-  "backup": "20260509T101748787Z-6939-all",
-  "target": "all",
-  "files": 27,
-  "root": "~/.thai-token-optimizer/backups"
-}
-```
-
-### แสดงรายการ backups
-
-```bash
-tto backups
-```
-
-### Rollback preview
-
-```bash
-tto rollback latest --dry-run
-tto rollback gemini --dry-run
-```
-
-### Rollback
-
-```bash
-tto rollback latest
-tto rollback gemini
-```
-
-กฎ:
-
-- `rollback gemini` restore เฉพาะไฟล์ของ Gemini
-- `rollback codex` restore เฉพาะไฟล์ของ Codex
-- `rollback latest` ทำงานตาม target ของ backup ล่าสุด
-- pre-rollback backup ถูกสร้างโดย default
-- ใช้ `--no-prebackup` เฉพาะเมื่อตั้งใจข้าม safety backup
+- strict saving gate
+- MTP preservation/hit-rate/slowdown thresholds
+- enhanced corpus minimum gain
+- detector thresholds สำหรับ routing
 
 ---
 
-## 🔌 รายละเอียด Integration
-
-### Codex
-
-ไฟล์:
-
-```text
-~/.codex/hooks.json
-~/.codex/config.toml
-~/.codex/AGENTS.md
-```
-
-Hooks:
-
-| Event | Script | Purpose |
-|---|---|---|
-| `SessionStart` | `hooks/tto-activate.js` | Inject compact Thai rules |
-| `UserPromptSubmit` | `hooks/tto-mode-tracker.js` | ตรวจ triggers และ safety |
-| `PreToolUse` | `hooks/tto-pretool-guard.js` | เพิ่ม safety guidance |
-| `PostToolUse` | `hooks/tto-posttool-summary.js` | สรุปหลังใช้ tool แบบกระชับ |
-| `Stop` | `hooks/tto-stop-summary.js` | คำตอบสุดท้ายแบบกระชับ |
-
-### Claude Code
-
-ไฟล์:
-
-```text
-~/.claude/settings.json
-```
-
-ใช้ hook scripts คล้ายกันสำหรับ session, prompt, tool และ final summary events
-
-### Gemini CLI
-
-ไฟล์:
-
-```text
-~/.gemini/extensions/thai-token-optimizer/gemini-extension.json
-~/.gemini/extensions/thai-token-optimizer/GEMINI.md
-~/.gemini/extensions/thai-token-optimizer/commands/tto/*.toml
-~/.gemini/settings.json
-```
-
-คำสั่งหลัง restart:
-
-```text
-/tto:auto
-/tto:lite
-/tto:full
-/tto:safe
-/tto:off
-/tto:status
-/tto:compress <text>
-/tto:estimate <text>
-```
-
-### OpenCode
-
-ไฟล์:
-
-```text
-~/.config/opencode/plugins/thai-token-optimizer.js
-~/.config/opencode/opencode.json
-~/.config/opencode/agents/thai-token-optimizer.md
-~/.config/opencode/skills/thai-token-optimizer.md
-```
-
-เพิ่ม:
-
-- `tool.execute.before`
-- `tool.execute.after`
-- session compaction guidance
-- environment hints
-
-### OpenClaw
-
-ไฟล์:
-
-```text
-~/.openclaw/openclaw.json
-~/.openclaw/hooks/thai-token-optimizer/HOOK.md
-~/.openclaw/hooks/thai-token-optimizer/handler.ts
-~/.openclaw/hooks/thai-token-optimizer/simulate.cjs
-```
-
-เพิ่ม:
-
-- Managed hook metadata สำหรับ `gateway:startup`, `agent:bootstrap`, `command:new`, `command:reset`, `command`
-- Config entry `hooks.internal.entries["thai-token-optimizer"].enabled = true`
-- Local simulator สำหรับ `tto doctor openclaw` เพื่อ validate safety behavior โดยไม่ต้องพึ่ง OpenClaw binary
-
-### Hermes Agent
-
-ไฟล์:
-
-```text
-~/.hermes/config.yaml
-~/.hermes/plugins/thai-token-optimizer/plugin.yaml
-~/.hermes/plugins/thai-token-optimizer/__init__.py
-~/.hermes/agent-hooks/thai-token-optimizer-pre_llm_call.cjs
-~/.hermes/agent-hooks/thai-token-optimizer-pre_tool_call.cjs
-~/.hermes/agent-hooks/thai-token-optimizer-post_tool_call.cjs
-~/.hermes/agent-hooks/thai-token-optimizer-on_session_start.cjs
-~/.hermes/agent-hooks/thai-token-optimizer-on_session_reset.cjs
-~/.hermes/agent-hooks/thai-token-optimizer-on_session_finalize.cjs
-~/.hermes/agent-hooks/thai-token-optimizer-subagent_stop.cjs
-```
-
-เพิ่ม:
-
-- Shell hooks: `pre_llm_call`, `pre_tool_call`, `post_tool_call`, `on_session_start`, `on_session_reset`, `on_session_finalize`, `subagent_stop`
-- Plugin hooks: `pre_llm_call`, `pre_tool_call`, `post_tool_call`, `post_llm_call`, session lifecycle, `transform_terminal_output`, `transform_llm_output`
-- `hooks_auto_accept: true` ใน managed block เพื่อให้ shell hooks พร้อมทำงานหลังติดตั้งใน non-TTY/gateway
-- `plugins.enabled: [thai-token-optimizer]` เพื่อเปิด plugin hooks
-
-### OpenClaw และ Hermes Agent: การทำงานร่วมกันแบบละเอียด
-
-Thai Token Optimizer เชื่อมกับ OpenClaw และ Hermes Agent ผ่านแนวคิดเดียวกันคือ “ติดตั้ง adapter ในพื้นที่ config ของ agent แล้วให้ agent เรียก hook ก่อน/ระหว่าง/หลังงานสำคัญ” แต่ทั้งสองระบบมี model ไม่เหมือนกัน จึงออกแบบ adapter แยกกันเพื่อใช้ความสามารถของแต่ละ agent ให้เต็มที่สุด
-
-#### OpenClaw Integration Flow
-
-```text
-tto install openclaw
-  -> backup target: openclaw
-  -> write ~/.openclaw/hooks/thai-token-optimizer/HOOK.md
-  -> write ~/.openclaw/hooks/thai-token-optimizer/handler.ts
-  -> write ~/.openclaw/hooks/thai-token-optimizer/simulate.cjs
-  -> enable hooks.internal.entries["thai-token-optimizer"] in ~/.openclaw/openclaw.json
-  -> tto doctor openclaw simulates a risky command event
-```
-
-OpenClaw ใช้ managed hook pack ที่ถูก discover จาก `~/.openclaw/hooks/` โดยมี `HOOK.md` เป็น metadata และ `handler.ts` เป็น runtime handler หลัก ส่วน `simulate.cjs` ใช้สำหรับ validation แบบ local เพื่อให้ `tto doctor openclaw` ตรวจพฤติกรรม safety ได้ แม้เครื่องนั้นยังไม่มี OpenClaw binary หรือยังไม่ได้เปิด session จริง
-
-| OpenClaw event | Thai Token Optimizer behavior | จุดประสงค์ |
-|---|---|---|
-| `gateway:startup` | ส่ง context ว่า TTO active | เตรียม compact Thai behavior ตั้งแต่เริ่ม gateway |
-| `agent:bootstrap` | ส่งกฎ preservation และ safety | ให้ agent รู้ว่าต้องคง command/path/version/error exact |
-| `command:new` | วิเคราะห์คำสั่ง/ข้อความใหม่ | จับ risky command ก่อนงานเริ่ม |
-| `command:reset` | คืน context แบบปลอดภัยหลัง reset | ลดโอกาสสูญเสีย constraint สำคัญ |
-| `command` | ตรวจ payload ระหว่าง command flow | เพิ่ม safety guidance เมื่อพบ production/secret/destructive intent |
-
-OpenClaw adapter ไม่แก้ prompt ของผู้ใช้แบบสุ่ม แต่เพิ่ม structured guidance ให้ agent เห็นในจุดที่ hook model รองรับ ถ้าพบคำสั่งเสี่ยง เช่น `rm -rf`, `DROP TABLE`, `git push --force`, production, secret, auth, payment หรือ migration จะบังคับแนวทาง safe mode: คงคำสั่ง exact, อธิบาย risk, มี backup, verification และ rollback
-
-#### Hermes Agent Integration Flow
-
-```text
-tto install hermes
-  -> backup target: hermes
-  -> write ~/.hermes/config.yaml managed block
-  -> write shell hooks into ~/.hermes/agent-hooks/*.cjs
-  -> write plugin pack into ~/.hermes/plugins/thai-token-optimizer/
-  -> enable plugins.enabled: [thai-token-optimizer]
-  -> tto doctor hermes simulates pre_tool_call with a risky command
-```
-
-Hermes รองรับทั้ง Shell hooks และ Plugin hooks ดังนั้น adapter จึงใช้ hybrid integration เพื่อให้ทำงานได้ทั้ง CLI/local session และ Gateway/plugin session:
-
-| Hermes layer | Installed file | Role |
-|---|---|---|
-| Shell hooks | `~/.hermes/agent-hooks/thai-token-optimizer-*.cjs` | subprocess hooks สำหรับ context injection และ risky tool guard |
-| Config block | `~/.hermes/config.yaml` | เปิด `hooks_auto_accept`, map events ไป shell scripts, และเปิด plugin |
-| Plugin manifest | `~/.hermes/plugins/thai-token-optimizer/plugin.yaml` | ให้ Hermes discover plugin pack |
-| Plugin runtime | `~/.hermes/plugins/thai-token-optimizer/__init__.py` | register plugin hooks ผ่าน `ctx.register_hook()` |
-
-| Hermes hook | Thai Token Optimizer behavior | จุดประสงค์ |
-|---|---|---|
-| `pre_llm_call` | inject compact Thai context | ให้ LLM ตอบไทยกระชับและคง technical details |
-| `pre_tool_call` | block/เตือนเมื่อ payload เสี่ยง | ป้องกัน destructive command โดยยังคงคำสั่ง exact |
-| `post_tool_call` | คงจุดเชื่อมสำหรับ summary หลัง tool | ลด noise หลัง tool output |
-| `post_llm_call` | pass-through output transformation | รักษาความเข้ากันได้กับ plugin lifecycle |
-| `on_session_start` / `on_session_reset` / `on_session_finalize` | lifecycle context hooks | คงกฎ TTO หลังเริ่ม session/reset/finalize |
-| `subagent_stop` | session/subagent lifecycle guard | ช่วยรักษา next action/constraints หลัง subagent จบ |
-| `transform_terminal_output` | truncate output ยาวแบบปลอดภัย | ลด token โดยเก็บ command, exit code, cwd |
-| `transform_llm_output` | pass-through final answer | ไม่แก้ final answer โดยไม่จำเป็น |
-
-#### Validation และ Doctor Checks
-
-```bash
-tto doctor openclaw --pretty
-tto doctor hermes --pretty
-```
-
-`tto doctor openclaw` ตรวจว่า metadata, handler, config entry, command events และ local simulation พร้อมใช้งาน ส่วน `tto doctor hermes` ตรวจ `config.yaml`, shell hook scripts, plugin manifest, plugin runtime และจำลอง `pre_tool_call` ด้วย risky command เพื่อยืนยันว่า hook คืน `action: block` พร้อมข้อความ backup/verification/rollback
-
-#### Backup, Rollback และ Uninstall
-
-```bash
-tto backup openclaw
-tto backup hermes
-tto rollback openclaw --dry-run
-tto rollback hermes --dry-run
-tto uninstall openclaw
-tto uninstall hermes
-```
-
-ทุกการติดตั้งผ่าน `tto install openclaw` หรือ `tto install hermes` จะสร้าง backup ก่อนเสมอผ่านระบบ backup กลางของ Thai Token Optimizer และ rollback แบบ target-specific จะ restore เฉพาะไฟล์ของ target นั้น ไม่แตะ Codex, Claude, Gemini หรือ OpenCode โดยไม่จำเป็น
-
-#### ข้อจำกัดที่ตั้งใจออกแบบไว้
-
-- OpenClaw/Hermes adapter ไม่แทนที่ระบบ policy ภายใน agent แต่เพิ่ม safety/context layer ให้ agent ใช้ประกอบการตัดสินใจ
-- หากไม่มี binary ของ OpenClaw หรือ Hermes ในเครื่อง `doctor` ยังตรวจได้ระดับ file/config/simulation แต่ไม่ claim ว่าได้รัน session จริง
-- Shell/plugin hooks ถูกออกแบบให้ fail-safe: หาก parsing input ผิดพลาด hook จะไม่ทำลาย session และจะไม่แก้ command โดยพลการ
-- Version ยังคงล็อกที่ `Thai Token Optimizer v1.0` และ package `1.0.0` ตาม project constraint
-
-### Portable adapters
-
-| Adapter | ไฟล์ |
-|---|---|
-| Cursor | `~/.cursor/rules/thai-token-optimizer.mdc` |
-| Aider | `~/.aider/thai-token-optimizer.md` |
-| Cline | `~/.cline/rules/thai-token-optimizer.md` |
-| Roo Code | `~/.roo/rules/thai-token-optimizer.md` |
-
----
-
-## 🏗️ Compression pipeline
-
-```text
-Input Thai prompt
-  ↓
-Code-aware parser
-  ↓
-User-specific dictionary protection
-  ↓
-Constraint locker
-  ↓
-Safety classifier
-  ↓
-Prompt compressor
-  ↓
-Budget compressor
-  ↓
-Semantic preservation checker
-  ↓
-Optimized prompt
-```
-
-Modules หลัก:
-
-| Module | Purpose |
-|---|---|
-| `tto-compressor.js` | Main prompt rewrite/compression engine |
-| `tto-budget-compressor.js` | Compresses toward token budget |
-| `tto-code-aware-parser.js` | Protects code/config/path/URL/command/version |
-| `tto-config.js` | Stores state, policy home paths, and personal dictionary |
-| `tto-constraint-locker.js` | Extracts and re-adds hard constraints |
-| `tto-preservation-checker.js` | Checks missing protected items |
-| `tto-token-estimator.js` | Estimates token savings |
-| `tto-safety-classifier.js` | Detects risky content |
-| `tto-ui.js` | Pretty terminal UI renderer |
-
----
-
-## 🗺️ Text Diagram: กระบวนการทำงานของระบบทั้งหมด
-
-แผนภาพนี้สรุปการไหลงานตั้งแต่ผู้ใช้สั่งงาน จนได้ผลลัพธ์การบีบอัดที่ปลอดภัยและคงความหมายสำคัญ
-
-```text
-User / Agent
-  (Codex / Claude / Gemini CLI / OpenCode / OpenClaw / Hermes)
-            │
-            ▼
-Entry Points
-  - Chat triggers: token thai auto|lite|full|safe|off
-  - CLI commands: tto compress / keep / forget / doctor / backup
-            │
-            ▼
-State + Policy Layer
-  - state.json
-  - config.json
-  - dictionary.json (personalization)
-            │
-            ▼
-Hook Runtime (SessionStart / UserPromptSubmit / PreToolUse / PostToolUse / Stop)
-            │
-            ▼
-Safety Classifier
-  - detects destructive / db / prod / secret / auth-payment risks
-            │
-            ▼
-Compression Pipeline
-  1) Code-aware parser
-  2) User-specific dictionary protection
-  3) Filler/replacement compression
-  4) Constraint locker
-  5) Budget compressor
-  6) Preservation checker
-            │
-            ▼
-Optimized Output
-  - concise Thai
-  - preserved commands/code/paths/versions
-  - safety details retained when risky
-            │
-            ▼
-Backup / Rollback Safety Net
-  - backup manifests include dictionary.json + state/config files
-  - rollback restores target-scoped files
-```
-
-### คำอธิบายทีละช่วง
-
-1. `Entry Points`
-ผู้ใช้สั่งผ่านแชต trigger หรือคำสั่ง CLI ปกติ ระบบจะเลือก mode และ policy ที่เหมาะกับงานนั้น
-
-2. `State + Policy`
-เก็บสถานะการทำงานและ personalization (`dictionary.json`) เพื่อให้ระบบเรียนรู้สไตล์รายบุคคลแบบต่อเนื่อง
-
-3. `Hook Runtime`
-inject พฤติกรรมตอนเริ่ม session, ก่อนใช้ tool, หลังใช้ tool และก่อนตอบ final เพื่อรักษาความสม่ำเสมอ
-
-4. `Safety Classifier`
-ถ้าเจอคำสั่งเสี่ยง ระบบจะบังคับแนวตอบแบบ safe โดยไม่ย่อจนเสียขั้นตอน backup/rollback/verify
-
-5. `Compression Pipeline`
-เริ่มจากปกป้องโครงสร้างเทคนิคและคำเฉพาะผู้ใช้ก่อน แล้วค่อยบีบอัดส่วนที่เป็น filler เพื่อลด token โดยไม่เสีย context
-
-6. `Backup / Rollback`
-ทุกงานแก้ config สำคัญมี backup รองรับ และ rollback สามารถ restore เฉพาะ target ที่ต้องการ
-
----
-
-## 🧪 Development and testing
-
-รัน tests:
-
-```bash
-npm test
-```
-
-รัน CI checks:
+## 15) CI Pipeline
 
 ```bash
 npm run ci
 ```
 
-Recommended manual checks:
+ลำดับ CI ปัจจุบันจาก `package.json`:
 
-```bash
-node --check bin/thai-token-optimizer.js
-tto doctor --ci
-tto benchmark --strict --default-policy
-tto ui
-tto doctor --pretty
+```text
+1) npm run test:ci
+2) node bin/thai-token-optimizer.js benchmark --strict --default-policy --mtp
+3) node bin/thai-token-optimizer.js doctor --ci
 ```
 
+---
+
+## 16) Snapshot การลด token จริง
+
+การเปรียบเทียบจริงล่าสุดในเครื่อง (`without TTO` เทียบกับ `with TTO`, 18 กรณี):
+
+```text
+┌──────────────────────┬────────┬───────────────┬──────────────┐
+│ Mode                 │ Tokens │ Saved         │ Preservation │
+├──────────────────────┼────────┼───────────────┼──────────────┤
+│ without TTO          │ 1789   │ baseline      │ n/a          │
+│ with TTO normal      │ 1344   │ -445 / -24.9% │ 100% min     │
+│ with TTO MTP/spec    │ 1334   │ -455 / -25.4% │ 100% min     │
+└──────────────────────┴────────┴───────────────┴──────────────┘
+```
+
+### ตารางเปรียบเทียบการลด Token
+
+```text
+┌──────────────────┬────────────────────────────────┬────────────────────────────────────────────────┬───────────────────────────────────────────┐
+│ หัวข้อเปรียบเทียบ    │ ภาษาไทย (Thai)                 │ ภาษาอังกฤษ (English)                            │ Mixed Language (ไทยผสมอังกฤษ)              │
+├──────────────────┼────────────────────────────────┼────────────────────────────────────────────────┼───────────────────────────────────────────┤
+│ อัตราการลดเฉลี่ย    │ 30% - 50%                      │ 15% - 60%                                      │ 25% - 45%                                 │
+│ กลไกหลัก          │ Filler Removal / สรุปความประโยค │ Selective Windowing (Masking) / Prose Trimming │ Technical Anchor Compression              │
+│ สิ่งที่ถูกลดออก     │ คำสุภาพ, คำเชื่อม, วลีเกริ่นนำ   │ Logs, Stack Traces, คำบรรยายทั่วไป                │ ภาษาไทยรอบข้าง Technical terms             │
+│ สิ่งที่ถูกรักษาไว้    │ ใจความสำคัญ, ตัวเลข, หน่วย      │ Code, Paths, Versions, JSON Keys               │ Technical terms และ Constraints ทั้ง 2 ภาษา │
+└──────────────────┴────────────────────────────────┴────────────────────────────────────────────────┴───────────────────────────────────────────┘
+```
+
+หมายเหตุ:
+
+- prompt ที่เข้มงวดด้านเทคนิค/ความปลอดภัย อาจตั้งใจลด token ได้น้อย
+- estimator อาจเป็นแบบ heuristic เว้นแต่ติดตั้ง exact tokenizer dependencies แล้ว
 
 ---
 
-## 🚀 Future Roadmap & Research: MTP & Speculative Decoding
+## 17) Runtime Files และ Artifacts
 
-แนวคิดของ **Multi-Token Prediction (MTP)** และ **Speculative Decoding** สามารถนำมาประยุกต์ใช้กับ **Thai Token Optimizer (TTO)** เพื่อยกระดับ "ความเร็วในการประมวลผล" และ "ความแม่นยำในการบีบอัด" โดยเปลี่ยนผ่านจาก Rule-based ไปสู่ **Hybrid AI-driven**:
-
-### 1. ความเป็นไปได้ในการประยุกต์ใช้
-ใช้ TTO เป็น **"Draft Model" (Speculator)** สำหรับ AI Agent หรือใช้ MTP เพื่อช่วยให้ TTO บีบอัดข้อความได้ฉลาดขึ้นเหมือนมนุษย์
-
-### 2. Implementation Roadmap
-
-- **TTO as a "Rule-based Speculator":** พัฒนาตัวทำนายคำถัดไปที่ "สั้นลง" ขณะผู้ใช้พิมพ์ (Local UI Acceleration) เพื่อทำ Auto-complete ประโยคที่บีบอัดแล้วล่วงหน้า 3-5 tokens
-- **Training a TTO-Aware Draft Model:** เทรน Small Language Model (SLM) ด้วย Dataset ที่ผ่านการบีบอัดด้วย TTO เพื่อทำหน้าที่เป็น Draft Model ที่ Gen ข้อความไทยแบบ Compact แล้วส่งให้ Target Model ตรวจสอบความถูกต้อง
-- **Constraint-Aware Verification:** ใช้ `tto-preservation-checker.js` และ `tto-constraint-locker.js` เป็นส่วนหนึ่งของ Verification Step ใน MTP Architecture เพื่อตรวจสอบ Hard Constraints ก่อนตัดสินใจขั้นสุดท้าย
-- **Semantic Muting as Speculation:** ใช้ MTP ทำนายส่วนของคำอธิบายไทยที่ "ซ้ำซ้อน" กับโค้ด และสั่งหยุด Gen (Muting) เพื่อประหยัด token
-
-### 3. ประโยชน์ที่คาดว่าจะได้รับ
-- **Latency Reduction:** ลดเวลาการรอ AI เขียนภาษาไทยยาวๆ (Fast Gen via MTP + Short Text via TTO)
-- **High Fidelity:** การมี TTO Verifier ในลูปจะช่วยการันตี Technical Accuracy ของข้อความที่ถูกบีบอัด
+```text
+┌─ Local State ──────────────────────────────────────────────────────────────┐
+│ state.json              mode/profile/speculative flags                     │
+│ stats.jsonl             runtime stats                                      │
+│ dictionary.json          personalization words from tto keep               │
+│ policy.json              benchmark and compression policy                  │
+├─ Runtime Analytics ────────────────────────────────────────────────────────┤
+│ checkpoint JSONL         checkpoint lifecycle                              │
+│ cache read log           repeated read analytics                           │
+│ calibration JSONL        estimated vs real token gap                       │
+├─ Benchmark Artifacts ──────────────────────────────────────────────────────┤
+│ benchmarks/regression_report.md                                            │
+│ benchmarks/regression_report.json                                          │
+│ benchmarks/regression_history.jsonl                                        │
+│ benchmarks/fleet_history.jsonl                                             │
+└────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 📁 Project structure
+## 18) การแก้ปัญหา
+
+### ปัญหา Hook JSON: UserPromptSubmit
+
+```text
+UserPromptSubmit hook failed
+error: hook returned invalid user prompt submit JSON output
+```
+
+```bash
+tto doctor codex --pretty
+node --test tests/test_codex_triggers.js tests/test_tracker.js
+```
+
+### ปัญหา Hook JSON: Stop
+
+```text
+Stop hook failed
+error: hook returned invalid stop hook JSON output
+```
+
+```bash
+tto doctor --pretty
+node --test tests/test_activate.js tests/test_pretty_ui.js
+```
+
+### CI timeout หรือ flaky gate
+
+```bash
+npm run test:ci
+```
+
+ตรวจสอบ artifacts:
+
+- `benchmarks/regression_report.md`
+- `benchmarks/regression_report.json`
+
+---
+
+## 19) Quick Reference สำหรับการพัฒนา
+
+ไดเรกทอรีสำคัญ:
 
 ```text
 thai-token-optimizer/
-├── bin/
-│   └── thai-token-optimizer.js
-├── hooks/
-│   ├── tto-activate.js
-│   ├── tto-mode-tracker.js
-│   ├── tto-pretool-guard.js
-│   ├── tto-posttool-summary.js
-│   ├── tto-stop-summary.js
-│   ├── tto-compressor.js
-│   ├── tto-budget-compressor.js
-│   ├── tto-code-aware-parser.js
-│   ├── tto-constraint-locker.js
-│   ├── tto-preservation-checker.js
-│   ├── tto-token-estimator.js
-│   ├── tto-safety-classifier.js
-│   ├── tto-backup.js
-│   ├── tto-doctor.js
-│   ├── tto-policy.js
-│   ├── tto-profiles.js
-│   └── tto-ui.js
-├── adapters/
-│   └── index.js
-├── benchmarks/
-│   ├── golden_cases.jsonl
-│   └── run_benchmark.js
-├── tests/
+├── bin/          CLI entrypoint
+├── hooks/        core engine, hooks, analytics, UI
+├── adapters/     integration installers
+├── benchmarks/   corpora, reports, gates
+├── tests/        regression and integration tests
 ├── .codex-plugin/
 ├── .claude-plugin/
 ├── .github/
-│   └── workflows/
 ├── README.md
-├── MANUAL.md
 ├── AGENTS.md
+├── MANUAL.md
 ├── package.json
 └── LICENSE
 ```
 
----
-
-## 🔐 Security notes
-
-Thai Token Optimizer:
-
-- ไม่เรียก external APIs สำหรับ core operation
-- ไม่ส่ง prompts ไปยัง remote services
-- เก็บ state แบบ local ที่ `~/.thai-token-optimizer/`
-- แก้ไข tool configs เฉพาะตอน install/uninstall/rollback
-- สร้าง backups ก่อนเปลี่ยน config
-
-อย่างไรก็ตาม ควรตรวจสอบการเปลี่ยนแปลงก่อนใช้งานบนเครื่อง production:
+การรันทดสอบแบบเจาะจง:
 
 ```bash
-tto backup all
-tto install all
-tto doctor
-```
-
-สำหรับงานที่เกี่ยวกับ rollback:
-
-```bash
-tto rollback latest --dry-run
+node --test tests/test_mtp_speculative.js tests/test_mtp_benchmark.js tests/test_mtp_detectors.js
+node --test tests/test_pretty_ui.js tests/test_fleet_auditor.js
 ```
 
 ---
 
-## ⚠️ ข้อจำกัดที่ทราบ
-
-- Token estimation เป็น heuristic เว้นแต่จะติดตั้ง optional tokenizer packages
-- Exact token counts แตกต่างกันตาม model และ tokenizer
-- Hook behavior ขึ้นอยู่กับ hook system ที่แต่ละ AI tool รองรับ
-- Portable adapters บางตัวเป็น instruction-file based ไม่ใช่ runtime hooks
-- Pretty UI สำหรับมนุษย์ ส่วน automation ควรใช้ JSON/text output
-- เครื่องมือนี้เพิ่มประสิทธิภาพ style ของ prompt/response ไม่ใช่คุณภาพ reasoning ของ model
-- ไม่ใช่เครื่องมือแทนการ review destructive commands ด้วยตนเอง
-
----
-
-## ❓ FAQ
-
-### นี่คือ model หรือไม่?
-
-ไม่ใช่ เป็น local CLI + hook + adapter pack
-
-### เครื่องมือนี้เรียก external API หรือไม่?
-
-ไม่มี core feature ใดที่ต้องใช้ network calls
-
-### ใช้งานโดยไม่มี optional tokenizer packages ได้หรือไม่?
-
-ได้ ระบบ fallback ไปใช้ heuristic estimation
-
-### ลด token ของ prompt ภาษาไทยได้หรือไม่?
-
-ได้ ผ่าน `tto compress` / `tto rewrite`
-
-### บังคับให้ทุกคำตอบสั้นมากได้หรือไม่?
-
-ได้ ด้วย `tto full` แต่งานเสี่ยงจะถูกบังคับให้ใช้ behavior ที่ปลอดภัยกว่าโดยอัตโนมัติ
-
-### `tto install all` แก้ global config files หรือไม่?
-
-ใช่ คำสั่งนี้แก้ config files ของเครื่องมือที่รองรับ แต่จะสร้าง backups ก่อน
-
-### Preview rollback ได้หรือไม่?
-
-ได้
-
-```bash
-tto rollback latest --dry-run
-```
-
-### ปิดระบบได้หรือไม่?
-
-ได้
-
-```bash
-tto off
-tto uninstall all
-```
-
-### ทำไมเวอร์ชันยังคงเป็น 1.0.0?
-
-โปรเจกต์นี้ล็อก package identity ไว้ที่:
+## 20) Safety Checklist (สำหรับการทำงานที่มีความเสี่ยง)
 
 ```text
-Thai Token Optimizer v1.0
-package version: 1.0.0
+[1] classify risk
+[2] backup first
+[3] dry-run when available
+[4] apply change
+[5] verify result
+[6] keep rollback ready
 ```
 
----
-
-## 🗺️ Workflow ที่แนะนำ
+ตัวอย่าง:
 
 ```bash
-npm install
-npm test
-npm run ci
-
 tto backup all
-tto install all
-tto install-agents
+tto rollback latest --dry-run
 tto doctor --pretty
-
-tto auto
-tto profile coding
-tto ui
-```
-
-จากนั้นภายใน AI coding tool ของคุณ:
-
-```text
-token thai auto
-```
-
-สำหรับงานเสี่ยง:
-
-```text
-token thai safe
-```
-
-สำหรับ rollback:
-
-```bash
-tto rollback latest --dry-run
-tto rollback latest
-tto doctor
 ```
 
 ---
 
-## 🧾 License
+## 21) License
 
-MIT
+MIT License
 
----
-
-<div align="center">
-
-## ⚡ Thai Token Optimizer v1.0
-
-**ภาษาไทยกระชับ คำสั่งปลอดภัย ความหมายไม่หาย**
-
-```text
-package version: 1.0.0
-```
-
-</div>
+ดู [LICENSE](LICENSE)

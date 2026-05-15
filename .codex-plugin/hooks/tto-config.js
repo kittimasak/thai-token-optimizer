@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -62,6 +62,8 @@ const DEFAULT_STATE = Object.freeze({
   level: 'auto',
   profile: 'coding',
   safetyMode: 'strict',
+  speculative: false,
+  autoCompressInput: false,
   version: 1
 });
 
@@ -128,6 +130,8 @@ function normalizeState(parsed = {}) {
     level: VALID_LEVELS.has(parsed.level) ? parsed.level : DEFAULT_STATE.level,
     profile: VALID_PROFILES.has(parsed.profile) ? parsed.profile : DEFAULT_STATE.profile,
     safetyMode: VALID_SAFETY_MODES.has(parsed.safetyMode) ? parsed.safetyMode : DEFAULT_STATE.safetyMode,
+    speculative: typeof parsed.speculative === 'boolean' ? parsed.speculative : DEFAULT_STATE.speculative,
+    autoCompressInput: typeof parsed.autoCompressInput === 'boolean' ? parsed.autoCompressInput : DEFAULT_STATE.autoCompressInput,
     version: typeof parsed.version === 'number' ? parsed.version : DEFAULT_STATE.version,
     lastChanged: parsed.lastChanged || undefined,
     lastSafetyCategory: parsed.lastSafetyCategory || undefined,

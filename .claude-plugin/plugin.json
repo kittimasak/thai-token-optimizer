@@ -1,22 +1,31 @@
 {
   "name": "thai-token-optimizer",
-  "description": "Thai Token Optimizer v1.0 — adaptive compact Thai+English communication mode for Claude Code. Reduces Thai output tokens while preserving technical accuracy and safety clarity.",
+  "description": "Thai Token Optimizer v2.0 — adaptive Thai token optimization for Claude Code using lifecycle hooks, compact Thai policy, MTP-aware compression guidance, quality checks, and safety preservation.",
   "author": {
     "name": "Dr.Kittimasak Naijit",
     "url": "https://github.com/kittimasak"
   },
-  "version": "1.0.0",
+  "version": "2.0.0",
   "license": "MIT",
+  "homepage": "https://github.com/kittimasak/thai-token-optimizer",
+  "repository": "https://github.com/kittimasak/thai-token-optimizer",
   "keywords": [
-    "thai",
-    "token-optimizer",
-    "prompt-compression",
     "claude-code",
     "hooks",
+    "thai",
+    "token",
+    "prompt-compression",
     "productivity",
-    "safety"
+    "safety",
+    "local-first",
+    "mtp",
+    "speculative-decoding",
+    "quality-score",
+    "coach-mode",
+    "fleet-audit",
+    "context-audit",
+    "claude-plugin"
   ],
-  "repository": "https://github.com/kittimasak/thai-token-optimizer",
   "hooks": {
     "SessionStart": [
       {
@@ -26,7 +35,7 @@
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/tto-activate.js\"",
             "timeout": 5,
-            "statusMessage": "Loading Thai Token Optimizer v1.0"
+            "statusMessage": "[TTO Stage 1/4] Detect Intent — loading Thai Token Optimizer v2.0"
           }
         ]
       }
@@ -39,7 +48,7 @@
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/tto-mode-tracker.js\"",
             "timeout": 5,
-            "statusMessage": "Tracking Thai Token Optimizer mode"
+            "statusMessage": "[TTO Stage 1/4] Detect Intent — tracking TTO mode/profile/safety"
           }
         ]
       }
@@ -52,7 +61,7 @@
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/tto-pretool-guard.js\"",
             "timeout": 5,
-            "statusMessage": "Checking Thai Token Optimizer safety guard"
+            "statusMessage": "[TTO Stage 3/4] Preserve Critical — checking safety guard"
           }
         ]
       }
@@ -65,7 +74,7 @@
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/tto-posttool-summary.js\"",
             "timeout": 5,
-            "statusMessage": "Preparing compact Thai tool summary"
+            "statusMessage": "[TTO Stage 4/4] Output Compact — preparing compact tool summary"
           }
         ]
       }
@@ -78,7 +87,7 @@
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/tto-stop-summary.js\"",
             "timeout": 5,
-            "statusMessage": "Finalizing compact Thai response"
+            "statusMessage": "[TTO Stage 4/4] Output Compact — finalizing safely"
           }
         ]
       }

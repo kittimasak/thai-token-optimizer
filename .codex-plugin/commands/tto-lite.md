@@ -1,6 +1,6 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
 A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -24,4 +24,5 @@ Enable lite mode.
 token thai lite
 ```
 
-Use for teaching, concepts, research, and explanations that must remain understandable.
+Use for teaching, concepts, research, design, and documentation where explanation must remain understandable.
+

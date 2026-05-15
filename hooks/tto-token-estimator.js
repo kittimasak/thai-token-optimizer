@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -38,28 +38,64 @@ function heuristicEstimate(text, target = 'generic') {
   const latinWords = countLatinWords(text);
   const symbols = countSymbols(text);
   const newlines = (text.match(/\n/g) || []).length;
+  
   let thaiDivisor = 1.8;
   let latinFactor = 1.2;
   if (/claude/i.test(target)) { thaiDivisor = 1.65; latinFactor = 1.15; }
   if (/codex|openai|gpt/i.test(target)) { thaiDivisor = 1.75; latinFactor = 1.25; }
   if (/deepseek|qwen|gemini/i.test(target)) { thaiDivisor = 1.9; latinFactor = 1.15; }
+  
   const thaiTokens = Math.ceil(thaiChars / thaiDivisor);
-  const latinTokens = Math.ceil(latinWords * latinFactor);
+  
+  // Latin words: account for word count AND character density for very long words
+  const latinMatches = text.match(/[A-Za-z0-9_./:@#-]+/g) || [];
+  let latinBaseTokens = 0;
+  for (const m of latinMatches) {
+    // Heuristic: 1 token per ~4.5 chars for long words, or at least 1 per word
+    latinBaseTokens += Math.max(1, Math.ceil(m.length / 4.5));
+  }
+  const latinTokens = Math.ceil(latinBaseTokens * latinFactor);
+  
   const symbolTokens = Math.ceil(symbols * 0.35);
   const lineTokens = Math.ceil(newlines * 0.4);
   const estimatedTokens = Math.max(0, thaiTokens + latinTokens + symbolTokens + lineTokens);
   return { chars, thaiChars, latinWords, symbols, newlines, target, estimatedTokens, exact: false, tokenizer: 'heuristic' };
 }
-function tryTiktoken(text) {
+const MODEL_ENCODING_MAP = {
+  'o1': 'o200k_base',
+  'gpt-4o': 'o200k_base',
+  'gpt-4o-mini': 'o200k_base',
+  'gpt-4': 'cl100k_base',
+  'gpt-3.5-turbo': 'cl100k_base',
+  'codex': 'p50k_base',
+  'claude': 'cl100k_base', // Claude use similar BPE density to cl100k
+  'gemini': 'cl100k_base',
+  'default': 'cl100k_base'
+};
+
+function resolveEncoding(target) {
+  const t = String(target || '').toLowerCase();
+  for (const [key, value] of Object.entries(MODEL_ENCODING_MAP)) {
+    if (t.includes(key)) return value;
+  }
+  return MODEL_ENCODING_MAP.default;
+}
+
+function tryTiktoken(text, target = 'generic') {
   try {
     const mod = require('@dqbd/tiktoken');
-    const enc = mod.encoding_for_model ? mod.encoding_for_model('gpt-4o') : mod.get_encoding('cl100k_base');
+    const encodingName = resolveEncoding(target);
+    const enc = mod.encoding_for_model && MODEL_ENCODING_MAP[target] 
+      ? mod.encoding_for_model(target) 
+      : mod.get_encoding(encodingName);
+    
     const tokens = enc.encode(String(text || ''));
     const count = tokens.length;
     if (enc.free) enc.free();
-    return { count, tokenizer: '@dqbd/tiktoken:gpt-4o' };
+    return { count, tokenizer: `@dqbd/tiktoken:${encodingName}` };
   } catch (_) { return null; }
 }
+
 function tryGptTokenizer(text) {
   try {
     const mod = require('gpt-tokenizer');
@@ -68,15 +104,16 @@ function tryGptTokenizer(text) {
     return { count: encode(String(text || '')).length, tokenizer: 'gpt-tokenizer' };
   } catch (_) { return null; }
 }
+
 function exactEstimate(text, target = 'generic') {
   const base = heuristicEstimate(text, target);
   let exact = null;
-  const isOpenAi = /codex|openai|gpt/i.test(target);
+  const isOpenAi = /codex|openai|gpt|o1/i.test(target);
   
   if (isOpenAi) {
-    exact = tryGptTokenizer(text) || tryTiktoken(text);
+    exact = tryGptTokenizer(text) || tryTiktoken(text, target);
   } else {
-    exact = tryTiktoken(text) || tryGptTokenizer(text);
+    exact = tryTiktoken(text, target) || tryGptTokenizer(text);
   }
 
   if (!exact) return { ...base, requestedExact: true, exactAvailable: false, note: 'Optional tokenizer not installed; used heuristic fallback.' };

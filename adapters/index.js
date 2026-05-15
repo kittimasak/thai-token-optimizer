@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -27,38 +27,15 @@ const ROOT = path.resolve(__dirname, '..');
 const CLI = path.join(ROOT, 'bin', 'thai-token-optimizer.js');
 const NODE = process.execPath || 'node';
 
-const AGENT_TEXT = `# Thai Token Optimizer v1.0
-
-Use compact Thai responses while preserving technical accuracy.
-
-Rules:
-- ตอบไทยกระชับ ตัดคำสุภาพ/filler/hedging ที่ไม่จำเป็น
-- คง technical terms, file paths, commands, flags, URLs, versions, errors, identifiers exact
-- โค้ด/คำสั่งก่อน คำอธิบายหลัง เมื่อเป็นงาน coding/DevOps
-- ห้ามบีบงานเสี่ยงเกินไป: destructive commands, database, production, auth, security, secrets, payment
-- คง constraint สำคัญ เช่น ต้อง/ห้าม/เด็ดขาด/version/v1.0/1.0.0
-- ถ้าเป็น Gemini CLI, OpenCode, OpenClaw หรือ Hermes Agent ให้ใช้กฎเดียวกันนี้ตลอด session
-
-Controls:
-- Terminal: \`tto auto|lite|full|safe|off|status\`
-- In chat: \`token thai auto|lite|full|safe|off\`
+const AGENT_TEXT = `# TTO v2.0 [⚓]
+[S]=Detail [A]=Mirror [T]=Senior+Compact [P]=[S]>[A]>Save
+- **Acts:** Res TH? [T]+Thai : [T]+Eng. Mirror [A]. If [S], apply [S]-Mode.
+- **[Lazy_Load]:** Read MANUAL.md for Cmd help/flags. NEVER guess.
 `;
 
 const GEMINI_EXTENSION_CONTEXT = `${AGENT_TEXT}
-
-## Gemini CLI integration
-Thai Token Optimizer v1.0 is active as a Gemini CLI extension context.
-Prefer concise Thai. Preserve commands, paths, filenames, versions, JSON/YAML/TOML, errors, and constraints exactly.
-For risky tool use, keep warnings, backup, rollback, and verification steps.
-Custom commands available after extension install:
-- /tto:auto
-- /tto:lite
-- /tto:full
-- /tto:safe
-- /tto:off
-- /tto:status
-- /tto:compress <text>
-- /tto:estimate <text>
+## Gemini CLI [⚓]
+- **Acts:** Mirror [A] 100%. [P] applies. [Lazy_Load] MANUAL.md for Cmd details.
 `;
 
 function q(s) { return JSON.stringify(String(s)); }
@@ -115,26 +92,18 @@ function installGemini() {
 
   const metadata = {
     name: 'thai-token-optimizer',
-    version: '1.0.0',
+    version: '2.0.0',
     contextFileName: 'GEMINI.md',
-    excludeTools: [
-      'run_shell_command(rm -rf)',
-      'run_shell_command(git push --force)',
-      'run_shell_command(DROP TABLE)'
-    ]
+    excludeTools: ['run_shell_command(rm -rf)', 'run_shell_command(git push --force)', 'run_shell_command(DROP TABLE)']
   };
   writeJson(path.join(extensionDir, 'gemini-extension.json'), metadata);
   writeWithBackup(path.join(extensionDir, 'GEMINI.md'), GEMINI_EXTENSION_CONTEXT);
 
   const cli = `${q(NODE)} ${q(CLI)}`;
-  writeGeminiCommand(extensionDir, 'tto/auto.toml', 'Enable Thai Token Optimizer auto mode.', `!{${cli} auto}\n\nThai Token Optimizer v1.0 auto mode is now enabled. Reply compact Thai and preserve technical accuracy.`);
-  writeGeminiCommand(extensionDir, 'tto/lite.toml', 'Enable Thai Token Optimizer lite mode.', `!{${cli} lite}\n\nThai Token Optimizer v1.0 lite mode is now enabled.`);
-  writeGeminiCommand(extensionDir, 'tto/full.toml', 'Enable Thai Token Optimizer full mode.', `!{${cli} full}\n\nThai Token Optimizer v1.0 full mode is now enabled.`);
-  writeGeminiCommand(extensionDir, 'tto/safe.toml', 'Enable Thai Token Optimizer safe mode.', `!{${cli} safe}\n\nThai Token Optimizer v1.0 safe mode is now enabled. Keep safety steps explicit.`);
-  writeGeminiCommand(extensionDir, 'tto/off.toml', 'Disable Thai Token Optimizer.', `!{${cli} off}\n\nThai Token Optimizer v1.0 is now disabled.`);
-  writeGeminiCommand(extensionDir, 'tto/status.toml', 'Show Thai Token Optimizer status.', `Current Thai Token Optimizer v1.0 status:\n\n\`\`\`json\n!{${cli} status}\n\`\`\``);
-  writeGeminiCommand(extensionDir, 'tto/compress.toml', 'Compress Thai prompt text with Thai Token Optimizer.', `Compress this text with Thai Token Optimizer v1.0 and preserve code/paths/constraints:\n\n{{args}}\n\nLocal estimator output:\n\`\`\`\n!{${cli} compress --level auto "{{args}}"}\n\`\`\``);
-  writeGeminiCommand(extensionDir, 'tto/estimate.toml', 'Estimate tokens for Thai text.', `Estimate token usage for this text:\n\n{{args}}\n\n\`\`\`json\n!{${cli} estimate --target gemini "{{args}}"}\n\`\`\``);
+  writeGeminiCommand(extensionDir, 'tto/mode.toml', 'Set TTO mode (auto|lite|full|safe|off).', `!{${cli} {{args}}}\n\nTTO v2.0 mode set to {{args}}. Reply compact Thai, keep technicals exact.`);
+  writeGeminiCommand(extensionDir, 'tto/status.toml', 'Show TTO status.', `TTO v2.0 Status:\n\`\`\`json\n!{${cli} status}\n\`\`\``);
+  writeGeminiCommand(extensionDir, 'tto/compress.toml', 'Compress Thai text.', `Optimize text with TTO v2.0:\n\n{{args}}\n\nOutput:\n\`\`\`\n!{${cli} compress --level auto "{{args}}"}\n\`\`\``);
+  writeGeminiCommand(extensionDir, 'tto/estimate.toml', 'Estimate tokens.', `Token estimation:\n\n{{args}}\n\n\`\`\`json\n!{${cli} estimate --target gemini "{{args}}"}\n\`\`\``);
 
   const settings = readJson(settingsPath, {});
   addGeminiHook(settings, 'SessionStart', 'startup|resume|clear', commandHook('thai-token-optimizer-session', 'tto-gemini-session.js'));
@@ -154,8 +123,9 @@ function opencodePluginSource() {
   const node = q(NODE);
   const root = q(ROOT);
   const cli = q(CLI);
+  const statePath = q(path.join(HOME_DIR, 'state.json'));
   const context = JSON.stringify(AGENT_TEXT + '\nOpenCode plugin: compact Thai output, strict safety for risky tools, preserve exact code/path/version/error.');
-  return `// Thai Token Optimizer v1.0 — OpenCode native plugin.\n// Generated by thai-token-optimizer installer. Version intentionally remains 1.0.0.\nconst node = ${node};\nconst root = ${root};\nconst cli = ${cli};\nconst contextText = ${context};\n\nasync function run($, args) {\n  try {\n    const out = await $\`${'${node}'} ${'${args}'}\`;\n    return String(out.stdout || out || '').trim();\n  } catch (e) {\n    return '';\n  }\n}\nfunction textOf(v) {\n  try { return typeof v === 'string' ? v : JSON.stringify(v); } catch { return String(v || ''); }\n}\nfunction isRisky(text) {\n  return /(rm\\\\s+-rf|DROP\\\\s+TABLE|git\\\\s+push\\\\s+--force|production|prod|secret|api[_-]?key|password|migration|auth|payment|พุชฟอร์ซ|ลบไฟล์ทั้งหมด|ฟอร์แมต|ฐานข้อมูล|ตาราง|ลบข้อมูล|ย้ายข้อมูล|ดรอปเทเบิ้ล|ดรอปดาต้าเบส|ขึ้นระบบจริง|โปรดักชัน|ปล่อยระบบ|ดีพลอย|ดันขึ้นโปรดักชัน|รหัสผ่าน|คีย์ลับ|โทเคนลับ|ความปลอดภัย|สิทธิ์|ยืนยันตัวตน|ชำระเงิน|จ่ายเงิน)/i.test(textOf(text));\n}\nexport const ThaiTokenOptimizer = async ({ client, $ }) => {\n  await client?.app?.log?.({ body: { service: 'thai-token-optimizer', level: 'info', message: 'Thai Token Optimizer v1.0 OpenCode plugin loaded' } }).catch?.(()=>{});\n  return {\n    'shell.env': async (input, output) => {\n      output.env.THAI_TOKEN_OPTIMIZER = '1';\n      output.env.THAI_TOKEN_OPTIMIZER_ROOT = root;\n    },\n    'tool.execute.before': async (input, output) => {\n      const payload = textOf({ input, output });\n      if (isRisky(payload)) {\n        output.args = output.args || {};\n        output.args.__thaiTokenOptimizerSafety = 'Thai Token Optimizer v1.0: risky operation detected. Preserve exact command, explain risk, include backup/rollback/verification. Do not over-compress.';\n      }\n    },\n    'tool.execute.after': async (input, output) => {\n      await client?.app?.log?.({ body: { service: 'thai-token-optimizer', level: 'info', message: 'Post-tool compact Thai summary recommended' } }).catch?.(()=>{});\n    },\n    'experimental.session.compacting': async (input, output) => {\n      output.context = output.context || [];\n      output.context.push(contextText + '\\nDuring compaction: keep current task, changed files, commands, errors, constraints, and next action. Summarize compactly in Thai.');\n    },\n    event: async ({ event }) => {\n      if (event?.type === 'session.created') {\n        await client?.app?.log?.({ body: { service: 'thai-token-optimizer', level: 'info', message: 'Use token thai auto|lite|full|safe|off or tto auto|lite|full|safe|off' } }).catch?.(()=>{});\n      }\n    }\n  };\n};\n`;
+  return `// Thai Token Optimizer v2.0 — OpenCode native plugin.\n// Generated by thai-token-optimizer installer. Version intentionally remains 2.0.0.\nimport fs from 'node:fs';\nconst node = ${node};\nconst root = ${root};\nconst cli = ${cli};\nconst statePath = ${statePath};\nconst contextText = ${context};\n\nasync function run($, args) {\n  try {\n    const out = await $\`${'${node}'} ${'${args}'}\`;\n    return String(out.stdout || out || '').trim();\n  } catch (e) {\n    return '';\n  }\n}\nfunction getState() {\n  try { if (fs.existsSync(statePath)) return JSON.parse(fs.readFileSync(statePath, 'utf8')); } catch (_) {}\n  return { enabled: true, level: 'auto' };\n}\nfunction textOf(v) {\n  try { return typeof v === 'string' ? v : JSON.stringify(v); } catch { return String(v || ''); }\n}\nfunction isRisky(text) {\n  return /(rm\\s+-rf|DROP\\s+TABLE|git\\s+push\\s+--force|production|prod|secret|api[_-]?key|password|migration|auth|payment|พุชฟอร์ซ|ลบไฟล์ทั้งหมด|ฟอร์แมต|ฐานข้อมูล|ตาราง|ลบข้อมูล|ย้ายข้อมูล|ดรอปเทเบิ้ล|ดรอปดาต้าเบส|ขึ้นระบบจริง|โปรดักชัน|ปล่อยระบบ|ดีพลอย|ดันขึ้นโปรดักชัน|รหัสผ่าน|คีย์ลับ|โทเคนลับ|ความปลอดภัย|สิทธิ์|ยืนยันตัวตน|ชำระเงิน|จ่ายเงิน)/i.test(textOf(text));\n}\nexport const ThaiTokenOptimizer = async ({ client, $ }) => {\n  await client?.app?.log?.({ body: { service: 'thai-token-optimizer', level: 'info', message: 'Thai Token Optimizer v2.0 OpenCode plugin loaded' } }).catch?.(()=>{});\n  return {\n    'shell.env': async (input, output) => {\n      const state = getState();\n      output.env.THAI_TOKEN_OPTIMIZER = state.enabled === false ? '0' : '1';\n      output.env.THAI_TOKEN_OPTIMIZER_LEVEL = state.level || 'auto';\n      output.env.THAI_TOKEN_OPTIMIZER_ROOT = root;\n    },\n    'tool.execute.before': async (input, output) => {\n      const payload = textOf({ input, output });\n      if (isRisky(payload)) {\n        output.args = output.args || {};\n        output.args.__thaiTokenOptimizerSafety = 'Thai Token Optimizer v2.0: risky operation detected. Preserve exact command, explain risk, include backup/rollback/verification. Do not over-compress.';\n      }\n    },\n    'tool.execute.after': async (input, output) => {\n      await client?.app?.log?.({ body: { service: 'thai-token-optimizer', level: 'info', message: 'Post-tool compact Thai summary recommended' } }).catch?.(()=>{});\n    },\n    'experimental.session.compacting': async (input, output) => {\n      const state = getState();\n      output.context = output.context || [];\n      if (state.enabled === false) {\n        output.context.push('Thai Token Optimizer DISABLED. Preserve normal OpenCode behavior.');\n        return;\n      }\n      output.context.push(\`TTO v2.0.0 [\${state.level || 'auto'}]: Compact Thai. \` + contextText + '\\nDuring compaction: keep current task, changed files, commands, errors, constraints, and next action. Summarize compactly in Thai.');\n    },\n    event: async ({ event }) => {\n      if (event?.type === 'session.created') {\n        await client?.app?.log?.({ body: { service: 'thai-token-optimizer', level: 'info', message: 'Use token thai auto|lite|full|safe|off or tto auto|lite|full|safe|off' } }).catch?.(()=>{});\n      }\n    }\n  };\n};\n`;
 }
 function installOpenCode() {
   const configDir = process.env.OPENCODE_CONFIG_DIR || path.join(os.homedir(), '.config', 'opencode');
@@ -168,14 +138,14 @@ function installOpenCode() {
   const pluginPath = writeWithBackup(path.join(pluginDir, 'thai-token-optimizer.js'), opencodePluginSource());
   const agentPath = writeWithBackup(path.join(agentsDir, 'thai-token-optimizer.md'), AGENT_TEXT + '\nOpenCode agent profile for compact Thai coding responses.');
   const skillPath = writeWithBackup(path.join(skillsDir, 'thai-token-optimizer.md'), AGENT_TEXT + '\nUse this skill when Thai token efficiency matters.');
-  writeWithBackup(path.join(commandsDir, 'tto-auto.md'), 'Run `tto auto` then respond in compact Thai with Thai Token Optimizer v1.0 rules.');
+  writeWithBackup(path.join(commandsDir, 'tto-auto.md'), 'Run `tto auto` then respond in compact Thai with Thai Token Optimizer v2.0 rules.');
   writeWithBackup(path.join(commandsDir, 'tto-safe.md'), 'Run `tto safe` then keep safety-critical details explicit while reducing filler.');
   const config = readJson(configPath, { '$schema': 'https://opencode.ai/config.json' });
   config.$schema ||= 'https://opencode.ai/config.json';
   config.plugin ||= [];
   // Local plugin directory is auto-loaded by OpenCode, but adding an explicit note in config helps users audit it.
   config.experimental ||= {};
-  config.experimental.thaiTokenOptimizer = { enabled: true, version: '1.0.0', plugin: pluginPath };
+  config.experimental.thaiTokenOptimizer = { enabled: true, version: '2.0.0', plugin: pluginPath };
   writeJson(configPath, config);
   setPolicy({ adapters: { ...getPolicy().adapters, opencode: true } });
   return [
@@ -204,13 +174,13 @@ metadata:
   { "openclaw": { "emoji": "⚡", "events": ["gateway:startup", "agent:bootstrap", "command:new", "command:reset", "command"], "requires": { "bins": ["node"] } } }
 ---
 
-# Thai Token Optimizer v1.0
+# Thai Token Optimizer v2.0
 
 OpenClaw hook for compact Thai agent behavior.
 
 ## What It Does
 
-- Emits Thai Token Optimizer v1.0 guidance when OpenClaw starts or bootstraps an agent.
+- Emits Thai Token Optimizer v2.0 guidance when OpenClaw starts or bootstraps an agent.
 - Adds compact Thai, code-aware preservation, and safety reminders for command events.
 - Keeps commands, paths, versions, errors, JSON/YAML/TOML, and constraints exact.
 - Treats destructive, production, auth, secret, payment, and migration requests as safety-sensitive.
@@ -227,14 +197,16 @@ OpenClaw hook for compact Thai agent behavior.
 function openClawHandlerSource() {
   const root = q(ROOT);
   const cli = q(CLI);
-  const context = JSON.stringify(AGENT_TEXT + '\nOpenClaw hook: compact Thai output, strict safety for risky commands, preserve exact code/path/version/error.');
-  return `// Thai Token Optimizer v1.0 — OpenClaw managed hook.\n// Generated by thai-token-optimizer installer. Version intentionally remains 1.0.0.\nconst root = ${root};\nconst cli = ${cli};\nconst contextText = ${context};\n\nfunction textOf(value) {\n  try { return typeof value === 'string' ? value : JSON.stringify(value); } catch { return String(value || ''); }\n}\nfunction isRisky(value) {\n  return /(rm\\\\s+-rf|DROP\\\\s+TABLE|git\\\\s+push\\\\s+--force|production|prod|secret|api[_-]?key|password|migration|auth|payment|พุชฟอร์ซ|ลบไฟล์ทั้งหมด|ฟอร์แมต|ฐานข้อมูล|ตาราง|ลบข้อมูล|ย้ายข้อมูล|ดรอปเทเบิ้ล|ดรอปดาต้าเบส|ขึ้นระบบจริง|โปรดักชัน|ปล่อยระบบ|ดีพลอย|ดันขึ้นโปรดักชัน|รหัสผ่าน|คีย์ลับ|โทเคนลับ|ความปลอดภัย|สิทธิ์|ยืนยันตัวตน|ชำระเงิน|จ่ายเงิน)/i.test(textOf(value));\n}\nfunction guidance(event) {\n  const eventName = [event?.type, event?.action].filter(Boolean).join(':') || 'openclaw';\n  return {\n    service: 'thai-token-optimizer',\n    version: '1.0.0',\n    root,\n    cli,\n    event: eventName,\n    instruction: contextText,\n    safety: isRisky(event) ? 'safe mode required: preserve exact command, explain risk, include backup, verification, and rollback.' : 'compact Thai mode recommended.'\n  };\n}\n\nconst handler = async (event = {}) => {\n  const info = guidance(event);\n  if (event?.type === 'gateway' || event?.type === 'agent' || event?.type === 'command') {\n    console.log('[thai-token-optimizer]', JSON.stringify(info));\n  }\n  return info;\n};\n\nexport { guidance };\nexport default handler;\n`;
+  const statePath = q(path.join(HOME_DIR, 'state.json'));
+  const contextBase = JSON.stringify(AGENT_TEXT + '\nOpenClaw hook: compact Thai output, strict safety for risky commands, preserve exact code/path/version/error.');
+  return `// Thai Token Optimizer v2.0 — OpenClaw managed hook.\n// Generated by thai-token-optimizer installer. Version intentionally remains 2.0.0.\nimport fs from 'node:fs';\nconst root = ${root};\nconst cli = ${cli};\nconst statePath = ${statePath};\nconst contextBase = ${contextBase};\n\nfunction textOf(value: any): string {\n  try { return typeof value === 'string' ? value : JSON.stringify(value); } catch { return String(value || ''); }\n}\nfunction isRisky(value: any): boolean {\n  return /(rm\\s+-rf|DROP\\s+TABLE|git\\s+push\\s+--force|production|prod|secret|api[_-]?key|password|migration|auth|payment|พุชฟอร์ซ|ลบไฟล์ทั้งหมด|ฟอร์แมต|ฐานข้อมูล|ตาราง|ลบข้อมูล|ย้ายข้อมูล|ดรอปเทเบิ้ล|ดรอปดาต้าเบส|ขึ้นระบบจริง|โปรดักชัน|ปล่อยระบบ|ดีพลอย|ดันขึ้นโปรดักชัน|รหัสผ่าน|คีย์ลับ|โทเคนลับ|ความปลอดภัย|สิทธิ์|ยืนยันตัวตน|ชำระเงิน|จ่ายเงิน)/i.test(textOf(value));\n}\nfunction guidance(event: any) {\n  const eventName = [event?.type, event?.action].filter(Boolean).join(':') || 'openclaw';\n  let state = { enabled: true, level: 'auto' };\n  try { if (fs.existsSync(statePath)) state = JSON.parse(fs.readFileSync(statePath, 'utf8')); } catch (_) {}\n  \n  const context = state.enabled \n    ? \`TTO v2.0.0 [\${state.level}]: Compact Thai. \` + contextBase\n    : 'Thai Token Optimizer is currently DISABLED. Proceed with normal responses.';\n\n  return {\n    service: 'thai-token-optimizer',\n    version: '2.0.0',\n    root,\n    cli,\n    enabled: !!state.enabled,\n    level: state.level,\n    event: eventName,\n    instruction: context,\n    safety: isRisky(event) ? 'safe mode required: preserve exact command, explain risk, include backup, verification, and rollback.' : 'compact Thai mode recommended.'\n  };\n}\n\nconst handler = async (event: any = {}) => {\n  const info = guidance(event);\n  if (event?.type === 'gateway' || event?.type === 'agent' || event?.type === 'command') {\n    console.log('[thai-token-optimizer]', JSON.stringify(info));\n  }\n  return info;\n};\n\nexport { guidance };\nexport default handler;\n`;
 }
 function openClawSimulatorSource() {
   const root = q(ROOT);
   const cli = q(CLI);
-  const context = JSON.stringify(AGENT_TEXT + '\nOpenClaw hook: compact Thai output, strict safety for risky commands, preserve exact code/path/version/error.');
-  return `#!/usr/bin/env node\n// Thai Token Optimizer v1.0 — local OpenClaw hook simulator for doctor/tests.\nconst root = ${root};\nconst cli = ${cli};\nconst contextText = ${context};\nfunction textOf(value) { try { return typeof value === 'string' ? value : JSON.stringify(value); } catch { return String(value || ''); } }\nfunction isRisky(value) { return /(rm\\\\s+-rf|DROP\\\\s+TABLE|git\\\\s+push\\\\s+--force|production|prod|secret|api[_-]?key|password|migration|auth|payment|พุชฟอร์ซ|ลบไฟล์ทั้งหมด|ฟอร์แมต|ฐานข้อมูล|ตาราง|ลบข้อมูล|ย้ายข้อมูล|ดรอปเทเบิ้ล|ดรอปดาต้าเบส|ขึ้นระบบจริง|โปรดักชัน|ปล่อยระบบ|ดีพลอย|ดันขึ้นโปรดักชัน|รหัสผ่าน|คีย์ลับ|โทเคนลับ|ความปลอดภัย|สิทธิ์|ยืนยันตัวตน|ชำระเงิน|จ่ายเงิน)/i.test(textOf(value)); }\nfunction guidance(event = {}) {\n  const eventName = [event && event.type, event && event.action].filter(Boolean).join(':') || 'openclaw';\n  return { service: 'thai-token-optimizer', version: '1.0.0', root, cli, event: eventName, instruction: contextText, safety: isRisky(event) ? 'safe mode required: preserve exact command, explain risk, include backup, verification, and rollback.' : 'compact Thai mode recommended.' };\n}\nif (require.main === module) {\n  let input = '';\n  process.stdin.on('data', chunk => { input += chunk; });\n  process.stdin.on('end', () => {\n    let event = {};\n    try { event = input.trim() ? JSON.parse(input) : {}; } catch { event = { type: 'invalid' }; }\n    console.log(JSON.stringify(guidance(event), null, 2));\n  });\n}\nmodule.exports = { guidance };\n`;
+  const statePath = q(path.join(HOME_DIR, 'state.json'));
+  const contextBase = JSON.stringify(AGENT_TEXT + '\nOpenClaw hook: compact Thai output, strict safety for risky commands, preserve exact code/path/version/error.');
+  return `#!/usr/bin/env node\n// Thai Token Optimizer v2.0 — local OpenClaw hook simulator.\nconst fs = require('fs');\nconst root = ${root};\nconst cli = ${cli};\nconst statePath = ${statePath};\nconst contextBase = ${contextBase};\nfunction textOf(value) { try { return typeof value === 'string' ? value : JSON.stringify(value); } catch { return String(value || ''); } }\nfunction isRisky(value) { return /(rm\\s+-rf|DROP\\s+TABLE|git\\s+push\\s+--force|production|prod|secret|api[_-]?key|password|migration|auth|payment|พุชฟอร์ซ|ลบไฟล์ทั้งหมด|ฟอร์แมต|ฐานข้อมูล|ตาราง|ลบข้อมูล|ย้ายข้อมูล|ดรอปเทเบิ้ล|ดรอปดาต้าเบส|ขึ้นระบบจริง|โปรดักชัน|ปล่อยระบบ|ดีพลอย|ดันขึ้นโปรดักชัน|รหัสผ่าน|คีย์ลับ|โทเคนลับ|ความปลอดภัย|สิทธิ์|ยืนยันตัวตน|ชำระเงิน|จ่ายเงิน)/i.test(textOf(value)); }\nfunction guidance(event = {}) {\n  const eventName = [event && event.type, event && event.action].filter(Boolean).join(':') || 'openclaw';\n  let state = { enabled: true, level: 'auto' };\n  try { if (fs.existsSync(statePath)) state = JSON.parse(fs.readFileSync(statePath, 'utf8')); } catch (_) {}\n  const context = state.enabled ? \`TTO v2.0.0 [\${state.level}]: Compact Thai. \` + contextBase : 'Thai Token Optimizer DISABLED.';\n  return { service: 'thai-token-optimizer', version: '2.0.0', root, cli, enabled: !!state.enabled, level: state.level, event: eventName, instruction: context, safety: isRisky(event) ? 'safe mode required: preserve exact command, explain risk, include backup, verification, and rollback.' : 'compact Thai mode recommended.' };\n}\nif (require.main === module) {\n  let input = '';\n  process.stdin.on('data', chunk => { input += chunk; });\n  process.stdin.on('end', () => {\n    let event = {};\n    try { event = input.trim() ? JSON.parse(input) : {}; } catch { event = { type: 'invalid' }; }\n    console.log(JSON.stringify(guidance(event), null, 2));\n  });\n}\nmodule.exports = { guidance };\n`;
 }
 function enableOpenClawConfig(configPath, hookDir) {
   const config = readJson(configPath, {});
@@ -282,18 +254,30 @@ function hermesContextText() {
 }
 function hermesPluginYaml() {
   return `name: thai-token-optimizer
-version: "1.0.0"
-description: Thai Token Optimizer v1.0 shell and plugin hooks for Hermes Agent
+version: "2.0.0"
+description: Thai Token Optimizer v2.0 shell and plugin hooks for Hermes Agent
 `;
 }
 function hermesPluginSource() {
-  const context = JSON.stringify(hermesContextText());
-  return `"""Thai Token Optimizer v1.0 — Hermes Agent plugin hooks."""
+  const statePath = q(path.join(HOME_DIR, 'state.json'));
+  const contextBase = JSON.stringify(hermesContextText());
+  return `"""Thai Token Optimizer v2.0 — Hermes Agent plugin hooks."""
 import json
 import re
+import os
 
-CONTEXT = ${context}
-RISKY = re.compile(r"(rm\\\\s+-rf|DROP\\\\s+TABLE|git\\\\s+push\\\\s+--force|production|prod|secret|api[_-]?key|password|migration|auth|payment|พุชฟอร์ซ|ลบไฟล์ทั้งหมด|ฟอร์แมต|ฐานข้อมูล|ตาราง|ลบข้อมูล|ย้ายข้อมูล|ดรอปเทเบิ้ล|ดรอปดาต้าเบส|ขึ้นระบบจริง|โปรดักชัน|ปล่อยระบบ|ดีพลอย|ดันขึ้นโปรดักชัน|รหัสผ่าน|คีย์ลับ|โทเคนลับ|ความปลอดภัย|สิทธิ์|ยืนยันตัวตน|ชำระเงิน|จ่ายเงิน)", re.I)
+STATE_PATH = ${statePath}
+CONTEXT_BASE = ${contextBase}
+RISKY = re.compile(r"(rm\\s+-rf|DROP\\s+TABLE|git\\s+push\\s+--force|production|prod|secret|api[_-]?key|password|migration|auth|payment|พุชฟอร์ซ|ลบไฟล์ทั้งหมด|ฟอร์แมต|ฐานข้อมูล|ตาราง|ลบข้อมูล|ย้ายข้อมูล|ดรอปเทเบิ้ล|ดรอปดาต้าเบส|ขึ้นระบบจริง|โปรดักชัน|ปล่อยระบบ|ดีพลอย|ดันขึ้นโปรดักชัน|รหัสผ่าน|คีย์ลับ|โทเคนลับ|ความปลอดภัย|สิทธิ์|ยืนยันตัวตน|ชำระเงิน|จ่ายเงิน)", re.I)
+
+def _get_state():
+    try:
+        if os.path.exists(STATE_PATH):
+            with open(STATE_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {"enabled": True, "level": "auto"}
 
 def _text(value):
     try:
@@ -305,14 +289,19 @@ def _is_risky(*values):
     return any(RISKY.search(_text(value)) for value in values)
 
 def _pre_llm_call(**kwargs):
-    return {"context": CONTEXT + "\\nDuring this Hermes turn: answer compactly in Thai, keep commands/paths/versions/errors exact, and do not over-compress safety-critical work."}
+    state = _get_state()
+    if not state.get("enabled", True):
+        return {"context": "Thai Token Optimizer is currently DISABLED. Proceed with normal responses."}
+    
+    ctx = f"TTO v2.0.0 [{state.get('level', 'auto')}]: Compact Thai. " + CONTEXT_BASE
+    return {"context": ctx + "\\nDuring this Hermes turn: answer compactly in Thai, keep commands/paths/versions/errors exact, and do not over-compress safety-critical work."}
 
 def _pre_tool_call(tool_name=None, args=None, params=None, **kwargs):
     payload = {"tool_name": tool_name, "args": args, "params": params, "extra": kwargs}
     if _is_risky(payload):
         return {
             "action": "block",
-            "message": "Thai Token Optimizer v1.0: risky tool call detected. Re-state exact command, explain risk, include backup, verification, and rollback before proceeding."
+            "message": "Thai Token Optimizer v2.0: risky tool call detected. Confirm exact command, backup, verification, and rollback before proceeding."
         }
     return None
 
@@ -350,19 +339,29 @@ def register(ctx):
 `;
 }
 function hermesShellHookSource(eventName) {
-  const context = JSON.stringify(hermesContextText());
+  const statePath = q(path.join(HOME_DIR, 'state.json'));
+  const contextBase = JSON.stringify(hermesContextText());
   return `#!/usr/bin/env node
-// Thai Token Optimizer v1.0 — Hermes shell hook: ${eventName}
-const contextText = ${context};
+// Thai Token Optimizer v2.0 — Hermes shell hook: ${eventName}
+const fs = require('fs');
+const statePath = ${statePath};
+const contextBase = ${contextBase};
 function textOf(value) { try { return typeof value === 'string' ? value : JSON.stringify(value); } catch { return String(value || ''); } }
-function isRisky(text) {\n  return /(rm\\\\s+-rf|DROP\\\\s+TABLE|git\\\\s+push\\\\s+--force|production|prod|secret|api[_-]?key|password|migration|auth|payment|พุชฟอร์ซ|ลบไฟล์ทั้งหมด|ฟอร์แมต|ฐานข้อมูล|ตาราง|ลบข้อมูล|ย้ายข้อมูล|ดรอปเทเบิ้ล|ดรอปดาต้าเบส|ขึ้นระบบจริง|โปรดักชัน|ปล่อยระบบ|ดีพลอย|ดันขึ้นโปรดักชัน|รหัสผ่าน|คีย์ลับ|โทเคนลับ|ความปลอดภัย|สิทธิ์|ยืนยันตัวตน|ชำระเงิน|จ่ายเงิน)/i.test(textOf(text));\n}
+function isRisky(text) {\n  return /(rm\\s+-rf|DROP\\s+TABLE|git\\s+push\\s+--force|production|prod|secret|api[_-]?key|password|migration|auth|payment|พุชฟอร์ซ|ลบไฟล์ทั้งหมด|ฟอร์แมต|ฐานข้อมูล|ตาราง|ลบข้อมูล|ย้ายข้อมูล|ดรอปเทเบิ้ล|ดรอปดาต้าเบส|ขึ้นระบบจริง|โปรดักชัน|ปล่อยระบบ|ดีพลอย|ดันขึ้นโปรดักชัน|รหัสผ่าน|คีย์ลับ|โทเคนลับ|ความปลอดภัย|สิทธิ์|ยืนยันตัวตน|ชำระเงิน|จ่ายเงิน)/i.test(textOf(text));\n}
 function response(payload) {
   const event = payload.hook_event_name || ${JSON.stringify(eventName)};
+  let state = { enabled: true, level: 'auto' };
+  try { if (fs.existsSync(statePath)) state = JSON.parse(fs.readFileSync(statePath, 'utf8')); } catch (_) {}
+
   if (event === 'pre_llm_call') {
-    return { context: contextText + '\\nHermes shell hook active: compact Thai, preserve exact technical details, and keep safety steps explicit.' };
+    const context = state.enabled 
+      ? \`TTO v2.0.0 [\${state.level}]: Compact Thai. \` + contextBase
+      : 'Thai Token Optimizer DISABLED.';
+    if (!state.enabled) return { context };
+    return { context: context + '\\nHermes shell hook active: compact Thai, preserve exact technical details, and keep safety steps explicit.' };
   }
   if (event === 'pre_tool_call' && isRisky(payload)) {
-    return { action: 'block', message: 'Thai Token Optimizer v1.0: risky Hermes tool call detected. Confirm exact command, backup, verification, and rollback before proceeding.' };
+    return { action: 'block', message: 'Thai Token Optimizer v2.0: risky Hermes tool call detected. Confirm exact command, backup, verification, and rollback before proceeding.' };
   }
   return {};
 }
@@ -423,7 +422,7 @@ function installHermes() {
 }
 
 const ADAPTERS = {
-  cursor: { file: path.join(os.homedir(), '.cursor', 'rules', 'thai-token-optimizer.mdc'), body: `---\ndescription: Thai Token Optimizer v1.0 compact Thai coding responses\nalwaysApply: true\n---\n\n${AGENT_TEXT}` },
+  cursor: { file: path.join(os.homedir(), '.cursor', 'rules', 'thai-token-optimizer.mdc'), body: `---\ndescription: Thai Token Optimizer v2.0 compact Thai coding responses\nalwaysApply: true\n---\n\n${AGENT_TEXT}` },
   aider: { file: path.join(os.homedir(), '.aider', 'thai-token-optimizer.md'), body: AGENT_TEXT },
   cline: { file: path.join(os.homedir(), '.cline', 'rules', 'thai-token-optimizer.md'), body: AGENT_TEXT },
   roo: { file: path.join(os.homedir(), '.roo', 'rules', 'thai-token-optimizer.md'), body: AGENT_TEXT }

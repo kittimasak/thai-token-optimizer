@@ -1,9 +1,9 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
-A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
+Claude Code plugin package documentation for Thai Token Optimizer v2.0.
 
 Author      : Dr.Kittimasak Naijit
 Repository  : https://github.com/kittimasak/thai-token-optimizer
@@ -16,22 +16,29 @@ Notes:
 ============================================================================
 -->
 
-# Claude Code Plugin — Thai Token Optimizer v1.0
+# Claude Code Plugin - Thai Token Optimizer v2.0
 
-> Claude Code plugin metadata, hook configuration, commands, and usage notes for **Thai Token Optimizer v1.0**
+Claude Code plugin metadata, lifecycle hooks, command templates, and skill guidance for **Thai Token Optimizer v2.0**.
 
 ```text
-Thai Token Optimizer v1.0
-package version: 1.0.0
+Thai Token Optimizer v2.0
+package version: 2.0.0
 ```
 
 ## Purpose
 
-This `.claude-plugin` directory makes Thai Token Optimizer discoverable and installable as a Claude Code plugin.
+The `.claude-plugin` directory packages TTO behavior for Claude Code:
 
-Thai Token Optimizer helps Claude Code respond in compact Thai while preserving technical accuracy, commands, code, paths, versions, errors, safety constraints, and rollback behavior.
+- compact Thai responses
+- code-aware preservation
+- safety-aware tool guidance
+- mode/profile tracking
+- MTP/speculative compression guidance
+- quality/coach/ops/fleet command templates
+- checkpoint/cache/context operational visibility
+- rollback-first installation discipline
 
-## Directory structure
+## Directory Structure
 
 ```text
 .claude-plugin/
@@ -39,6 +46,9 @@ Thai Token Optimizer helps Claude Code respond in compact Thai while preserving 
 ├── plugin.json
 ├── README.md
 ├── INSTALL_TH.md
+├── VALIDATION.md
+├── hooks/
+│   └── tto-*.js
 ├── commands/
 │   ├── tto-auto.md
 │   ├── tto-lite.md
@@ -46,61 +56,49 @@ Thai Token Optimizer helps Claude Code respond in compact Thai while preserving 
 │   ├── tto-safe.md
 │   ├── tto-off.md
 │   ├── tto-status.md
-│   └── tto-doctor.md
+│   ├── tto-dashboard.md
+│   ├── tto-doctor.md
+│   ├── tto-benchmark.md
+│   ├── tto-quality.md
+│   ├── tto-coach.md
+│   ├── tto-ops.md
+│   ├── tto-fleet.md
+│   ├── tto-compress.md
+│   └── tto-context.md
 └── skills/
     └── thai-token-optimizer/
         └── SKILL.md
 ```
 
-## Files
+## Hook Events
 
-| File | Purpose |
-|---|---|
-| `marketplace.json` | Local/marketplace plugin listing |
-| `plugin.json` | Claude Code plugin metadata and hook bindings |
-| `README.md` | English usage and maintenance notes |
-| `INSTALL_TH.md` | Thai installation guide |
-| `commands/*.md` | Command prompt templates for Claude Code users |
-| `skills/thai-token-optimizer/SKILL.md` | Claude skill-style behavior guide |
+`plugin.json` registers Claude Code lifecycle hooks with stage-based messages:
 
-## Hook events
+| Event | Script | Stage | Purpose |
+|---|---|---|---|
+| `SessionStart` | `hooks/tto-activate.js` | `[TTO Stage 1/4]` | Load compact Thai context |
+| `UserPromptSubmit` | `hooks/tto-mode-tracker.js` | `[TTO Stage 1/4]` | Track mode/profile/safety/speculative state |
+| `PreToolUse` | `hooks/tto-pretool-guard.js` | `[TTO Stage 3/4]` | Preserve critical safety details before tools |
+| `PostToolUse` | `hooks/tto-posttool-summary.js` | `[TTO Stage 4/4]` | Encourage compact tool summary |
+| `Stop` | `hooks/tto-stop-summary.js` | `[TTO Stage 4/4]` | Return valid minimal stop payload |
 
-`plugin.json` registers these hooks:
-
-| Event | Script | Purpose |
-|---|---|---|
-| `SessionStart` | `hooks/tto-activate.js` | Inject compact Thai behavior at session start |
-| `UserPromptSubmit` | `hooks/tto-mode-tracker.js` | Detect mode commands and safety categories |
-| `PreToolUse` | `hooks/tto-pretool-guard.js` | Add safety guard before risky tools |
-| `PostToolUse` | `hooks/tto-posttool-summary.js` | Encourage compact Thai tool summaries |
-| `Stop` | `hooks/tto-stop-summary.js` | Encourage compact final answer |
-
-The scripts are referenced using:
+Hook commands use:
 
 ```text
 ${CLAUDE_PLUGIN_ROOT}/hooks/<script>.js
 ```
 
-When this plugin is used from the repository root, the `hooks/` directory must exist at the repository root.
+Hooks must keep stdout valid for Claude Code. Debug text belongs in `~/.thai-token-optimizer/error.log`, not stdout.
 
-## Install from repository
+## Install Claude Code Integration
 
 ```bash
-git clone https://github.com/kittimasak/thai-token-optimizer.git
-cd thai-token-optimizer
-
-npm install
-npm test
-npm run ci
-
-npm link
-
 tto backup claude
 tto install claude
-tto doctor --pretty
+tto doctor claude --pretty
 ```
 
-## Install all integrations
+## Install All Integrations
 
 ```bash
 tto backup all
@@ -109,9 +107,7 @@ tto install-agents
 tto doctor --pretty
 ```
 
-## Claude Code chat commands
-
-Inside Claude Code, use:
+## Claude Code Chat Controls
 
 ```text
 token thai auto
@@ -119,57 +115,81 @@ token thai lite
 token thai full
 token thai safe
 token thai off
+/tto spec
+/tto nospec
+/tto nointeractive
 ```
 
-Recommended default:
+## Core v2 Commands
 
-```text
-token thai auto
+```bash
+# status/dashboard
+tto status --pretty
+tto dashboard --view overview
+tto dashboard --view quality
+tto dashboard --view waste
+tto dashboard --view trend
+
+# compression/MTP
+tto compress --pretty --level auto --target claude --budget 500 --check prompt.txt
+tto compress --speculative --diagnostics --check --target claude prompt.txt
+tto benchmark --pretty --strict --default-policy --mtp
+
+# quality/ops/fleet
+tto quality --pretty
+tto coach --pretty
+tto ops --pretty
+tto fleet --pretty --doctor --calibration --session-scan
+
+# continuity/cache/context
+tto checkpoint status --pretty
+tto cache stats --pretty
+tto context --pretty
+tto calibration status --pretty
 ```
 
-## CLI verification
+## Supported Targets
+
+| Target | Integration | Command |
+|---|---|---|
+| Codex | hooks + `AGENTS.md` | `tto install codex` |
+| Claude Code | settings hooks + `.claude-plugin` | `tto install claude` |
+| Gemini CLI | extension + hooks | `tto install gemini` |
+| OpenCode | native plugin + config | `tto install opencode` |
+| OpenClaw | managed hook + config | `tto install openclaw` |
+| Hermes Agent | shell hooks + plugin hooks | `tto install hermes` |
+| Cursor | rule file | `tto install cursor` |
+| Aider | instruction file | `tto install aider` |
+| Cline | rule file | `tto install cline` |
+| Roo Code | rule file | `tto install roo` |
+
+## Validation
 
 ```bash
 node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/plugin.json','utf8')); console.log('plugin.json OK')"
 node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/marketplace.json','utf8')); console.log('marketplace.json OK')"
-npm test
-npm run ci
-tto doctor --pretty
+find .claude-plugin/hooks -name '*.js' -print0 | xargs -0 -n1 node --check
+node --test tests/test_install.js
+node --test tests/test_pretty_ui.js
 ```
 
-## Safety behavior
+## Safety Behavior
 
-Thai Token Optimizer should switch to safety-first behavior for:
+Use safe behavior for destructive shell commands, database migration, production deploy, auth/security/payment work, secrets/API keys/tokens, backup/rollback/uninstall, and global config edits.
 
-- destructive commands
-- database migration
-- production deploy
-- auth/security/payment work
-- secrets/API keys/tokens
-- backup/rollback/uninstall
-- global config edits
-
-Safe responses should include:
+Safe answer pattern:
 
 ```text
-risk → backup → dry-run/preview → exact command → verify → rollback
+risk -> backup -> dry-run/preview -> exact command -> verify -> rollback
 ```
 
-## Version lock
+## Version Lock
 
-Do not change:
+Keep exact:
 
 ```text
-Thai Token Optimizer v1.0
-package version: 1.0.0
+Thai Token Optimizer v2.0
+package version: 2.0.0
 ```
 
-Do not introduce `v1.1`, `1.1.0`, or unrelated branding.
-
-## Author
-
-```text
-Author: Dr.Kittimasak Naijit
-GitHub: https://github.com/kittimasak
-Repository: https://github.com/kittimasak/thai-token-optimizer
-```
+Do not introduce older version labels or unrelated branding.

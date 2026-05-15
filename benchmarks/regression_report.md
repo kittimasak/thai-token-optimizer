@@ -1,59 +1,85 @@
-# Thai Token Optimizer v1.0 Strict Regression Report
-Generated: 2026-05-11T12:59:08.762Z
+# Thai Token Optimizer v2.0 Strict Regression Report
+Generated: 2026-05-15T03:06:17.723Z
 Samples: 8
-Average estimated saving: 10.8%
+Average estimated saving: 12%
 Minimum preservation: 100%
 Strict gate: PASS
 | ID | Before | After | Saved | Preservation | Safety categories |
 |---|---:|---:|---:|---:|---|
-| constraint-version | 46 | 46 | 0% | 100% | - |
-| code-command | 41 | 41 | 0% | 100% | - |
-| db-safety | 32 | 32 | 0% | 100% | database_migration, production_deploy |
-| research | 41 | 39 | 4.9% | 100% | - |
-| thai-filler-debug | 76 | 53 | 30.3% | 100% | - |
+| constraint-version | 52 | 52 | 0% | 100% | - |
+| code-command | 57 | 57 | 0% | 100% | - |
+| db-safety | 39 | 39 | 0% | 100% | database_migration, production_deploy |
+| research | 52 | 50 | 3.8% | 100% | - |
+| thai-filler-debug | 77 | 54 | 29.9% | 100% | - |
 | thai-filler-install | 68 | 54 | 20.6% | 100% | - |
 | thai-filler-research | 67 | 53 | 20.9% | 100% | - |
-| thai-filler-report | 62 | 56 | 9.7% | 100% | - |
+| thai-filler-report | 62 | 49 | 21% | 100% | - |
 ## MTP / Speculative Comparison
 Budget: 80 | Target: codex
-Runs: 10 (warmup: 2)
-Normal latency (mean/p50/p95/stddev): 1.9/1.8/2.4/0.2 ms
-Spec latency   (mean/p50/p95/stddev): 18.3/18/20.4/0.8 ms
-Slowdown mean (spec-normal): 16.4 ms
+Runs: 9 (warmup: 1, seed: 20260512)
+Normal latency (mean/p50/p95/stddev): 1.2/1.1/1.7/0.3 ms
+Spec latency   (mean/p50/p95/stddev): 10.8/9.8/18.5/3.2 ms
+Slowdown mean (spec-normal): 9.6 ms
 Spec hit rate: 87.5%
-Enhanced gain on mtp_corpus: 30.4% (required >= 5%)
+Enhanced gain on corpus_long_repetitive_mixed_tech_v1: 12233.3% (required >= 12%)
 MTP gate: PASS
+## Drift Monitor (repeated-run stability)
+Normal saved   (mean/p50/p95/stddev): 8.8/8.8/8.8/0
+Spec saved     (mean/p50/p95/stddev): 8.1/8.1/8.1/0
+Slowdown (ms)  (mean/p50/p95/stddev): 9.6/8.9/16.8/2.9
 | Mode | Avg Saved | Avg After | Avg Preserve | Over Budget | Spec Mode Hits |
 |---|---:|---:|---:|---:|---:|
-| normal | 6.1 | 49.3 | 100% | 0 | 0 |
-| speculative | 7.1 | 48.3 | 100% | 0 | 7 |
+| normal | 8.8 | 51.9 | 93.8% | 0 | 0 |
+| speculative | 8.1 | 52.5 | 100% | 0 | 7 |
 | ID | Mode | Saved | After | Preserve | Over Budget |
 |---|---|---:|---:|---:|---|
-| constraint-version | spec:lite | 0 | 47 | 100% | no |
-| code-command | spec:lite | 0 | 41 | 100% | no |
-| db-safety | normal | 0 | 33 | 100% | no |
-| research | spec:lite | 0 | 43 | 100% | no |
-| thai-filler-debug | spec:auto | 24 | 54 | 100% | no |
+| constraint-version | spec:lite | 0 | 53 | 100% | no |
+| code-command | spec:lite | 0 | 58 | 100% | no |
+| db-safety | normal | 0 | 40 | 100% | no |
+| research | spec:lite | 0 | 54 | 100% | no |
+| thai-filler-debug | spec:auto | 24 | 55 | 100% | no |
 | thai-filler-install | spec:auto | 14 | 56 | 100% | no |
 | thai-filler-research | spec:auto | 14 | 54 | 100% | no |
-| thai-filler-report | spec:lite | 5 | 58 | 100% | no |
+| thai-filler-report | spec:lite | 13 | 50 | 100% | no |
 ## Enhanced Corpus Gate (long repetitive narrative + mixed technical blocks)
-Corpus: benchmarks/mtp_corpus.jsonl
-Samples: 6 | Budget: 120 | Target: codex
-Baseline avg saved: 14.8
-Enhanced avg saved: 19.3
-Gain: 30.4% (required >= 5%)
+Corpus: benchmarks/corpus_long_repetitive_mixed_tech_v1.jsonl
+Samples: 4 | Budget: 120 | Target: codex
+Baseline avg saved: 0.3
+Enhanced avg saved: 37
+Gain: 12233.3% (required >= 12%)
 Preservation parity: PASS
 Enhanced corpus gate: PASS
 | ID | Baseline Saved | Enhanced Saved | Baseline Preserve | Enhanced Preserve |
 |---|---:|---:|---:|---:|
-| mtp-long-repeat-install | 19 | 19 | 100% | 100% |
-| mtp-mixed-technical-blocks | 0 | 0 | 100% | 100% |
-| mtp-repetitive-reporting | 0 | 12 | 100% | 100% |
-| mtp-long-narrative-with-code | 68 | 83 | 100% | 100% |
-| mtp-repetitive-mixed-fence | 0 | 0 | 100% | 100% |
-| mtp-repetitive-ops-playbook | 2 | 2 | 100% | 100% |
+| v1-long-narrative-devops | 0 | 76 | 100% | 100% |
+| v1-mixed-technical-blocks | 1 | 1 | 100% | 100% |
+| v1-long-repetitive-research | 0 | 0 | 100% | 100% |
+| v1-incident-response-mixed | 0 | 71 | 100% | 100% |
+## Overfit Guard Corpus (non-gating monitor)
+Corpus: benchmarks/corpus_overfit_guard_v1.jsonl
+Samples: 3
+Baseline avg saved: 0.3
+Enhanced avg saved: 1.3
+Gain: 333.3% (required >= 0%)
+Preservation parity: PASS
+Fixture corpus guard: PASS
+Action routing gate: PASS
+| ID | Baseline Saved | Enhanced Saved | Baseline Preserve | Enhanced Preserve |
+|---|---:|---:|---:|---:|
+| guard-short-technical | 0 | 3 | 100% | 100% |
+| guard-mixed-narrative | 0 | 0 | 100% | 100% |
+| guard-safety-critical | 1 | 1 | 100% | 100% |
+## Waste Detector Signals
+| ID | Severity | Message |
+|---|---|---|
+| low_saving_cluster | warn | 3 samples have <=1% savings; consider prompt decomposition or selective-window tuning |
+| tool_cascade | warn | 3 consecutive low-saving technical turns detected; likely retry/tool cascade waste |
+## Detector Action Suggestions
+| ID | Severity | Owner | Routing | Suggestion |
+|---|---|---|---|---|
+| add_tool_circuit_breaker | medium | Agent Runtime Owner | warning_only | After 2 consecutive tool failures, stop retries and request narrowed scope or run diagnostics first. |
+| tune_selective_window | medium | Compression Engine Owner | warning_only | Increase selective-window aggressiveness for low-value narrative lines while preserving technical tokens. |
 ## Notes
-- Version remains Thai Token Optimizer v1.0 / package 1.0.0.
+- Version remains Thai Token Optimizer v2.0 / package 2.0.0.
 - Exact tokenizer is optional; if unavailable the estimator falls back to heuristic mode.
 - Strict mode checks saving, preservation, constraints, and code block safety.

@@ -1,0 +1,3 @@
+{"id":"guard-short-technical","text":"ช่วยสรุปคำสั่งติดตั้งแบบสั้น โดยต้องคง `npm test`, `npm run ci`, และ path `~/.codex/config.toml` ให้ครบ"}
+{"id":"guard-mixed-narrative","text":"เอกสารนี้มีทั้ง narrative และ technical terms ซ้ำเล็กน้อย ซ้ำเล็กน้อย แต่ต้องคงคำว่า semantic preservation, benchmark, regression gate และคำสั่ง `tto benchmark --strict --default-policy --mtp`"}
+{"id":"guard-safety-critical","text":"อธิบาย rollback อย่างย่อ โดยต้องคง `tto rollback latest --dry-run` ก่อน `tto rollback latest` และต้องไม่ลบคำว่า backup/restore"}

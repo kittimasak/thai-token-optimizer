@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -26,7 +26,13 @@ const { appendMissingConstraints, extractConstraints } = require('./tto-constrai
 const { collectProtectedRanges } = require('./tto-code-aware-parser');
 const { classifyTask, TIERS } = require('./tto-profiles');
 
-const HARD_LINE_RE = /(ห้าม|ต้อง|เด็ดขาด|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|```|`|https?:\/\/|~\/|\.\/|\/|\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|codex_hooks\s*=\s*true)/i;
+const HARD_LINE_RE = /(^\s*\|.*\|\s*$|^\s*[A-Za-z0-9_.-]+[ \t]*:[ \t]*$|ห้าม|ต้อง|เด็ดขาด|must|must not|do not|never|keep|preserve|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|```|`|https?:\/\/|~\/|\.\/|\/|\b[A-Za-z]:\\|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module|EADDRINUSE)\b|\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|codex_hooks\s*=\s*true)/i;
+const STRUCTURE_SENSITIVE_LINE_RE = /^(\s+["']?[A-Za-z0-9_.-]+["']?\s*[:=]|\s+[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\s*at\s+|.*\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b)/i;
+
+function normalizeBudgetLine(line) {
+  const raw = String(line || '');
+  return STRUCTURE_SENSITIVE_LINE_RE.test(raw) ? raw.replace(/[ \t]+$/g, '') : raw.trim();
+}
 
 function unique(arr) {
   const seen = new Set();
@@ -44,7 +50,7 @@ function protectedValues(text) {
 
 function appendMissingProtected(original, optimized) {
   let out = String(optimized || '').trim();
-  const missing = unique(protectedValues(original)).filter(v => !out.includes(v));
+  const missing = unique(protectedValues(original)).filter(v => !out.includes(v) && !out.includes(String(v).trim()));
   if (!missing.length) return out;
   const suffix = ['รายการเทคนิคคงเดิม:', ...missing.map(v => `- ${v}`)].join('\n');
   return `${out}\n\n${suffix}`.trim();
@@ -105,7 +111,7 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
   if (!budget || budget <= 0) return enforcePreservation(original, out, budget);
   if (estimateTokens(out, target).estimatedTokens <= budget) return enforcePreservation(original, out, budget);
 
-  let lines = out.split(/\n+/).map(x => x.trim()).filter(Boolean);
+  let lines = out.split(/\n+/).map(normalizeBudgetLine).filter(Boolean);
 
   // Tier 1 (Critical) is very reluctant to remove lines unless budget is tight
   let minLines = (tier === TIERS.CRITICAL && (!budget || budget > 50)) ? Math.max(1, lines.length - 1) : 1;
@@ -129,7 +135,7 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
   if (estimateTokens(out, target).estimatedTokens <= budget) return enforcePreservation(original, out, budget);
 
   // Shorten non-hard plain lines
-  lines = out.split(/\n+/).map(x => x.trim()).filter(Boolean);
+  lines = out.split(/\n+/).map(normalizeBudgetLine).filter(Boolean);
   for (let i = 0; i < lines.length && estimateTokens(lines.join('\n'), target).estimatedTokens > budget; i++) {
     if (HARD_LINE_RE.test(lines[i])) continue;
     // For very tight budget, be even more aggressive (0.3 ratio)
@@ -162,11 +168,19 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
 
   // Final emergency pass
   while (budget > 0 && lines.length > 1 && estimateTokens(lines.join('\n'), target).estimatedTokens > budget) {
-    lines.pop();
+    let removeIdx = -1;
+    let lowest = Infinity;
+    for (let i = 0; i < lines.length; i++) {
+      if (HARD_LINE_RE.test(lines[i])) continue;
+      const score = safeLineScore(lines[i], tier);
+      if (score < lowest) { lowest = score; removeIdx = i; }
+    }
+    if (removeIdx < 0) break;
+    lines.splice(removeIdx, 1);
   }
   
   // Even if only 1 line left, if it's over budget, we MUST trim it
-  // UNLESS it's a hard line (commands, constraints, versions) - Mandate v1.0
+  // UNLESS it's a hard line (commands, constraints, versions) - Mandate v2.0
   if (budget > 0 && lines.length === 1 && estimateTokens(lines[0], target).estimatedTokens > budget) {
     if (!HARD_LINE_RE.test(lines[0])) {
       lines[0] = lines[0].slice(0, Math.floor(lines[0].length * (budget / estimateTokens(lines[0], target).estimatedTokens))).trim();
@@ -208,11 +222,17 @@ function speculateCandidates(original, options = {}) {
 
   for (const family of families) {
     for (const level of allLevels) {
-      const optimized = enforcePreservation(
+      let optimized = enforcePreservation(
         original,
         compressPrompt(original, { ...options, ...family.opts, level, lockConstraints: false }),
         budget
       );
+      
+      // If still over budget, apply trimToBudget to this candidate
+      if (budget > 0 && estimateTokens(optimized, target).estimatedTokens > budget) {
+        optimized = trimToBudget(optimized, budget, target, original, classifyTask(options.agentName, original));
+      }
+
       const savings = estimateSavings(original, optimized, target);
       const preservation = checkPreservation(original, optimized);
       const row = { optimized, savings, preservation, level, family: family.name };

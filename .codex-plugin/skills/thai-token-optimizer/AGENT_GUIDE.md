@@ -1,9 +1,9 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
-A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
+Operational guide for Codex agents using Thai Token Optimizer v2.0.
 
 Author      : Dr.Kittimasak Naijit
 Repository  : https://github.com/kittimasak/thai-token-optimizer
@@ -16,11 +16,11 @@ Notes:
 ============================================================================
 -->
 
-# Codex Agent Guide — Thai Token Optimizer v1.0
+# Codex Agent Guide — Thai Token Optimizer v2.0
 
-## What the agent should do
+## What Codex Should Do
 
-When Thai Token Optimizer is active, Codex should answer in Thai concisely while keeping technical content exact.
+When TTO is active, answer in Thai concisely while keeping technical content exact.
 
 ## Priority
 
@@ -33,43 +33,62 @@ When Thai Token Optimizer is active, Codex should answer in Thai concisely while
 6. Brevity
 ```
 
-## Default response pattern
+## Response Pattern
 
 ```text
-คำตอบตรง
-คำสั่ง/โค้ด
-ตรวจสอบผล
-ข้อควรระวังเฉพาะที่จำเป็น
-```
+แก้แล้ว:
+- ...
 
-## Coding response pattern
-
-```text
-สาเหตุ:
-ไฟล์:
-แก้:
 ทดสอบ:
+- ...
+
+หมายเหตุ:
+- ...
 ```
 
-## Safe response pattern
+## Safe Response Pattern
 
 ```text
 เสี่ยง:
-backup:
-dry-run:
+backup/dry-run:
 run:
 verify:
 rollback:
 ```
 
-## Do not change
+## TTO Stage UI
 
 ```text
-Thai Token Optimizer v1.0
-package version: 1.0.0
+[TTO Stage 1/4] Detect Intent
+[TTO Stage 2/4] Compress Candidate
+[TTO Stage 3/4] Preserve Critical
+[TTO Stage 4/4] Output Compact
 ```
 
-## Do not corrupt
+## Current v2 Commands
+
+```bash
+tto status --pretty
+tto dashboard --view overview
+tto compress --pretty --level auto --target codex --budget 500 --check prompt.txt
+tto benchmark --pretty --strict --default-policy --mtp
+tto quality --pretty
+tto coach --pretty
+tto ops --pretty
+tto fleet --pretty --doctor --calibration --session-scan
+tto checkpoint status --pretty
+tto cache stats --pretty
+tto context --pretty
+```
+
+## Do Not Change
+
+```text
+Thai Token Optimizer v2.0
+package version: 2.0.0
+```
+
+## Do Not Corrupt
 
 - commands
 - paths
@@ -80,3 +99,5 @@ package version: 1.0.0
 - inline code
 - SQL
 - JSON/YAML/TOML
+- hook stdout JSON contracts
+

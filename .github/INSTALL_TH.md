@@ -1,8 +1,8 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
-Description :
+คำอธิบาย :
 A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
 
 Author      : Dr.Kittimasak Naijit
@@ -16,15 +16,15 @@ Notes:
 ============================================================================
 -->
 
-# คู่มือ .github สำหรับ Thai Token Optimizer v1.0
+# คู่มือ .github สำหรับ Thai Token Optimizer v2.0
 
 ## ภาพรวม
 
 โฟลเดอร์ `.github` ใช้เก็บ GitHub workflows, issue templates, pull request template และ config ที่ช่วยดูแลคุณภาพของโปรเจกต์
 
 ```text
-Thai Token Optimizer v1.0
-package version: 1.0.0
+Thai Token Optimizer v2.0
+package version: 2.0.0
 ```
 
 ## Workflow ที่มี
@@ -35,7 +35,7 @@ package version: 1.0.0
 | `workflows/validate.yml` | ตรวจ syntax, JSON, JSONL, plugin metadata และ version lock |
 | `workflows/docs-check.yml` | ตรวจเอกสารสำคัญและคำสั่งที่ต้องมี |
 | `workflows/security-scan.yml` | ตรวจ secret pattern และคำสั่งเสี่ยง |
-| `workflows/release.yml` | ตรวจ release tag `v1.0*` |
+| `workflows/release.yml` | ตรวจ release tag `v2.0*` |
 
 ## คำสั่งตรวจในเครื่อง
 
@@ -49,8 +49,8 @@ node bin/thai-token-optimizer.js doctor --ci
 
 ## Checklist ก่อน push
 
-- [ ] `package version` ยังเป็น `1.0.0`
-- [ ] README/AGENTS/MANUAL ยังใช้ `Thai Token Optimizer v1.0`
+- [ ] `package version` ยังเป็น `2.0.0`
+- [ ] README/AGENTS/MANUAL ยังใช้ `Thai Token Optimizer v2.0`
 - [ ] ไม่มี secret/API key/token
 - [ ] `npm test` ผ่าน
 - [ ] `npm run ci` ผ่าน

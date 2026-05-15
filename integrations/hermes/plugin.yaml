@@ -1,0 +1,10 @@
+# Thai Token Optimizer v2.0 - Hermes Plugin Manifest
+# Copy this file to: ~/.hermes/plugins/thai-token-optimizer/plugin.yaml
+
+name: thai-token-optimizer
+version: 2.0.0
+description: Thai Token Optimizer v2.0 for Hermes Agent
+hooks:
+  - pre_llm_call
+  - pre_tool_call
+  - transform_terminal_output

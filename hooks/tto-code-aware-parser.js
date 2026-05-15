@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -24,14 +24,20 @@ const { extractSymbols, pruneRedundantThai, isSelfDocumenting } = require('./tto
 
 const PROTECTED_PATTERNS = [
   /```[\s\S]*?```/g,
+  /^\s*\|.*\|\s*$/gm,
   /`[^`\n]+`/g,
-  /https?:\/\/[^\s)]+/g,
+  /https?:\/\/[A-Za-z0-9._~:/?#[\]@!$&'()*+,;=%-]+/g,
+  /\b[A-Za-z]:\\[A-Za-z0-9._@%+\-\\]+/g,
   /\b(?:[A-Za-z]:)?(?:\.?\.\/|~\/|\/)[A-Za-z0-9._@%+\-/]+/g,
   /\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b/gi,
-  /\b[A-Z0-9_]{2,}\b/g,
+  /\b[A-Z0-9_]{2,128}\b/g,
   /\bv?\d+\.\d+(?:\.\d+)?(?:[-+][A-Za-z0-9.-]+)?\b/g,
   /\b[A-Za-z0-9_-]+\.(?:js|mjs|cjs|ts|tsx|jsx|json|yaml|yml|toml|env|md|py|php|sql|sh|bash|zsh|txt|zip)\b/g,
-  /^\s*["']?[A-Za-z0-9_.-]+["']?\s*[:=]\s*.+$/gm
+  /^\s*at\s+.*?\([^)\n]+:\d+:\d+\)/gm,
+  /^\s*at\s+.*(?::\d+:\d+\)?|\))$/gm,
+  /^.*\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b.*$/gm,
+  /^\s*["']?[A-Za-z0-9_.-]+["']?[ \t]*[:=][ \t]*\S.*$/gm,
+  /^\s*[A-Za-z0-9_.-]+[ \t]*:[ \t]*$/gm
 ];
 
 function overlaps(aStart, aEnd, ranges) {
@@ -108,6 +114,21 @@ function restoreSegments(text, protectedValues) {
   return out;
 }
 
+function preserveBoundaryWhitespace(originalSegment, transformedSegment, hasLeftContent = false) {
+  let out = String(transformedSegment || '');
+  if (!out) {
+    if (/^\s+$/.test(String(originalSegment || ''))) return String(originalSegment).includes('\n') ? '\n' : ' ';
+    return out;
+  }
+  if (hasLeftContent && /^\s/.test(originalSegment) && !/^\s/.test(out)) {
+    out = (/^\s*\n/.test(originalSegment) ? '\n' : ' ') + out;
+  }
+  if (/\s$/.test(originalSegment) && !/\s$/.test(out)) {
+    out += (/\n\s*$/.test(originalSegment) ? '\n' : ' ');
+  }
+  return out;
+}
+
 function transformCodeAware(text, transform) {
   const protectedData = protectSegments(text);
   const transformed = transform(protectedData.text);
@@ -141,11 +162,12 @@ function transformSemanticAware(text, transform) {
     if (r.start < cursor) continue;
     
     // Transform Thai text before the code block
-    let segment = text.slice(cursor, r.start);
+    const rawSegment = text.slice(cursor, r.start);
+    let segment = rawSegment;
     // Semantic Pruning: Remove redundancy before general compression
     segment = pruneRedundantThai(segment, symbolList);
     
-    const transformedSegment = transform(segment);
+    const transformedSegment = preserveBoundaryWhitespace(rawSegment, transform(segment), out.length > 0);
     out += transformedSegment;
     
     const token = `⟦TTO_PROTECT_${protectedValues.length}⟧`;
@@ -164,9 +186,9 @@ function transformSemanticAware(text, transform) {
   }
   
   // Transform remaining Thai text
-  let lastSegment = text.slice(cursor);
-  lastSegment = pruneRedundantThai(lastSegment, symbolList);
-  out += transform(lastSegment);
+  const rawLastSegment = text.slice(cursor);
+  let lastSegment = pruneRedundantThai(rawLastSegment, symbolList);
+  out += preserveBoundaryWhitespace(rawLastSegment, transform(lastSegment), out.length > 0);
 
   return restoreSegments(out, protectedValues);
 }
@@ -176,6 +198,7 @@ module.exports = {
   collectProtectedRanges, 
   protectSegments, 
   restoreSegments, 
+  preserveBoundaryWhitespace,
   transformCodeAware,
   transformSemanticAware
 };

@@ -25,13 +25,13 @@ jobs:
           test -f README.md
           test -f AGENTS.md
           test -f MANUAL.md || true
-          test -f README_ENGLISH.md || true
+          test -f README_EN.md || true
 
       - name: Check canonical identity in docs
         run: |
-          grep -q "Thai Token Optimizer v1.0" README.md
-          grep -q "package version: 1.0.0" README.md
-          grep -q "Thai Token Optimizer v1.0" AGENTS.md || true
+          grep -q "Thai Token Optimizer v2.0" README.md
+          grep -q "package version: 2.0.0" README.md
+          grep -q "Thai Token Optimizer v2.0" AGENTS.md || true
 
       - name: Check important commands documented
         run: |

@@ -1,6 +1,6 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
 A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -19,17 +19,6 @@ Notes:
 # Validation
 
 ```text
-.github/INSTALL_TH.md: OK
-.github/ISSUE_TEMPLATE/bug_report.yml: OK
-.github/ISSUE_TEMPLATE/config.yml: OK
-.github/ISSUE_TEMPLATE/documentation.yml: OK
-.github/ISSUE_TEMPLATE/feature_request.yml: OK
-.github/PULL_REQUEST_TEMPLATE.md: OK
-.github/README.md: OK
-.github/dependabot.yml: OK
-.github/workflows/docs-check.yml: OK
-.github/workflows/release.yml: OK
-.github/workflows/security-scan.yml: OK
-.github/workflows/test.yml: OK
-.github/workflows/validate.yml: OK
+package version: 2.0.0
+release tag: v2.0*
 ```

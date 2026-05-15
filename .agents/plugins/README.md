@@ -1,9 +1,9 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
-A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
+Local plugin marketplace manifest notes for Thai Token Optimizer v2.0.
 
 Author      : Dr.Kittimasak Naijit
 Repository  : https://github.com/kittimasak/thai-token-optimizer
@@ -16,9 +16,14 @@ Notes:
 ============================================================================
 -->
 
-# Thai Token Optimizer Local Plugin Marketplace
+# Thai Token Optimizer v2.0 Local Plugin Marketplace
 
-This directory contains the local plugin marketplace manifest for **Thai Token Optimizer v1.0**.
+This directory contains the local plugin marketplace manifest for **Thai Token Optimizer v2.0**.
+
+```text
+Thai Token Optimizer v2.0
+package version: 2.0.0
+```
 
 ## File
 
@@ -26,7 +31,7 @@ This directory contains the local plugin marketplace manifest for **Thai Token O
 marketplace.json
 ```
 
-## Plugin entry
+## Plugin Entry
 
 | Key | Value |
 |---|---|
@@ -42,11 +47,24 @@ marketplace.json
 ## Validate
 
 ```bash
-node -e "JSON.parse(require('fs').readFileSync('.agents/plugins/marketplace.json','utf8')); console.log('OK')"
+node -e "JSON.parse(require('fs').readFileSync('.agents/plugins/marketplace.json','utf8')); console.log('marketplace.json OK')"
+```
+
+## Related TTO v2 Checks
+
+```bash
+tto status --pretty
+tto doctor --pretty
+tto benchmark --pretty --strict --default-policy --mtp
+tto quality --pretty
+tto ops --pretty
+tto fleet --pretty --doctor --calibration --session-scan
 ```
 
 ## Notes
 
-- This file is intentionally minimal to avoid incompatibility with strict plugin marketplace parsers.
+- Keep `marketplace.json` intentionally minimal to avoid incompatibility with strict plugin marketplace parsers.
 - Keep extra documentation in Markdown files instead of adding unknown fields into `marketplace.json`.
-- Keep Thai Token Optimizer version locked at `v1.0 / 1.0.0`.
+- Keep `Thai Token Optimizer v2.0` and `package version: 2.0.0` exact.
+- Do not put secrets, tokens, API keys, credentials, or personal data in this directory.
+- Do not remove backup, rollback, preservation, or safety behavior from TTO.

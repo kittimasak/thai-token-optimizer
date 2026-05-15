@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - 'v1.0*'
+      - 'v2.0*'
 
 jobs:
   release-check:
@@ -22,5 +22,5 @@ jobs:
       - run: timeout 55m npm run test:ci
       - run: node bin/thai-token-optimizer.js benchmark --strict --default-policy
       - run: node bin/thai-token-optimizer.js config get
-      - run: test "$(node -p "require('./package.json').version")" = "1.0.0"
-      - run: grep -R "Thai Token Optimizer v1.0" README.md AGENTS.md benchmarks || true
+      - run: test "$(node -p "require('./package.json').version")" = "2.0.0"
+      - run: grep -R "Thai Token Optimizer v2.0" README.md AGENTS.md benchmarks || true

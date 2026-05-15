@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -22,6 +22,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { execFileSync } = require('child_process');
+const { pathToFileURL } = require('url');
 
 const root = path.resolve(__dirname, '..');
 const bin = path.join(root, 'bin', 'thai-token-optimizer.js');
@@ -41,10 +42,10 @@ test('Gemini adapter installs extension, commands, and hooks', () => {
   const ext = path.join(tmp, '.gemini', 'extensions', 'thai-token-optimizer');
   assert.ok(fs.existsSync(path.join(ext, 'gemini-extension.json')));
   assert.ok(fs.existsSync(path.join(ext, 'GEMINI.md')));
-  assert.ok(fs.existsSync(path.join(ext, 'commands', 'tto', 'auto.toml')));
+  assert.ok(fs.existsSync(path.join(ext, 'commands', 'tto', 'mode.toml')));
   assert.ok(fs.existsSync(path.join(ext, 'commands', 'tto', 'compress.toml')));
   const meta = JSON.parse(fs.readFileSync(path.join(ext, 'gemini-extension.json'), 'utf8'));
-  assert.equal(meta.version, '1.0.0');
+  assert.equal(meta.version, '2.0.0');
   assert.equal(meta.contextFileName, 'GEMINI.md');
   const settings = JSON.parse(fs.readFileSync(path.join(tmp, '.gemini', 'settings.json'), 'utf8'));
   assert.ok(settings.hooks.SessionStart);
@@ -53,7 +54,7 @@ test('Gemini adapter installs extension, commands, and hooks', () => {
   assert.ok(settings.hooks.PreCompress);
 });
 
-test('OpenCode adapter installs native plugin, config, agent, and skill', () => {
+test('OpenCode adapter installs native plugin, config, agent, skill, and safety behavior', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'tto-opencode-'));
   const out = run(['install', 'opencode'], tmp);
   assert.match(out, /opencode/);
@@ -65,6 +66,39 @@ test('OpenCode adapter installs native plugin, config, agent, and skill', () => 
   assert.ok(fs.existsSync(path.join(cfg, 'opencode.json')));
   assert.ok(fs.existsSync(path.join(cfg, 'agents', 'thai-token-optimizer.md')));
   assert.ok(fs.existsSync(path.join(cfg, 'skills', 'thai-token-optimizer.md')));
+  const mod = await import(pathToFileURL(plugin));
+  const instance = await mod.ThaiTokenOptimizer({
+    client: { app: { log: async () => {} } },
+    $: async () => ({ stdout: '' })
+  });
+  const statePath = path.join(tmp, '.tto', 'state.json');
+  fs.mkdirSync(path.dirname(statePath), { recursive: true });
+  fs.writeFileSync(statePath, JSON.stringify({ enabled: true, level: 'lite' }));
+  const envOut = { env: {} };
+  await instance['shell.env']({}, envOut);
+  assert.equal(envOut.env.THAI_TOKEN_OPTIMIZER, '1');
+  assert.equal(envOut.env.THAI_TOKEN_OPTIMIZER_LEVEL, 'lite');
+  const riskyCommands = ['rm -rf /tmp/cache', 'DROP TABLE users', 'git push --force origin main'];
+  for (const command of riskyCommands) {
+    const output = { args: { command } };
+    await instance['tool.execute.before']({ tool: 'shell', command }, output);
+    assert.match(output.args.__thaiTokenOptimizerSafety, /risky operation detected/, command);
+  }
+  const normal = { args: { command: 'list files' } };
+  await instance['tool.execute.before']({ tool: 'shell', command: 'list files' }, normal);
+  assert.equal(normal.args.__thaiTokenOptimizerSafety, undefined);
+  const compact = { context: [] };
+  await instance['experimental.session.compacting']({}, compact);
+  assert.match(compact.context[0], /TTO v2\.0\.0 \[lite\]/);
+  assert.match(compact.context[0], /During compaction/);
+  fs.writeFileSync(statePath, JSON.stringify({ enabled: false, level: 'lite' }));
+  const disabledEnv = { env: {} };
+  await instance['shell.env']({}, disabledEnv);
+  assert.equal(disabledEnv.env.THAI_TOKEN_OPTIMIZER, '0');
+  const disabledCompact = { context: [] };
+  await instance['experimental.session.compacting']({}, disabledCompact);
+  assert.match(disabledCompact.context[0], /DISABLED/);
+  assert.doesNotMatch(disabledCompact.context[0], /During compaction/);
 });
 
 test('OpenClaw adapter installs managed hook, config entry, and simulator', () => {
@@ -133,11 +167,11 @@ test('Gemini hook wrappers emit compact context when enabled', () => {
     input: JSON.stringify({ event: 'SessionStart' }),
     encoding: 'utf8'
   });
-  assert.match(session, /Gemini CLI/);
+  assert.match(session, /TTO v2\.0\.0/);
   const before = execFileSync('node', [path.join(root, 'hooks', 'tto-gemini-beforetool.js')], {
     env: { ...process.env, HOME: tmp, TTO_HOME: path.join(tmp, '.tto'), GEMINI_HOME: path.join(tmp, '.gemini'), OPENCODE_CONFIG_DIR: path.join(tmp, '.config', 'opencode') },
     input: JSON.stringify({ tool: 'run_shell_command', command: 'rm -rf /tmp/x' }),
     encoding: 'utf8'
   });
-  assert.match(before, /SAFETY/);
+  assert.match(before, /\[TTO Stage 3\/4\] Preserve Critical/);
 });

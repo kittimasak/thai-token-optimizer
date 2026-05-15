@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -39,14 +39,15 @@ test('Codex Thai triggers enable and disable Thai Token Optimizer', () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'tto-codex-'));
   let r = runTracker('token thai lite', home);
   assert.equal(r.status, 0);
-  assert.equal(r.stdout.trim(), '{"continue":true}');
+  const payload = JSON.parse(r.stdout);
+  assert.equal(payload.continue, true);
   const state = JSON.parse(fs.readFileSync(path.join(home, 'state.json'), 'utf8'));
   assert.equal(state.enabled, true);
   assert.equal(state.level, 'lite');
 
   r = runTracker('หยุดลด token', home);
   assert.equal(r.status, 0);
-  assert.equal(r.stdout.trim(), '');
+  assert.equal(JSON.parse(r.stdout).continue, true);
   const state2 = JSON.parse(fs.readFileSync(path.join(home, 'state.json'), 'utf8'));
   assert.equal(state2.enabled, false);
 });

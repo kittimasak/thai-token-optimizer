@@ -1,0 +1,289 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="800" viewBox="0 0 1600 800" role="img" aria-labelledby="title desc">
+  <title id="title">Compression Workflow</title>
+  <desc id="desc">Animated SVG diagram showing the Thai Token Optimizer compression workflow: Input, Classify, Compress, Preserve, Output.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#020617"/>
+      <stop offset="35%" stop-color="#071a46"/>
+      <stop offset="72%" stop-color="#0a3552"/>
+      <stop offset="100%" stop-color="#0b5b46"/>
+    </linearGradient>
+
+    <radialGradient id="purpleOrb" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.48"/>
+      <stop offset="70%" stop-color="#7c3aed" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="cyanOrb" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.40"/>
+      <stop offset="75%" stop-color="#06b6d4" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#d946ef"/>
+      <stop offset="25%" stop-color="#60a5fa"/>
+      <stop offset="55%" stop-color="#22d3ee"/>
+      <stop offset="80%" stop-color="#2dd4bf"/>
+      <stop offset="100%" stop-color="#4ade80"/>
+    </linearGradient>
+
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="60%" stop-color="#e0f2fe"/>
+      <stop offset="100%" stop-color="#bbf7d0"/>
+    </linearGradient>
+
+    <linearGradient id="card1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.26"/>
+      <stop offset="100%" stop-color="#09111f" stop-opacity="0.48"/>
+    </linearGradient>
+    <linearGradient id="card2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.26"/>
+      <stop offset="100%" stop-color="#09111f" stop-opacity="0.48"/>
+    </linearGradient>
+    <linearGradient id="card3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.26"/>
+      <stop offset="100%" stop-color="#09111f" stop-opacity="0.48"/>
+    </linearGradient>
+    <linearGradient id="card4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#14b8a6" stop-opacity="0.26"/>
+      <stop offset="100%" stop-color="#09111f" stop-opacity="0.48"/>
+    </linearGradient>
+    <linearGradient id="card5" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22c55e" stop-opacity="0.26"/>
+      <stop offset="100%" stop-color="#09111f" stop-opacity="0.48"/>
+    </linearGradient>
+
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000814" flood-opacity="0.46"/>
+    </filter>
+
+    <filter id="glowCyan" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.16  0 0 0 0 0.9  0 0 0 0 1  0 0 0 0.85 0" result="glow"/>
+      <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <filter id="glowPurple" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.88  0 0 0 0 0.35  0 0 0 0 1  0 0 0 0.85 0" result="glow"/>
+      <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <style>
+      .title { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 900; font-size: 74px; fill: url(#titleGrad); letter-spacing: -2px; }
+      .subtitle { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 550; font-size: 24px; fill: #dbe6f4; }
+      .label { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 850; font-size: 34px; fill: #f8fafc; }
+      .descText { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 560; font-size: 18px; fill: #d9ebff; opacity: .95; }
+      .chipText { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 760; font-size: 21px; fill: #f8fafc; }
+      .card { stroke-width: 2.3; filter: url(#shadow); }
+      .shine { fill: rgba(255,255,255,.12); }
+      .accentBar { animation: glowBar 3s ease-in-out infinite; }
+      .orbit { fill: none; stroke: #60a5fa; stroke-width: 1.4; opacity: .16; stroke-dasharray: 4 13; animation: orbit 22s linear infinite; transform-origin: 1420px 70px; }
+      .particle { fill: #dbeafe; opacity: 0; animation: twinkle 4s ease-in-out infinite; }
+      .p2 { animation-delay: .6s; } .p3 { animation-delay: 1.2s; } .p4 { animation-delay: 1.8s; } .p5 { animation-delay: 2.4s; }
+      .cardGroup { animation: lift 5.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      .delay1 { animation-delay: .15s; } .delay2 { animation-delay: .3s; } .delay3 { animation-delay: .45s; } .delay4 { animation-delay: .6s; }
+      .iconPulse { animation: pulse 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      .arrowTrail { stroke: url(#accent); stroke-width: 4.2; stroke-linecap: round; stroke-dasharray: 14 20; animation: dash 1.8s linear infinite; }
+      .arrowGlow { stroke: url(#accent); stroke-width: 14; stroke-linecap: round; opacity: .14; filter: url(#glowCyan); }
+      .waveBase { stroke: url(#accent); stroke-width: 16; opacity: .12; fill: none; stroke-linecap: round; }
+      .waveMain { stroke: url(#accent); stroke-width: 7; fill: none; stroke-linecap: round; stroke-dasharray: 56 26; animation: wave 5s linear infinite; filter: url(#glowCyan); }
+      .waveThin { stroke: url(#accent); stroke-width: 1.8; fill: none; opacity: .42; stroke-dasharray: 4 13; animation: dashBack 8s linear infinite; }
+      .node { filter: url(#glowCyan); animation: nodePulse 2.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      .node.n2 { animation-delay: .25s; } .node.n3 { animation-delay: .5s; } .node.n4 { animation-delay: .75s; } .node.n5 { animation-delay: 1s; }
+      .chev { fill: none; stroke: #67e8f9; stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; opacity: .72; animation: slideChevron 2s ease-in-out infinite; }
+      .chip { stroke-width: 2; filter: url(#shadow); }
+      .chipGlow { opacity: .18; filter: url(#glowCyan); }
+
+      @keyframes dash { to { stroke-dashoffset: -68; } }
+      @keyframes dashBack { to { stroke-dashoffset: 90; } }
+      @keyframes wave { to { stroke-dashoffset: -164; } }
+      @keyframes pulse { 0%,100% { transform: scale(1); opacity: .88; } 50% { transform: scale(1.06); opacity: 1; } }
+      @keyframes lift { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+      @keyframes nodePulse { 0%,100% { transform: scale(1); opacity: .8; } 50% { transform: scale(1.18); opacity: 1; } }
+      @keyframes slideChevron { 0%,100% { opacity: .24; transform: translateX(0); } 50% { opacity: 1; transform: translateX(9px); } }
+      @keyframes twinkle { 0%,100% { opacity: 0; transform: translateX(0); } 45% { opacity: .9; } 70% { opacity: .22; transform: translateX(12px); } }
+      @keyframes glowBar { 0%,100% { opacity: .85; filter: url(#glowPurple); } 50% { opacity: 1; filter: url(#glowCyan); } }
+      @keyframes orbit { to { transform: rotate(360deg); } }
+
+      @media (prefers-reduced-motion: reduce) {
+        .accentBar,.orbit,.particle,.cardGroup,.iconPulse,.arrowTrail,.waveMain,.waveThin,.node,.chev { animation: none !important; }
+      }
+    </style>
+  </defs>
+
+  <rect width="1600" height="800" rx="28" fill="url(#bg)"/>
+  <rect x="1" y="1" width="1598" height="798" rx="27" fill="none" stroke="rgba(255,255,255,.08)"/>
+
+  <circle cx="70" cy="700" r="360" fill="url(#purpleOrb)"/>
+  <circle cx="1540" cy="250" r="420" fill="url(#cyanOrb)"/>
+  <circle cx="860" cy="785" r="340" fill="#22d3ee" opacity=".05"/>
+  <path class="orbit" d="M1290 78 C1360 -18 1510 5 1548 124 C1586 246 1422 325 1350 232 C1294 159 1323 84 1407 59"/>
+  <path class="orbit" opacity=".11" d="M1240 116 C1326 -8 1585 -8 1600 152"/>
+
+  <g>
+    <circle class="particle" cx="352" cy="172" r="2.2"/>
+    <circle class="particle p2" cx="530" cy="215" r="1.9"/>
+    <circle class="particle p3" cx="758" cy="130" r="2.1"/>
+    <circle class="particle p4" cx="1122" cy="198" r="1.8"/>
+    <circle class="particle p5" cx="1390" cy="168" r="2.2"/>
+    <circle class="particle p2" cx="940" cy="434" r="1.8"/>
+    <circle class="particle p3" cx="1208" cy="380" r="1.6"/>
+  </g>
+
+  <rect class="accentBar" x="60" y="72" width="10" height="86" rx="6" fill="url(#accent)"/>
+  <text x="98" y="125" class="title">Compression Workflow</text>
+  <text x="100" y="170" class="subtitle">Classify risk, compress safely, verify preservation, then emit optimized output.</text>
+
+  <!-- Centered arrows aligned between cards -->
+  <g>
+    <path class="arrowGlow" d="M292 350 L338 350"/>
+    <path class="arrowTrail" d="M292 350 L338 350"/>
+    <polygon points="356,350 334,336 334,364" fill="#c084fc" filter="url(#glowPurple)"/>
+
+    <path class="arrowGlow" d="M588 350 L634 350"/>
+    <path class="arrowTrail" d="M588 350 L634 350"/>
+    <polygon points="652,350 630,336 630,364" fill="#60a5fa" filter="url(#glowCyan)"/>
+
+    <path class="arrowGlow" d="M884 350 L930 350"/>
+    <path class="arrowTrail" d="M884 350 L930 350"/>
+    <polygon points="948,350 926,336 926,364" fill="#22d3ee" filter="url(#glowCyan)"/>
+
+    <path class="arrowGlow" d="M1180 350 L1226 350"/>
+    <path class="arrowTrail" d="M1180 350 L1226 350"/>
+    <polygon points="1244,350 1222,336 1222,364" fill="#4ade80" filter="url(#glowCyan)"/>
+  </g>
+
+  <!-- Cards -->
+  <g class="cardGroup">
+    <rect x="60" y="235" width="220" height="242" rx="28" fill="url(#card1)" stroke="#c084fc" class="card"/>
+    <path class="shine" d="M88 246 H252 C265 246 273 253 273 265 V279 C219 254 152 253 88 279 Z"/>
+    <circle cx="140" cy="292" r="46" fill="#581c87" opacity=".40" stroke="#d946ef" stroke-width="2"/>
+    <g class="iconPulse" stroke="#e879f9" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M118 304 h45 v25 H118z"/>
+      <path d="M118 304 v-15 h16 l7 8 h22 v7"/>
+    </g>
+    <text x="170" y="393" text-anchor="middle" class="label">Input</text>
+    <rect x="146" y="412" width="48" height="6" rx="3" fill="#d946ef"/>
+    <text x="170" y="452" text-anchor="middle" class="descText">prompt / file / hook</text>
+  </g>
+
+  <g class="cardGroup delay1">
+    <rect x="356" y="235" width="220" height="242" rx="28" fill="url(#card2)" stroke="#60a5fa" class="card"/>
+    <path class="shine" d="M384 246 H548 C561 246 569 253 569 265 V279 C515 254 448 253 384 279 Z"/>
+    <circle cx="436" cy="292" r="46" fill="#1e3a8a" opacity=".40" stroke="#60a5fa" stroke-width="2"/>
+    <g class="iconPulse" stroke="#7dd3fc" stroke-width="5" fill="none" stroke-linecap="round">
+      <circle cx="430" cy="285" r="18"/>
+      <path d="M444 299 l20 20"/>
+    </g>
+    <text x="466" y="393" text-anchor="middle" class="label">Classify</text>
+    <rect x="442" y="412" width="48" height="6" rx="3" fill="#60a5fa"/>
+    <text x="466" y="452" text-anchor="middle" class="descText">risk + task type</text>
+  </g>
+
+  <g class="cardGroup delay2">
+    <rect x="652" y="235" width="220" height="242" rx="28" fill="url(#card3)" stroke="#22d3ee" class="card"/>
+    <path class="shine" d="M680 246 H844 C857 246 865 253 865 265 V279 C811 254 744 253 680 279 Z"/>
+    <circle cx="732" cy="292" r="46" fill="#164e63" opacity=".40" stroke="#22d3ee" stroke-width="2"/>
+    <g class="iconPulse" stroke="#22d3ee" stroke-width="4" fill="none" stroke-linejoin="round">
+      <path d="M714 282 l18 -10 l18 10 l-18 10 z"/>
+      <path d="M714 296 l18 10 l18 -10"/>
+      <path d="M714 310 l18 10 l18 -10"/>
+    </g>
+    <text x="762" y="393" text-anchor="middle" class="label">Compress</text>
+    <rect x="738" y="412" width="48" height="6" rx="3" fill="#22d3ee"/>
+    <text x="762" y="452" text-anchor="middle" class="descText">dedup + budget + MTP</text>
+  </g>
+
+  <g class="cardGroup delay3">
+    <rect x="948" y="235" width="220" height="242" rx="28" fill="url(#card4)" stroke="#2dd4bf" class="card"/>
+    <path class="shine" d="M976 246 H1140 C1153 246 1161 253 1161 265 V279 C1107 254 1040 253 976 279 Z"/>
+    <circle cx="1028" cy="292" r="46" fill="#134e4a" opacity=".40" stroke="#2dd4bf" stroke-width="2"/>
+    <g class="iconPulse" stroke="#5eead4" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1028 268 l29 10 v22 c0 17 -12 29 -29 36 c-17 -7 -29 -19 -29 -36 v-22z"/>
+      <path d="M1015 302 l9 9 l18 -21"/>
+    </g>
+    <text x="1058" y="393" text-anchor="middle" class="label">Preserve</text>
+    <rect x="1034" y="412" width="48" height="6" rx="3" fill="#2dd4bf"/>
+    <text x="1058" y="446" text-anchor="middle" class="descText">commands + code +</text>
+    <text x="1058" y="470" text-anchor="middle" class="descText">paths</text>
+  </g>
+
+  <g class="cardGroup delay4">
+    <rect x="1244" y="235" width="220" height="242" rx="28" fill="url(#card5)" stroke="#4ade80" class="card"/>
+    <path class="shine" d="M1272 246 H1436 C1449 246 1457 253 1457 265 V279 C1403 254 1336 253 1272 279 Z"/>
+    <circle cx="1324" cy="292" r="46" fill="#14532d" opacity=".40" stroke="#4ade80" stroke-width="2"/>
+    <g class="iconPulse" stroke="#86efac" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1308 279 l-16 16 l16 16"/>
+      <path d="M1340 279 l16 16 l-16 16"/>
+      <path d="M1332 274 l-13 42"/>
+    </g>
+    <text x="1354" y="393" text-anchor="middle" class="label">Output</text>
+    <rect x="1330" y="412" width="48" height="6" rx="3" fill="#4ade80"/>
+    <text x="1354" y="446" text-anchor="middle" class="descText">pretty / JSON / hook</text>
+  </g>
+
+  <!-- Wave area -->
+  <path class="waveBase" d="M48 555 C160 610 255 495 380 538 S598 628 742 554 S1038 476 1186 546 S1410 625 1540 518"/>
+  <path class="waveThin" d="M48 541 C160 596 255 481 380 524 S598 614 742 540 S1038 462 1186 532 S1410 611 1540 504"/>
+  <path class="waveMain" d="M48 555 C160 610 255 495 380 538 S598 628 742 554 S1038 476 1186 546 S1410 625 1540 518"/>
+
+  <g>
+    <path class="chev" d="M492 538 l10 10 l-10 10 M507 538 l10 10 l-10 10"/>
+    <path class="chev" d="M824 530 l10 10 l-10 10 M839 530 l10 10 l-10 10" style="animation-delay:.35s"/>
+    <path class="chev" d="M1182 521 l10 10 l-10 10 M1197 521 l10 10 l-10 10" style="animation-delay:.7s"/>
+  </g>
+
+  <g>
+    <circle class="node" cx="170" cy="572" r="10" fill="#e879f9"/>
+    <circle class="node n2" cx="360" cy="535" r="12" fill="#c084fc"/>
+    <circle class="node n3" cx="635" cy="586" r="12" fill="#60a5fa"/>
+    <circle class="node n4" cx="966" cy="533" r="12" fill="#22d3ee"/>
+    <circle class="node n5" cx="1342" cy="578" r="12" fill="#34d399"/>
+
+    <circle cx="360" cy="535" r="33" fill="none" stroke="#c084fc" opacity=".30"/>
+    <circle cx="635" cy="586" r="33" fill="none" stroke="#60a5fa" opacity=".30"/>
+    <circle cx="966" cy="533" r="33" fill="none" stroke="#22d3ee" opacity=".30"/>
+    <circle cx="1342" cy="578" r="33" fill="none" stroke="#34d399" opacity=".30"/>
+  </g>
+
+  <!-- Chips -->
+  <g>
+    <rect x="108" y="640" width="340" height="74" rx="37" fill="#a855f7" class="chipGlow"/>
+    <rect x="108" y="640" width="340" height="74" rx="37" fill="rgba(88,28,135,.44)" stroke="#c084fc" class="chip"/>
+    <circle cx="165" cy="677" r="28" fill="#581c87" stroke="#d946ef" stroke-width="2"/>
+    <text x="145" y="687" font-size="28" fill="#f8fafc" font-family="Inter, sans-serif" font-weight="800">&lt;/&gt;</text>
+    <text x="212" y="688" class="chipText">Code-aware parser</text>
+  </g>
+
+  <g>
+    <rect x="504" y="640" width="318" height="74" rx="37" fill="#3b82f6" class="chipGlow"/>
+    <rect x="504" y="640" width="318" height="74" rx="37" fill="rgba(30,58,138,.44)" stroke="#60a5fa" class="chip"/>
+    <circle cx="561" cy="677" r="28" fill="#1e3a8a" stroke="#60a5fa" stroke-width="2"/>
+    <path d="M550 662 C540 665 541 689 551 692 M572 662 C582 665 581 689 571 692 M556 658 v38 M566 658 v38" stroke="#93c5fd" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <text x="608" y="688" class="chipText">Semantic dedup</text>
+  </g>
+
+  <g>
+    <rect x="876" y="640" width="334" height="74" rx="37" fill="#06b6d4" class="chipGlow"/>
+    <rect x="876" y="640" width="334" height="74" rx="37" fill="rgba(8,47,73,.44)" stroke="#22d3ee" class="chip"/>
+    <circle cx="933" cy="677" r="28" fill="#164e63" stroke="#22d3ee" stroke-width="2"/>
+    <path d="M916 669 h33 M916 686 h33" stroke="#67e8f9" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="931" cy="669" r="5" fill="#67e8f9"/>
+    <circle cx="939" cy="686" r="5" fill="#67e8f9"/>
+    <text x="981" y="688" class="chipText">Budget optimizer</text>
+  </g>
+
+  <g>
+    <rect x="1260" y="640" width="300" height="74" rx="37" fill="#14b8a6" class="chipGlow"/>
+    <rect x="1260" y="640" width="300" height="74" rx="37" fill="rgba(19,78,74,.44)" stroke="#5eead4" class="chip"/>
+    <circle cx="1317" cy="677" r="28" fill="#134e4a" stroke="#5eead4" stroke-width="2"/>
+    <path d="M1317 658 l19 7 v14 c0 13 -8 22 -19 27 c-11 -5 -19 -14 -19 -27 v-14z" stroke="#99f6e4" stroke-width="3.2" fill="none"/>
+    <path d="M1308 680 l7 7 l14 -18" stroke="#99f6e4" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+    <text x="1364" y="688" class="chipText">Preservation checker</text>
+  </g>
+</svg>

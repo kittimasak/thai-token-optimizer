@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -63,6 +63,7 @@ const DEFAULT_STATE = Object.freeze({
   profile: 'coding',
   safetyMode: 'strict',
   speculative: false,
+  autoCompressInput: false,
   version: 1
 });
 
@@ -114,7 +115,9 @@ function setDictionary(data) {
   try {
     const normalized = normalizeDictionary(data);
     fs.mkdirSync(HOME_DIR, { recursive: true });
-    fs.writeFileSync(DICTIONARY_PATH, JSON.stringify(normalized, null, 2) + '\n');
+    const tmpPath = DICTIONARY_PATH + '.tmp';
+    fs.writeFileSync(tmpPath, JSON.stringify(normalized, null, 2) + '\n');
+    fs.renameSync(tmpPath, DICTIONARY_PATH);
     _dictionaryCache = normalized;
     return normalized;
   } catch (e) {
@@ -130,6 +133,7 @@ function normalizeState(parsed = {}) {
     profile: VALID_PROFILES.has(parsed.profile) ? parsed.profile : DEFAULT_STATE.profile,
     safetyMode: VALID_SAFETY_MODES.has(parsed.safetyMode) ? parsed.safetyMode : DEFAULT_STATE.safetyMode,
     speculative: typeof parsed.speculative === 'boolean' ? parsed.speculative : DEFAULT_STATE.speculative,
+    autoCompressInput: typeof parsed.autoCompressInput === 'boolean' ? parsed.autoCompressInput : DEFAULT_STATE.autoCompressInput,
     version: typeof parsed.version === 'number' ? parsed.version : DEFAULT_STATE.version,
     lastChanged: parsed.lastChanged || undefined,
     lastSafetyCategory: parsed.lastSafetyCategory || undefined,

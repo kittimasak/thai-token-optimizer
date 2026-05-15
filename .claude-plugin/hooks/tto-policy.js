@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -33,11 +33,33 @@ const DEFAULT_POLICY = Object.freeze({
   maxCompressionRatio: 0.6,
   targetAgent: 'auto',
   exactTokenizer: false,
+  readCache: {
+    mode: 'warn'
+  },
+  contextPruning: {
+    enabled: true,
+    staleMinutesThreshold: 30
+  },
+  precompressThreshold: 300,
   benchmarkStrict: {
     minAverageSavingPercent: 10,
     minTechnicalTermPreservationPercent: 95,
     requireConstraintPreservationPercent: 100,
-    requireCodeBlockPreservationPercent: 100
+    requireCodeBlockPreservationPercent: 100,
+    mtpMaxAveragePreservationPercent: 100,
+    mtpMinSpecHitRatePercent: 60,
+    mtpMaxAverageSlowdownMs: 60,
+    mtpEnhancedMinGainPercent: 12,
+
+    mtpRepeats: 9,
+    mtpWarmupRuns: 1,
+    mtpSeed: 20260512,
+    mtpEnhancedCorpusPath: 'benchmarks/corpus_long_repetitive_mixed_tech_v1.jsonl',
+    mtpFixtureCorpusPath: 'benchmarks/corpus_overfit_guard_v1.jsonl',
+    mtpFixtureMinGainPercent: 0,
+    mtpHighOutputWasteMinCount: 4,
+    mtpHighToolCascadeMinStreak: 4,
+    mtpHighBadDecompositionMinCount: 2
   },
   adapters: {
     codex: true,
@@ -62,6 +84,8 @@ function normalizeBoolean(v, fallback) {
 }
 function normalizePolicy(parsed = {}) {
   const mc = Number(parsed.maxCompressionRatio);
+  const readCacheMode = String(parsed.readCache?.mode || DEFAULT_POLICY.readCache.mode).toLowerCase();
+  const normalizedReadCacheMode = ['off', 'warn', 'block'].includes(readCacheMode) ? readCacheMode : DEFAULT_POLICY.readCache.mode;
   return {
     ...DEFAULT_POLICY,
     ...parsed,
@@ -73,6 +97,12 @@ function normalizePolicy(parsed = {}) {
     exactTokenizer: normalizeBoolean(parsed.exactTokenizer, DEFAULT_POLICY.exactTokenizer),
     maxCompressionRatio: Number.isFinite(mc) && mc > 0 && mc <= 1 ? mc : DEFAULT_POLICY.maxCompressionRatio,
     benchmarkStrict: { ...DEFAULT_POLICY.benchmarkStrict, ...(parsed.benchmarkStrict || {}) },
+    readCache: { ...DEFAULT_POLICY.readCache, ...(parsed.readCache || {}), mode: normalizedReadCacheMode },
+    contextPruning: {
+      enabled: normalizeBoolean(parsed.contextPruning?.enabled, DEFAULT_POLICY.contextPruning.enabled),
+      staleMinutesThreshold: Number.isFinite(parsed.contextPruning?.staleMinutesThreshold) ? parsed.contextPruning.staleMinutesThreshold : DEFAULT_POLICY.contextPruning.staleMinutesThreshold
+    },
+    precompressThreshold: Number.isFinite(parsed.precompressThreshold) ? parsed.precompressThreshold : DEFAULT_POLICY.precompressThreshold,
     adapters: { ...DEFAULT_POLICY.adapters, ...(parsed.adapters || {}) },
     version: 1
   };

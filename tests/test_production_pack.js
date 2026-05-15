@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * Thai Token Optimizer v1.0
+ * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
  * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
@@ -35,10 +35,10 @@ function run(args, env = {}) {
 }
 
 test('compress --budget keeps package version constraint and fits approximate budget', () => {
-  const input = 'ช่วยอธิบายรายละเอียดเกี่ยวกับการปรับแต่งระบบอย่างละเอียด แต่ยังเป็น Thai Token Optimizer v1.0 ไม่เปลี่ยนเวอร์ชันเด็ดขาด และต้องใช้คำสั่ง node bin/thai-token-optimizer.js install all';
+  const input = 'ช่วยอธิบายรายละเอียดเกี่ยวกับการปรับแต่งระบบอย่างละเอียด แต่ยังเป็น Thai Token Optimizer v2.0 ไม่เปลี่ยนเวอร์ชันเด็ดขาด และต้องใช้คำสั่ง node bin/thai-token-optimizer.js install all';
   const res = run(['compress', '--budget', '80', '--target', 'codex', '--check', input]);
   assert.equal(res.status, 0, res.stderr);
-  assert.match(res.stdout, /v1\.0/);
+  assert.match(res.stdout, /v2\.0/);
   assert.match(res.stdout, /node bin\/thai-token-optimizer\.js install all/);
   assert.match(res.stderr, /Budget: 80/);
   assert.match(res.stderr, /Preservation:/);
@@ -49,7 +49,7 @@ test('preservation checker reports missing constraints', () => {
   try {
     const original = path.join(home, 'original.txt');
     const optimized = path.join(home, 'optimized.txt');
-    fs.writeFileSync(original, 'ห้ามเปลี่ยนเวอร์ชัน v1.0 เด็ดขาด ใช้ไฟล์ package.json');
+    fs.writeFileSync(original, 'ห้ามเปลี่ยนเวอร์ชัน v2.0 เด็ดขาด ใช้ไฟล์ package.json');
     fs.writeFileSync(optimized, 'ใช้ไฟล์ package.json');
     const res = run(['preserve', original, optimized]);
     assert.equal(res.status, 0, res.stderr);
@@ -91,7 +91,7 @@ test('doctor reports installed Codex and Claude hooks in isolated home', () => {
     const res = run(['doctor'], env);
     assert.equal(res.status, 0, res.stdout + res.stderr);
     assert.match(res.stdout, /Status: OK/);
-    assert.match(res.stdout, /Package version remains 1\.0\.0/);
+    assert.match(res.stdout, /Package version remains 2\.0\.0/);
   } finally {
     fs.rmSync(home, { recursive: true, force: true });
   }

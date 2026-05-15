@@ -1,0 +1,524 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+  <title id="title">Thai Token Optimizer – System Architecture</title>
+  <desc id="desc">Premium animated SVG architecture diagram for Thai Token Optimizer. Shows the flow from user input, through risk control, compression, verification, and output operations, with meaningful icons and vivid motion effects.</desc>
+
+  <defs>
+    <!-- ===== COLOR SYSTEM ===== -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#020617"/>
+      <stop offset="30%" stop-color="#08153a"/>
+      <stop offset="64%" stop-color="#10295c"/>
+      <stop offset="100%" stop-color="#08645c"/>
+    </linearGradient>
+
+    <radialGradient id="glowPurple" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c084fc" stop-opacity=".42"/>
+      <stop offset="70%" stop-color="#7c3aed" stop-opacity=".10"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="glowCyan" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity=".34"/>
+      <stop offset="72%" stop-color="#06b6d4" stop-opacity=".09"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#d946ef"/>
+      <stop offset="26%" stop-color="#818cf8"/>
+      <stop offset="52%" stop-color="#38bdf8"/>
+      <stop offset="76%" stop-color="#2dd4bf"/>
+      <stop offset="100%" stop-color="#4ade80"/>
+    </linearGradient>
+
+    <linearGradient id="titleGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="65%" stop-color="#dbeafe"/>
+      <stop offset="100%" stop-color="#bbf7d0"/>
+    </linearGradient>
+
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity=".18"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity=".05"/>
+    </linearGradient>
+
+    <linearGradient id="layer1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity=".30"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity=".56"/>
+    </linearGradient>
+    <linearGradient id="layer2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity=".30"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity=".56"/>
+    </linearGradient>
+    <linearGradient id="layer3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity=".30"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity=".56"/>
+    </linearGradient>
+    <linearGradient id="layer4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#14b8a6" stop-opacity=".30"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity=".56"/>
+    </linearGradient>
+    <linearGradient id="layer5" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22c55e" stop-opacity=".30"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity=".56"/>
+    </linearGradient>
+
+    <!-- ===== FILTERS ===== -->
+    <filter id="shadow" x="-60%" y="-60%" width="220%" height="220%">
+      <feDropShadow dx="0" dy="22" stdDeviation="18" flood-color="#020617" flood-opacity=".52"/>
+    </filter>
+
+    <filter id="glow" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="softGlow" x="-90%" y="-90%" width="280%" height="280%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- ===== TYPOGRAPHY + ANIMATION ===== -->
+    <style>
+      .title {
+        font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif;
+        font-size: 62px;
+        font-weight: 950;
+        letter-spacing: -1.4px;
+        fill: url(#titleGrad);
+      }
+      .subtitle {
+        font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif;
+        font-size: 21px;
+        font-weight: 620;
+        fill: #dbe7f5;
+      }
+      .layerTitle {
+        font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif;
+        font-size: 27px;
+        font-weight: 900;
+        fill: #f8fafc;
+        letter-spacing: .2px;
+      }
+      .layerText {
+        font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif;
+        font-size: 17px;
+        font-weight: 650;
+        fill: #d8e8f8;
+      }
+      .tag {
+        font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif;
+        font-size: 13px;
+        font-weight: 800;
+        fill: #edf6ff;
+      }
+      .chipText {
+        font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif;
+        font-size: 15px;
+        font-weight: 850;
+        fill: #eff6ff;
+      }
+      .mini {
+        font-family: Inter, 'Noto Sans', 'Segoe UI', Tahoma, sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        fill: #bfdbfe;
+      }
+      .cmd {
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+        font-size: 13px;
+        fill: #dbeafe;
+      }
+
+      .accentBar { animation: barPulse 3s ease-in-out infinite; }
+      .orbit {
+        fill: none;
+        stroke: #38bdf8;
+        stroke-width: 1.2;
+        opacity: .14;
+        stroke-dasharray: 4 13;
+        animation: orbitSpin 26s linear infinite;
+        transform-origin: 1320px 150px;
+      }
+      .halo {
+        fill: none;
+        stroke: url(#accent);
+        stroke-width: 1.5;
+        opacity: .13;
+        stroke-dasharray: 8 18;
+        animation: haloSpin 28s linear infinite;
+        transform-origin: 800px 620px;
+      }
+      .particle {
+        fill: #dbeafe;
+        opacity: 0;
+        animation: twinkle 4.5s ease-in-out infinite;
+      }
+      .p2 { animation-delay: .6s; } .p3 { animation-delay: 1.2s; } .p4 { animation-delay: 1.8s; } .p5 { animation-delay: 2.4s; } .p6 { animation-delay: 3s; }
+
+      .layerCard {
+        stroke-width: 2.2;
+        filter: url(#shadow);
+        animation: floatLayer 6s ease-in-out infinite;
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+      .l2 { animation-delay: .18s; }
+      .l3 { animation-delay: .36s; }
+      .l4 { animation-delay: .54s; }
+      .l5 { animation-delay: .72s; }
+
+      .shine { fill: rgba(255,255,255,.11); }
+
+      .flowGlow {
+        stroke: #67e8f9;
+        stroke-width: 20;
+        opacity: .12;
+        stroke-linecap: round;
+        fill: none;
+        filter: url(#glow);
+      }
+      .flowMain {
+        stroke: #67e8f9;
+        stroke-width: 5.8;
+        stroke-linecap: round;
+        fill: none;
+        stroke-dasharray: 18 20;
+        animation: flowDash 1.9s linear infinite;
+        filter: url(#glow);
+      }
+      .flowHead {
+        fill: #67e8f9;
+        filter: url(#glow);
+        opacity: .96;
+      }
+
+      .nodeCore {
+        filter: url(#glow);
+        animation: nodePulse 2.4s ease-in-out infinite;
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+      .ring {
+        fill: none;
+        stroke: #67e8f9;
+        stroke-width: 1.8;
+        opacity: .2;
+        animation: ringPulse 2.7s ease-in-out infinite;
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+
+      .sideBus {
+        stroke: url(#accent);
+        stroke-width: 3.4;
+        stroke-linecap: round;
+        fill: none;
+        opacity: .56;
+        stroke-dasharray: 10 18;
+        animation: busDash 5.2s linear infinite;
+      }
+      .crossLink {
+        stroke: url(#accent);
+        stroke-width: 2;
+        stroke-linecap: round;
+        fill: none;
+        opacity: .22;
+        stroke-dasharray: 3 14;
+        animation: busDash 8s linear infinite;
+      }
+
+      .layerIcon {
+        filter: url(#softGlow);
+        animation: iconPulse 2.8s ease-in-out infinite;
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+      .iconStroke {
+        fill: none;
+        stroke-width: 3.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .chip {
+        filter: url(#shadow);
+        animation: chipFloat 5.2s ease-in-out infinite;
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+      .i2 { animation-delay: .18s; } .i3 { animation-delay: .36s; } .i4 { animation-delay: .54s; } .i5 { animation-delay: .72s; } .i6 { animation-delay: .9s; }
+
+      .terminal {
+        fill: url(#glass);
+        stroke: rgba(255,255,255,.18);
+        stroke-width: 1.4;
+        filter: url(#shadow);
+        animation: terminalGlow 4.5s ease-in-out infinite;
+      }
+
+      .packet { filter: url(#glow); }
+
+      @keyframes barPulse { 0%,100%{opacity:.82} 50%{opacity:1} }
+      @keyframes orbitSpin { to{transform:rotate(360deg)} }
+      @keyframes haloSpin { to{transform:rotate(-360deg)} }
+      @keyframes twinkle { 0%,100%{opacity:0;transform:translateX(0)} 42%{opacity:.85} 72%{opacity:.25;transform:translateX(12px)} }
+      @keyframes floatLayer { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+      @keyframes flowDash { to{stroke-dashoffset:-74} }
+      @keyframes busDash { to{stroke-dashoffset:-120} }
+      @keyframes nodePulse { 0%,100%{transform:scale(1);opacity:.86} 50%{transform:scale(1.18);opacity:1} }
+      @keyframes ringPulse { 0%,100%{transform:scale(1);opacity:.18} 50%{transform:scale(1.5);opacity:.42} }
+      @keyframes iconPulse { 0%,100%{transform:scale(1);opacity:.90} 50%{transform:scale(1.08);opacity:1} }
+      @keyframes chipFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+      @keyframes terminalGlow { 0%,100%{opacity:.86} 50%{opacity:1} }
+
+      @media (prefers-reduced-motion: reduce) {
+        .accentBar,.orbit,.halo,.particle,.layerCard,.flowMain,.nodeCore,.ring,.sideBus,.crossLink,.layerIcon,.chip,.terminal { animation:none !important; }
+      }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1120" rx="36" fill="url(#bg)"/>
+  <rect x="1" y="1" width="1598" height="1118" rx="35" fill="none" stroke="rgba(255,255,255,.08)"/>
+
+  <!-- ambient background -->
+  <circle cx="165" cy="860" r="340" fill="url(#glowPurple)"/>
+  <circle cx="1380" cy="180" r="360" fill="url(#glowCyan)"/>
+  <circle cx="800" cy="1025" r="430" fill="#22d3ee" opacity=".04"/>
+  <path class="orbit" d="M1188 125 C1280 -5 1470 32 1510 178 C1552 332 1365 414 1278 314 C1208 234 1235 136 1330 95"/>
+  <path class="orbit" opacity=".10" d="M1130 170 C1240 -20 1545 -3 1588 264"/>
+  <ellipse class="halo" cx="800" cy="615" rx="615" ry="400"/>
+  <ellipse class="halo" opacity=".08" cx="800" cy="615" rx="520" ry="338"/>
+  <circle class="particle" cx="278" cy="186" r="2.1"/>
+  <circle class="particle p2" cx="490" cy="138" r="1.8"/>
+  <circle class="particle p3" cx="1048" cy="258" r="1.9"/>
+  <circle class="particle p4" cx="1290" cy="392" r="1.9"/>
+  <circle class="particle p5" cx="710" cy="194" r="1.8"/>
+  <circle class="particle p6" cx="1466" cy="628" r="2.1"/>
+
+  <!-- header -->
+  <rect x="62" y="58" width="11" height="90" rx="6" fill="url(#accent)" class="accentBar"/>
+  <text x="102" y="118" class="title">System Architecture</text>
+  <text x="104" y="160" class="subtitle">Local-first control, compression, verification, and operations layers</text>
+
+  <!-- terminal / runtime card -->
+  <g>
+    <rect x="1150" y="62" width="304" height="108" rx="24" class="terminal"/>
+    <circle cx="1184" cy="97" r="6" fill="#fb7185"/>
+    <circle cx="1206" cy="97" r="6" fill="#fbbf24"/>
+    <circle cx="1228" cy="97" r="6" fill="#4ade80"/>
+    <text x="1256" y="102" class="mini">local-first runtime</text>
+    <text x="1184" y="136" class="cmd">$ tto doctor --pretty</text>
+    <text x="1184" y="158" class="cmd">status: safe / ready</text>
+  </g>
+
+  <!-- animated side buses -->
+  <path d="M1360 234 C1430 350 1430 780 1360 926" class="sideBus"/>
+  <path d="M240 234 C170 350 170 780 240 926" class="sideBus"/>
+  <path d="M248 348 C640 270 960 270 1352 348" class="crossLink"/>
+  <path d="M248 782 C640 855 960 855 1352 782" class="crossLink"/>
+
+  <!-- ===== MAIN LAYERS ===== -->
+  <g>
+    <!-- Layer 1 -->
+    <g class="layerCard">
+      <rect x="150" y="210" width="1300" height="118" rx="34" fill="url(#layer1)" stroke="#c084fc"/>
+      <path class="shine" d="M192 223 H1410 C1426 223 1436 234 1436 250 V267 C985 224 535 219 192 272 Z"/>
+      <g class="layerIcon">
+        <circle cx="218" cy="269" r="36" fill="rgba(192,132,252,.15)" stroke="#c084fc" stroke-width="2"/>
+        <!-- Input icon: file + cursor -->
+        <path d="M196 278 h39 v24 h-39z M196 278 v-18 h15 l8 9 h16 v9" class="iconStroke" stroke="#e9d5ff"/>
+        <path d="M225 246 l9 18 -7 1 -3 8 -7 -20z" class="iconStroke" stroke="#99f6e4"/>
+      </g>
+      <text x="280" y="264" class="layerTitle">USER / AGENT INPUT</text>
+      <text x="280" y="300" class="layerText">prompt text • hook payload • file input • benchmark corpus • session log</text>
+      <rect x="1198" y="252" width="172" height="40" rx="20" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.14)"/>
+      <text x="1284" y="277" text-anchor="middle" class="tag">source context</text>
+    </g>
+
+    <!-- connector 1 -->
+    <path d="M800 328 L800 372" class="flowGlow"/>
+    <path d="M800 328 L800 372" class="flowMain"/>
+    <polygon points="800,390 789,366 811,366" class="flowHead"/>
+    <circle cx="800" cy="350" r="8" fill="#67e8f9" class="nodeCore"/>
+    <circle cx="800" cy="350" r="16" class="ring"/>
+
+    <!-- Layer 2 -->
+    <g class="layerCard l2">
+      <rect x="150" y="384" width="1300" height="118" rx="34" fill="url(#layer2)" stroke="#818cf8"/>
+      <path class="shine" d="M192 397 H1410 C1426 397 1436 408 1436 424 V441 C985 398 535 393 192 446 Z"/>
+      <g class="layerIcon">
+        <circle cx="218" cy="443" r="36" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="2"/>
+        <!-- Control / Risk icon: shield + slider -->
+        <path d="M218 410 l32 12 v23 c0 23 -14 39 -32 47 c-18 -8 -32 -24 -32 -47 v-23z" class="iconStroke" stroke="#c7d2fe"/>
+        <path d="M203 444 h30 M209 435 v18 M226 435 v18" class="iconStroke" stroke="#99f6e4"/>
+        <circle cx="209" cy="443" r="4" fill="#99f6e4"/>
+        <circle cx="226" cy="438" r="4" fill="#99f6e4"/>
+      </g>
+      <text x="280" y="438" class="layerTitle">CONTROL AND RISK LAYER</text>
+      <text x="280" y="474" class="layerText">mode tracker → profile selector → safety classifier → policy defaults</text>
+      <rect x="1198" y="426" width="172" height="40" rx="20" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.14)"/>
+      <text x="1284" y="451" text-anchor="middle" class="tag">risk-aware gate</text>
+    </g>
+
+    <!-- connector 2 -->
+    <path d="M800 502 L800 546" class="flowGlow"/>
+    <path d="M800 502 L800 546" class="flowMain"/>
+    <polygon points="800,564 789,540 811,540" class="flowHead"/>
+    <circle cx="800" cy="524" r="8" fill="#67e8f9" class="nodeCore"/>
+    <circle cx="800" cy="524" r="16" class="ring"/>
+
+    <!-- Layer 3 -->
+    <g class="layerCard l3">
+      <rect x="150" y="558" width="1300" height="118" rx="34" fill="url(#layer3)" stroke="#22d3ee"/>
+      <path class="shine" d="M192 571 H1410 C1426 571 1436 582 1436 598 V615 C985 572 535 567 192 620 Z"/>
+      <g class="layerIcon">
+        <circle cx="218" cy="617" r="36" fill="rgba(34,211,238,.15)" stroke="#22d3ee" stroke-width="2"/>
+        <!-- Compression icon: funnel -->
+        <path d="M194 592 h48 l-17 20 v18 l-14 7 v-25z" class="iconStroke" stroke="#a5f3fc"/>
+        <path d="M205 646 h26" class="iconStroke" stroke="#99f6e4"/>
+        <circle cx="218" cy="646" r="4" fill="#99f6e4"/>
+      </g>
+      <text x="280" y="612" class="layerTitle">COMPRESSION PIPELINE</text>
+      <text x="280" y="648" class="layerText">code-aware parser → semantic analyzer → dictionary → dedup → budget optimizer → MTP</text>
+      <rect x="1198" y="600" width="172" height="40" rx="20" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.14)"/>
+      <text x="1284" y="625" text-anchor="middle" class="tag">token optimizer</text>
+    </g>
+
+    <!-- connector 3 -->
+    <path d="M800 676 L800 720" class="flowGlow"/>
+    <path d="M800 676 L800 720" class="flowMain"/>
+    <polygon points="800,738 789,714 811,714" class="flowHead"/>
+    <circle cx="800" cy="698" r="8" fill="#67e8f9" class="nodeCore"/>
+    <circle cx="800" cy="698" r="16" class="ring"/>
+
+    <!-- Layer 4 -->
+    <g class="layerCard l4">
+      <rect x="150" y="732" width="1300" height="118" rx="34" fill="url(#layer4)" stroke="#2dd4bf"/>
+      <path class="shine" d="M192 745 H1410 C1426 745 1436 756 1436 772 V789 C985 746 535 741 192 794 Z"/>
+      <g class="layerIcon">
+        <circle cx="218" cy="791" r="36" fill="rgba(45,212,191,.15)" stroke="#2dd4bf" stroke-width="2"/>
+        <!-- Verification icon: magnifier + check -->
+        <circle cx="210" cy="785" r="18" class="iconStroke" stroke="#99f6e4"/>
+        <path d="M223 798 l13 13" class="iconStroke" stroke="#99f6e4"/>
+        <path d="M203 785 l6 6 l11 -13" class="iconStroke" stroke="#bbf7d0"/>
+      </g>
+      <text x="280" y="786" class="layerTitle">VERIFICATION LAYER</text>
+      <text x="280" y="822" class="layerText">constraint locker → preservation checker → safety fallback → reports</text>
+      <rect x="1198" y="774" width="172" height="40" rx="20" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.14)"/>
+      <text x="1284" y="799" text-anchor="middle" class="tag">preservation lock</text>
+    </g>
+
+    <!-- connector 4 -->
+    <path d="M800 850 L800 894" class="flowGlow"/>
+    <path d="M800 850 L800 894" class="flowMain"/>
+    <polygon points="800,912 789,888 811,888" class="flowHead"/>
+    <circle cx="800" cy="872" r="8" fill="#67e8f9" class="nodeCore"/>
+    <circle cx="800" cy="872" r="16" class="ring"/>
+
+    <!-- Layer 5 -->
+    <g class="layerCard l5">
+      <rect x="150" y="906" width="1300" height="118" rx="34" fill="url(#layer5)" stroke="#4ade80"/>
+      <path class="shine" d="M192 919 H1410 C1426 919 1436 930 1436 946 V963 C985 920 535 915 192 968 Z"/>
+      <g class="layerIcon">
+        <circle cx="218" cy="965" r="36" fill="rgba(74,222,128,.15)" stroke="#4ade80" stroke-width="2"/>
+        <!-- Output icon: upward arrow + dashboard base -->
+        <path d="M218 935 v38 M200 953 l18 -18 l18 18" class="iconStroke" stroke="#bbf7d0"/>
+        <path d="M196 977 h44" class="iconStroke" stroke="#99f6e4"/>
+      </g>
+      <text x="280" y="960" class="layerTitle">OUTPUT AND OPERATIONS</text>
+      <text x="280" y="996" class="layerText">CLI text/json/pretty • hook context • dashboard • fleet • CI artifacts</text>
+      <rect x="1198" y="948" width="172" height="40" rx="20" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.14)"/>
+      <text x="1284" y="973" text-anchor="middle" class="tag">ship + observe</text>
+    </g>
+  </g>
+
+  <!-- moving packets down the main spine -->
+  <circle r="6" fill="#67e8f9" class="packet">
+    <animateMotion dur="6.0s" repeatCount="indefinite" path="M800 328 L800 372 L800 502 L800 546 L800 676 L800 720 L800 850 L800 894"/>
+  </circle>
+  <circle r="4.5" fill="#c084fc" class="packet" opacity=".95">
+    <animateMotion dur="7.8s" begin="1.2s" repeatCount="indefinite" path="M240 234 C170 350 170 780 240 926"/>
+  </circle>
+  <circle r="4.5" fill="#4ade80" class="packet" opacity=".95">
+    <animateMotion dur="7.8s" begin=".4s" repeatCount="indefinite" path="M1360 234 C1430 350 1430 780 1360 926"/>
+  </circle>
+
+  <!-- capability chips row: clearer semantic icons -->
+  <g>
+    <g class="chip">
+      <rect x="132" y="1044" width="176" height="50" rx="25" fill="rgba(255,255,255,.09)" stroke="rgba(255,255,255,.16)"/>
+      <!-- CLI: terminal window with prompt -->
+      <g transform="translate(164 1054)">
+        <rect x="0" y="0" width="38" height="26" rx="6" fill="none" stroke="#99f6e4" stroke-width="2.8"/>
+        <circle cx="8" cy="7" r="1.8" fill="#99f6e4"/>
+        <circle cx="15" cy="7" r="1.8" fill="#99f6e4" opacity=".75"/>
+        <path d="M8 16 l6 4 l-6 4 M20 24 h10" class="iconStroke" stroke="#99f6e4" style="stroke-width:2.7"/>
+      </g>
+      <text x="248" y="1076" text-anchor="middle" class="chipText">CLI</text>
+    </g>
+
+    <g class="chip i2">
+      <rect x="324" y="1044" width="182" height="50" rx="25" fill="rgba(255,255,255,.09)" stroke="rgba(255,255,255,.16)"/>
+      <!-- Hooks: event node connected to hook curve -->
+      <g transform="translate(356 1052)">
+        <circle cx="8" cy="16" r="3.8" fill="#99f6e4"/>
+        <path d="M12 16 h12 c7 0 11 4 11 11 v4" class="iconStroke" stroke="#99f6e4" style="stroke-width:2.8"/>
+        <path d="M35 31 v4 c0 6 -5 11 -11 11 s-11 -5 -11 -11 c0 -5 4 -8 9 -8 h5" class="iconStroke" stroke="#99f6e4" style="stroke-width:2.8"/>
+      </g>
+      <text x="416" y="1076" text-anchor="middle" class="chipText">Hooks</text>
+    </g>
+
+    <g class="chip i3">
+      <rect x="522" y="1044" width="194" height="50" rx="25" fill="rgba(255,255,255,.09)" stroke="rgba(255,255,255,.16)"/>
+      <!-- Adapters: two ports bridged by arrows -->
+      <g transform="translate(556 1054)">
+        <rect x="0" y="4" width="11" height="16" rx="2" fill="none" stroke="#99f6e4" stroke-width="2.6"/>
+        <rect x="32" y="4" width="11" height="16" rx="2" fill="none" stroke="#99f6e4" stroke-width="2.6"/>
+        <path d="M11 12 h9 M24 12 h8" class="iconStroke" stroke="#99f6e4" style="stroke-width:2.8"/>
+        <path d="M15 8 l5 4 l-5 4 M28 8 l-5 4 l5 4" class="iconStroke" stroke="#bbf7d0" style="stroke-width:2.4"/>
+      </g>
+      <text x="644" y="1076" text-anchor="middle" class="chipText">Adapters</text>
+    </g>
+
+    <g class="chip i4">
+      <rect x="734" y="1044" width="184" height="50" rx="25" fill="rgba(255,255,255,.09)" stroke="rgba(255,255,255,.16)"/>
+      <!-- Safety: shield with check -->
+      <g transform="translate(770 1051)">
+        <path d="M20 2 l17 6 v13 c0 14 -8 23 -17 28 c-9 -5 -17 -14 -17 -28 V8z" class="iconStroke" stroke="#99f6e4" style="stroke-width:2.7"/>
+        <path d="M12 21 l6 6 l11 -13" class="iconStroke" stroke="#bbf7d0" style="stroke-width:3"/>
+      </g>
+      <text x="842" y="1076" text-anchor="middle" class="chipText">Safety</text>
+    </g>
+
+    <g class="chip i5">
+      <rect x="932" y="1044" width="204" height="50" rx="25" fill="rgba(255,255,255,.09)" stroke="rgba(255,255,255,.16)"/>
+      <!-- Analytics: bar chart with trend line -->
+      <g transform="translate(968 1053)">
+        <path d="M0 30 V2 M0 30 H38" class="iconStroke" stroke="#99f6e4" style="stroke-width:2.6"/>
+        <rect x="7" y="20" width="5" height="10" rx="1.5" fill="#99f6e4" opacity=".70"/>
+        <rect x="17" y="13" width="5" height="17" rx="1.5" fill="#99f6e4" opacity=".82"/>
+        <rect x="28" y="8" width="5" height="22" rx="1.5" fill="#99f6e4"/>
+        <path d="M6 22 L18 15 L29 11 L38 6" class="iconStroke" stroke="#bbf7d0" style="stroke-width:2.4"/>
+      </g>
+      <text x="1034" y="1076" text-anchor="middle" class="chipText">Analytics</text>
+    </g>
+
+    <g class="chip i6">
+      <rect x="1152" y="1044" width="220" height="50" rx="25" fill="rgba(255,255,255,.09)" stroke="rgba(255,255,255,.16)"/>
+      <!-- Rollback: undo arrow with clock hand -->
+      <g transform="translate(1188 1051)">
+        <path d="M10 10 H0 V0" class="iconStroke" stroke="#99f6e4" style="stroke-width:2.8"/>
+        <path d="M2 10 c4 -8 13 -12 22 -12 c14 0 25 11 25 25 s-11 25 -25 25 c-10 0 -18 -5 -22 -12" class="iconStroke" stroke="#99f6e4" style="stroke-width:2.8"/>
+        <path d="M24 13 v12 l9 5" class="iconStroke" stroke="#bbf7d0" style="stroke-width:2.4"/>
+      </g>
+      <text x="1268" y="1076" text-anchor="middle" class="chipText">Rollback</text>
+    </g>
+  </g>
+</svg>

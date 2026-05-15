@@ -1,9 +1,9 @@
 <!--
 ============================================================================
-Thai Token Optimizer v1.0
+Thai Token Optimizer v2.0
 ============================================================================
 Description :
-A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
+Thai installation guide for the Claude Code plugin package.
 
 Author      : Dr.Kittimasak Naijit
 Repository  : https://github.com/kittimasak/thai-token-optimizer
@@ -16,70 +16,43 @@ Notes:
 ============================================================================
 -->
 
-# คู่มือติดตั้ง Claude Code Plugin — Thai Token Optimizer v1.0
+# คู่มือติดตั้ง Claude Code Plugin - Thai Token Optimizer v2.0
 
-> คู่มือสำหรับ `.claude-plugin` ของ **Thai Token Optimizer v1.0**
-
-```text
-Thai Token Optimizer v1.0
-package version: 1.0.0
-```
-
-## ภาพรวม
-
-โฟลเดอร์ `.claude-plugin` ใช้ประกาศ metadata และ hook configuration สำหรับติดตั้ง Thai Token Optimizer ให้กับ Claude Code
-
-เมื่อใช้งานแล้ว Claude Code จะสามารถ:
-
-- ตอบภาษาไทยแบบกระชับ
-- ลดคำฟุ่มเฟือย
-- รักษา command, path, config, version, error และ code
-- เปิด/ปิดโหมดผ่านข้อความในแชต เช่น `token thai auto`
-- ใช้ safety mode เมื่องานเสี่ยง
-- เรียก hook ก่อน/หลัง tool use
-
-## โครงสร้างไฟล์
+คู่มือนี้ใช้สำหรับ `.claude-plugin` ของ **Thai Token Optimizer v2.0**
 
 ```text
-.claude-plugin/
-├── marketplace.json
-├── plugin.json
-├── README.md
-├── INSTALL_TH.md
-├── commands/
-│   ├── tto-auto.md
-│   ├── tto-lite.md
-│   ├── tto-full.md
-│   ├── tto-safe.md
-│   ├── tto-off.md
-│   ├── tto-status.md
-│   └── tto-doctor.md
-└── skills/
-    └── thai-token-optimizer/
-        └── SKILL.md
+Thai Token Optimizer v2.0
+package version: 2.0.0
 ```
 
-## ติดตั้งจาก GitHub
+## สิ่งที่ plugin ทำ
+
+- เพิ่ม Claude Code hooks สำหรับ compact Thai workflow
+- ติดตาม mode/profile/safety/speculative state
+- ช่วยคง command, path, error, identifier, config key ให้ตรงเดิม
+- ใช้ safety override เมื่อเป็นงาน production, auth, database, destructive command หรือ rollback
+- มี command templates สำหรับ dashboard, quality, coach, ops, fleet, benchmark, compress, context
+
+## ติดตั้งแบบแนะนำ
 
 ```bash
 git clone https://github.com/kittimasak/thai-token-optimizer.git
 cd thai-token-optimizer
-
 npm install
 npm test
 npm run ci
 npm link
 ```
 
-## ติดตั้งเฉพาะ Claude Code
+ติดตั้ง Claude Code integration:
 
 ```bash
 tto backup claude
 tto install claude
-tto doctor --pretty
+tto doctor claude --pretty
 ```
 
-## ติดตั้งทุกระบบ
+ติดตั้งทุก integration:
 
 ```bash
 tto backup all
@@ -88,78 +61,81 @@ tto install-agents
 tto doctor --pretty
 ```
 
-## ใช้งานใน Claude Code
+## คำสั่งใน Claude Code
 
-หลังติดตั้งแล้ว restart Claude Code จากนั้นพิมพ์:
+```text
+token thai auto
+token thai lite
+token thai full
+token thai safe
+token thai off
+/tto spec
+/tto nospec
+/tto nointeractive
+```
+
+ค่าแนะนำ:
 
 ```text
 token thai auto
 ```
 
-โหมดอื่น:
+## คำสั่ง v2 ที่ควรตรวจหลังติดตั้ง
+
+```bash
+tto status --pretty
+tto dashboard --view overview
+tto doctor claude --pretty
+tto quality --pretty
+tto coach --pretty
+tto ops --pretty
+tto compress --pretty --level auto --target claude --budget 500 --check prompt.txt
+tto benchmark --pretty --strict --default-policy --mtp
+```
+
+## สถานะ Hook ที่ผู้ใช้จะเห็น
 
 ```text
-token thai lite
-token thai full
-token thai safe
-token thai off
+[TTO Stage 1/4] Detect Intent - loading Thai Token Optimizer v2.0
+[TTO Stage 1/4] Detect Intent - tracking TTO mode/profile/safety
+[TTO Stage 3/4] Preserve Critical - checking safety guard
+[TTO Stage 4/4] Output Compact - preparing compact tool summary
+[TTO Stage 4/4] Output Compact - finalizing safely
 ```
 
-## ตรวจสอบ plugin.json
+## Backup และ Rollback
+
+ก่อนแก้ config ควร backup:
 
 ```bash
-node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/plugin.json','utf8')); console.log('plugin.json OK')"
+tto backup claude
 ```
 
-## ตรวจสอบ marketplace.json
-
-```bash
-node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/marketplace.json','utf8')); console.log('marketplace.json OK')"
-```
-
-## ตรวจสุขภาพระบบ
-
-```bash
-tto doctor --pretty
-```
-
-## Rollback
-
-Preview ก่อน:
+ตรวจ rollback ก่อน:
 
 ```bash
 tto rollback claude --dry-run
 ```
 
-Rollback จริง:
+rollback จริง:
 
 ```bash
 tto rollback claude
+tto doctor claude --pretty
 ```
 
-## Uninstall
+## ตรวจความถูกต้องของ plugin package
 
 ```bash
-tto uninstall claude
-```
-
-หรือ uninstall ทุก integration:
-
-```bash
-tto uninstall all
+node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/plugin.json','utf8')); console.log('plugin.json OK')"
+node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/marketplace.json','utf8')); console.log('marketplace.json OK')"
+find .claude-plugin/hooks -name '*.js' -print0 | xargs -0 -n1 node --check
+node --test tests/test_install.js
 ```
 
 ## ข้อควรระวัง
 
-- ห้ามเปลี่ยน `package version: 1.0.0`
-- ห้ามลบ safety checks
+- ห้ามแก้ stdout ของ hooks ให้มี debug text ปนกับ JSON
 - ห้ามลบ backup/rollback behavior
-- ห้ามใส่ API key, token, password หรือ secret ใน `.claude-plugin`
-- ถ้าแก้ hook หรือ plugin metadata ให้รัน `npm test` และ `npm run ci`
-
-## ผู้จัดทำ
-
-```text
-Author: Dr.Kittimasak Naijit
-Repository: https://github.com/kittimasak/thai-token-optimizer
-```
+- ห้ามลดทอนคำสั่ง, path, error, version หรือ config key
+- ห้ามเปลี่ยน version lock ออกจาก `Thai Token Optimizer v2.0` และ `package version: 2.0.0`
