@@ -1,3 +1,9 @@
+---
+name: thai-token-optimizer
+description: "Advanced Thai token optimization for coding agents with code-aware preservation."
+version: "2.0.0"
+---
+
 <!--
 ============================================================================
 Thai Token Optimizer v2.0
