@@ -113,23 +113,129 @@ function collapseRepeatedPhrases(line) {
   return out.join(' ').trim();
 }
 
-function semanticDedup(text) {
+function levenshtein(a, b) {
+  const tmp = [];
+  for (let i = 0; i <= a.length; i++) tmp[i] = [i];
+  for (let j = 0; j <= b.length; j++) tmp[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      tmp[i][j] = Math.min(
+        tmp[i - 1][j] + 1,
+        tmp[i][j - 1] + 1,
+        tmp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+  }
+  return tmp[a.length][b.length];
+}
+
+function aggressiveLogDedup(lines, level = 'auto') {
+  if (lines.length < 2) return lines;
+  const out = [];
+  let i = 0;
+  while (i < lines.length) {
+    const current = lines[i];
+    const key = normalizeSemanticKey(current);
+    if (!key) { out.push(current); i++; continue; }
+
+    // 1. Exact Repetition (Semantic Sequence Compression)
+    let j = i + 1;
+    while (j < lines.length && normalizeSemanticKey(lines[j]) === key) j++;
+    const exactCount = j - i;
+    if (exactCount >= 3) {
+      out.push(`[${current.replace(/\.+$/, '')}] รันซ้ำ ${exactCount} ครั้งเพื่ออัปเดตสถานะ`);
+      i = j;
+      continue;
+    }
+
+    // 2. Pattern-Based Collapsing (Common Prefix)
+    // E.g. "กำลังตรวจสอบไฟล์ index.js", "กำลังตรวจสอบไฟล์ package.json"
+    const prefixMatch = current.match(/^([\u0E00-\u0E7F\s]+)/); // Thai prefix
+    if (prefixMatch && prefixMatch[1].length > 4) {
+      const prefix = prefixMatch[1];
+      let k = i + 1;
+      const items = [current.slice(prefix.length).replace(/\.+$/, '').trim()];
+      while (k < lines.length && lines[k].startsWith(prefix)) {
+        items.push(lines[k].slice(prefix.length).replace(/\.+$/, '').trim());
+        k++;
+      }
+      if (items.length >= 3) {
+        out.push(`${prefix.trim()} [${items.join(', ')}] (${items.length} รายการ)`);
+        i = k;
+        continue;
+      }
+    }
+
+    // 3. Numerical Aggregation / Similarity (Levenshtein)
+    // E.g. "พบข้อผิดพลาด 1 จุด" x 5
+    let l = i + 1;
+    while (l < lines.length) {
+      const dist = levenshtein(current, lines[l]);
+      const maxLen = Math.max(current.length, lines[l].length);
+      const similarity = 1 - dist / maxLen;
+      if (similarity < 0.6) break;
+      l++;
+    }
+    const simCount = l - i;
+    if (simCount >= 3) {
+      out.push(`${current.replace(/\d+/, simCount).replace(/(\d+)\s*จุด/, simCount + ' จุด')} (พบซ้ำ ${simCount} ครั้งในบรรทัดใกล้เคียงกัน)`);
+      i = l;
+      continue;
+    }
+
+    out.push(lines[i++]);
+  }
+  return out;
+}
+
+function semanticDedup(text, level = 'auto') {
   const blocks = String(text || '').split(/\n{2,}/);
   const seenBlock = new Set();
   const dedupBlocks = [];
 
   for (const block of blocks) {
-    const lines = block.split('\n').map(x => STRUCTURE_SENSITIVE_RE.test(x) ? x : collapseRepeatedPhrases(x)).filter(Boolean);
+    let lines = block.split('\n').map(x => STRUCTURE_SENSITIVE_RE.test(x) ? x : collapseRepeatedPhrases(x)).filter(Boolean);
+    
+    // Apply Aggressive Log Deduplication
+    if (level !== 'lite') {
+      lines = aggressiveLogDedup(lines, level);
+    }
+
     const seenLine = new Set();
     const keptLines = [];
+    let politeSuffix = '';
+
     for (const line of lines) {
       const key = normalizeSemanticKey(line);
       if (!key) continue;
       if (seenLine.has(key)) continue;
+      
+      // Polite Particle & Filler Stripping (Aggressive)
+      let processedLine = line;
+      if (level === 'full' || level === 'ultra' || level === 'auto') {
+        const m = processedLine.match(/(เสร็จแล้ว|เรียบร้อยแล้ว|แล้ว)(ครับ|ค่ะ|นะครับ|นะคะ)$/);
+        if (m) {
+          if (m[0].length > politeSuffix.length) politeSuffix = m[0];
+          processedLine = processedLine.replace(m[0], '').trim();
+        }
+      }
+
       seenLine.add(key);
-      keptLines.push(line);
+      keptLines.push(processedLine);
     }
-    const merged = keptLines.join('\n').trim();
+
+    let merged = keptLines.join('\n').trim();
+    if (politeSuffix && keptLines.length > 1) {
+      // Grouping actions: [A, B, C] + Suffix
+      if (keptLines.every(l => !l.includes('\n'))) {
+        merged = `[${keptLines.join(', ')}] ${politeSuffix}`;
+      } else {
+        merged += `\n${politeSuffix}`;
+      }
+    } else if (politeSuffix && keptLines.length === 1) {
+      merged += ' ' + politeSuffix;
+    }
+
     const bKey = normalizeSemanticKey(merged);
     if (!merged || !bKey) continue;
     if (seenBlock.has(bKey)) continue;
@@ -238,7 +344,14 @@ function selectiveWindowCompress(text, level = 'auto', semanticBlocks = []) {
   if (level === 'ultra') {
     for (const [from, to] of ULTRA_REPLACEMENTS) out = out.split(from).join(to);
   }
-  for (const [pattern, repl] of FILLER_PATTERNS) out = out.replace(pattern, repl);
+  for (const [pattern, repl] of FILLER_PATTERNS) {
+    // Skip particle removal for auto/full/ultra to let semanticDedup handle grouping
+    if ((level === 'auto' || level === 'full' || level === 'ultra') && 
+        (pattern.source.includes('ครับ') || pattern.source.includes('ค่ะ'))) {
+      continue;
+    }
+    out = out.replace(pattern, repl);
+  }
   // Avoid removing space before punctuation if it looks like a path or special technical notation
   out = out.replace(/\s+([,;:!?])/g, '$1').replace(/[ \t]+\n/g, '\n');
   // Specifically handle '.' to avoid breaking ./ or file extensions
@@ -284,7 +397,7 @@ function compressPrompt(text, options = {}) {
   
   const compressed = transformSemanticAware(original, seg => compressSegment(seg, level));
   let normalized = compressed.replace(/\n{3,}/g, '\n\n').trim();
-  if (options.semanticDedup !== false) normalized = semanticDedup(normalized);
+  if (options.semanticDedup !== false) normalized = semanticDedup(normalized, level);
   if (options.selectiveWindow || level === 'ultra') normalized = selectiveWindowCompress(normalized, level, semanticBlocks);
   return options.lockConstraints === false ? normalized : appendMissingConstraints(original, normalized);
 }
