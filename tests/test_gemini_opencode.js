@@ -61,7 +61,7 @@ test('OpenCode adapter installs native plugin, config, agent, skill, and safety 
   const cfg = path.join(tmp, '.config', 'opencode');
   const plugin = path.join(cfg, 'plugins', 'thai-token-optimizer.js');
   assert.ok(fs.existsSync(plugin));
-  assert.match(fs.readFileSync(plugin, 'utf8'), /export const ThaiTokenOptimizer/);
+  assert.match(fs.readFileSync(plugin, 'utf8'), /exports\.ThaiTokenOptimizer/);
   assert.match(fs.readFileSync(plugin, 'utf8'), /tool\.execute\.before/);
   assert.ok(fs.existsSync(path.join(cfg, 'opencode.json')));
   assert.ok(fs.existsSync(path.join(cfg, 'agents', 'thai-token-optimizer.md')));
