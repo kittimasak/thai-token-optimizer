@@ -26,7 +26,7 @@ const { appendMissingConstraints, extractConstraints } = require('./tto-constrai
 const { collectProtectedRanges } = require('./tto-code-aware-parser');
 const { classifyTask, TIERS } = require('./tto-profiles');
 
-const HARD_LINE_RE = /(^\s*\|.*\|\s*$|^\s*[A-Za-z0-9_.-]+[ \t]*:[ \t]*$|(?:\s|^)(ห้าม|ต้อง|เด็ดขาด)(?:\s|$)|must|must not|do not|never|\bkeep\b|\bpreserve\b|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|```|`|https?:\/\/|~\/|\.\/|\b[A-Za-z]:\\|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module|EADDRINUSE)\b|^\s*(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|codex_hooks\s*=\s*true|sequence detected|รันซ้ำ|พบซ้ำ|ย่อรายละเอียด|PURPOSE|RESULT|SUMMARY|จุดประสงค์|สรุป|เป้าหมาย)/i;
+const HARD_LINE_RE = /(^\s*\|.*\|\s*$|^\s*[A-Za-z0-9_.-]+[ \t]*:[ \t]*$|(?:\s|^)(ห้าม|ต้อง|เด็ดขาด)(?:\s|$)|must|must not|do not|never|\bkeep\b|\bpreserve\b|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|```|`|https?:\/\/|~\/|\.\/|\b[A-Za-z]:\\|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module|EADDRINUSE)\b|^\s*(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|codex_hooks\s*=\s*true|sequence detected|รันซ้ำ|พบซ้ำ|ย่อรายละเอียด)/i;
 const STRUCTURE_SENSITIVE_LINE_RE = /^(\s+["']?[A-Za-z0-9_.-]+["']?\s*[:=]|\s+[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\s*at\s+|.*\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b)/i;
 
 function normalizeBudgetLine(line) {
@@ -168,9 +168,17 @@ function trimPlainLine(line, maxChars, tier = TIERS.ROUTINE) {
     
     // Only apply if it actually saves significant space and leaves meaningful head/tail
     if (headLen + tailLen + middlePlaceholder.length <= maxChars) {
-      const head = s.slice(0, headLen).trim();
-      const tail = s.slice(-tailLen).trim();
-      return `${head}${middlePlaceholder}${tail}`;
+      let head = s.slice(0, headLen);
+      // Backtrack to last space or Thai boundary if possible
+      const lastSpace = head.lastIndexOf(' ');
+      if (lastSpace > headLen * 0.6) head = head.slice(0, lastSpace);
+      
+      let tail = s.slice(-tailLen);
+      // Forward track to next space in tail if possible
+      const firstSpace = tail.indexOf(' ');
+      if (firstSpace >= 0 && firstSpace < tailLen * 0.4) tail = tail.slice(firstSpace + 1);
+
+      return `${head.trim()}${middlePlaceholder}${tail.trim()}`;
     }
   }
 
@@ -327,12 +335,18 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
   const originalFirst = original.split('\n').filter(l => l.trim().length > 5)[0] || '';
   if (originalFirst) {
     const compressedFirst = compressPrompt(originalFirst, { level: 'full', lockConstraints: false }).trim();
-    // Normalize for matching: Remove spaces, technical symbols, and fillers
+    // Robust Matching: Label-based or Short Prefix
+    const getLabel = (s) => (s.match(/^[A-Z0-9_\/ ]+:/i) || [])[0] || '';
+    const label = getLabel(compressedFirst);
     const norm = (s) => s.replace(/[^\w\u0E00-\u0E7F]/g, '').toLowerCase();
-    const firstMatchKey = norm(compressedFirst).slice(0, 15);
-    const outMatchKey = norm(out);
+    const firstMatchKey = norm(compressedFirst).slice(0, 6);
+    const outNorm = norm(out);
+    
+    let alreadyPresent = false;
+    if (label && out.trim().toLowerCase().startsWith(label.toLowerCase())) alreadyPresent = true;
+    if (!alreadyPresent && firstMatchKey && outNorm.includes(firstMatchKey)) alreadyPresent = true;
 
-    if (firstMatchKey && !outMatchKey.includes(firstMatchKey)) {
+    if (!alreadyPresent) {
       const head = trimPlainLine(compressedFirst, 40, tier);
       out = `${head}\n${out}`;
     }
@@ -340,9 +354,22 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
   
   // FINAL RESULT GUARANTEE: Ensure the very last significant line (Outcome) is ALWAYS present
   const originalLast = original.trim().split('\n').filter(l => l.trim().length > 5).pop() || '';
-  if (originalLast && !out.includes(originalLast.slice(-15)) && (originalLast.includes(':') || originalLast.match(/(success|fail|done|error|result|สรุป|สำเร็จ)/i))) {
-    const tail = trimPlainLine(originalLast, 40, tier);
-    if (!out.includes(tail)) out = `${out}\n${tail}`;
+  if (originalLast) {
+    const compressedLast = compressPrompt(originalLast, { level: 'full', lockConstraints: false }).trim();
+    const getLabel = (s) => (s.match(/^[A-Z0-9_\/ ]+:/i) || [])[0] || '';
+    const label = getLabel(compressedLast);
+    const norm = (s) => s.replace(/[^\w\u0E00-\u0E7F]/g, '').toLowerCase();
+    const lastMatchKey = norm(compressedLast).slice(-6);
+    const outNorm = norm(out);
+
+    let alreadyPresent = false;
+    if (label && out.trim().toLowerCase().includes(label.toLowerCase())) alreadyPresent = true;
+    if (!alreadyPresent && lastMatchKey && outNorm.includes(lastMatchKey)) alreadyPresent = true;
+
+    if (!alreadyPresent && (compressedLast.includes(':') || compressedLast.match(/(success|fail|done|error|result|สรุป|สำเร็จ)/i))) {
+      const tail = trimPlainLine(compressedLast, 40, tier);
+      out = `${out}\n${tail}`;
+    }
   }
 
   return enforcePreservation(original, out, budget);
