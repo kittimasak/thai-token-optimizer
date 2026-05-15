@@ -26,7 +26,7 @@ const { appendMissingConstraints, extractConstraints } = require('./tto-constrai
 const { collectProtectedRanges } = require('./tto-code-aware-parser');
 const { classifyTask, TIERS } = require('./tto-profiles');
 
-const HARD_LINE_RE = /(^\s*\|.*\|\s*$|^\s*[A-Za-z0-9_.-]+[ \t]*:[ \t]*$|(?:\s|^)(ห้าม|ต้อง|เด็ดขาด)(?:\s|$)|must|must not|do not|never|\bkeep\b|\bpreserve\b|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|```|`|https?:\/\/|~\/|\.\/|\b[A-Za-z]:\\|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module|EADDRINUSE)\b|\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|codex_hooks\s*=\s*true|sequence detected|รันซ้ำ|พบซ้ำ|ย่อรายละเอียด|PURPOSE|RESULT|SUMMARY|จุดประสงค์|สรุป|เป้าหมาย)/i;
+const HARD_LINE_RE = /(^\s*\|.*\|\s*$|^\s*[A-Za-z0-9_.-]+[ \t]*:[ \t]*$|(?:\s|^)(ห้าม|ต้อง|เด็ดขาด)(?:\s|$)|must|must not|do not|never|\bkeep\b|\bpreserve\b|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|```|`|https?:\/\/|~\/|\.\/|\b[A-Za-z]:\\|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module|EADDRINUSE)\b|^\s*(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|codex_hooks\s*=\s*true|sequence detected|รันซ้ำ|พบซ้ำ|ย่อรายละเอียด|PURPOSE|RESULT|SUMMARY|จุดประสงค์|สรุป|เป้าหมาย)/i;
 const STRUCTURE_SENSITIVE_LINE_RE = /^(\s+["']?[A-Za-z0-9_.-]+["']?\s*[:=]|\s+[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\s*at\s+|.*\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b)/i;
 
 function normalizeBudgetLine(line) {
@@ -132,17 +132,17 @@ function safeLineScore(line, tier = TIERS.ROUTINE, idx = -1, total = 0) {
   // Semantic Anchor awareness: Keep headers like "BLOCK A:" or "STEP 1:"
   if (/^[A-Z0-9_\/ ]+:/.test(line)) score += 2000;
 
+  // English Logical Anchors: MISSION, CONTEXT, CONCLUSION, etc.
+  if (/^(MISSION|CONTEXT|CONCLUSION|STEP \d+|OVERVIEW|RESULT|SUMMARY):/i.test(line)) score += 5000;
+
   // ALD Summary Score: Summaries are EXTREMELY high value as they represent many lines.
-  // They must be kept to prevent preservation bloat from adding back all individual lines.
   if (/sequence detected|รันซ้ำ|พบซ้ำ|ย่อรายละเอียด/.test(line)) score += 5000;
 
   // ALD Remnant Score: Technical lists are valuable but prunable if long
-
   if (/^รายการเทคนิคคงเดิม:/.test(line)) score -= 500;
   if (/^-\s/.test(line)) score -= 1000; // Drastic reduction for list items
 
   // Head/Tail priority for SMT continuity (Equal high priority)
-
   if (idx === 0) score += 3000; 
   if (idx === total - 1 && total > 1) score += 2500;
 
@@ -197,8 +197,8 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
   let out = String(text || '').trim();
   const currentTokens = estimateTokens(out, target).estimatedTokens;
   if (!budget || budget <= 0) return enforcePreservation(original, out, budget);
-  if (currentTokens <= budget) return enforcePreservation(original, out, budget);
-
+  
+  // Always attempt trim pass if over budget
   let lines = out.split(/\n+/).map(normalizeBudgetLine).filter(Boolean);
 
   // 1. Smart Middle-Truncation (SMT) for multi-line blocks - PRIORITY
@@ -223,22 +223,7 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
   }
 
   // Tier 1 (Critical) is very reluctant to remove lines unless budget is tight
-  let minLines = (tier === TIERS.CRITICAL && (!budget || budget > 50)) ? Math.max(1, lines.length - 1) : 1;
-  
-  // If budget is extremely tight, force minLines to 1
-  if (budget > 0 && budget < 40) minLines = 1;
-
-  while (lines.length > minLines && estimateTokens(lines.join('\n'), target).estimatedTokens > budget) {
-    let removeIdx = -1;
-    let lowest = Infinity;
-    for (let i = 0; i < lines.length; i++) {
-      if (HARD_LINE_RE.test(lines[i])) continue;
-      const score = safeLineScore(lines[i], tier, i, lines.length);
-      if (score < lowest) { lowest = score; removeIdx = i; }
-    }
-    if (removeIdx < 0) break;
-    lines.splice(removeIdx, 1);
-  }
+  // (Legacy while loop removed to favor global budget optimizer)
 
   out = lines.join('\n').trim();
   if (estimateTokens(out, target).estimatedTokens <= budget) return enforcePreservation(original, out, budget);
@@ -340,6 +325,13 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
   if (originalFirst && !out.includes(originalFirst.slice(0, 15))) {
     const head = trimPlainLine(originalFirst, 40, tier);
     out = `${head}\n${out}`;
+  }
+  
+  // FINAL RESULT GUARANTEE: Ensure the very last significant line (Outcome) is ALWAYS present
+  const originalLast = original.trim().split('\n').filter(l => l.trim().length > 5).pop() || '';
+  if (originalLast && !out.includes(originalLast.slice(-15)) && (originalLast.includes(':') || originalLast.match(/(success|fail|done|error|result|สรุป|สำเร็จ)/i))) {
+    const tail = trimPlainLine(originalLast, 40, tier);
+    if (!out.includes(tail)) out = `${out}\n${tail}`;
   }
 
   return enforcePreservation(original, out, budget);
