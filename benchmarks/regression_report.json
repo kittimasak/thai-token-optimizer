@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-15T10:18:27.745Z",
+  "generatedAt": "2026-05-15T15:32:45.548Z",
   "strict": true,
   "mtp": true,
   "reportPath": "benchmarks/regression_report.md",
@@ -36,9 +36,9 @@
     "warmup": 1,
     "normal": {
       "speculative": false,
-      "elapsedMs": 0.7,
-      "avgSaved": 8.8,
-      "avgAfter": 51.9,
+      "elapsedMs": 1.2,
+      "avgSaved": 9,
+      "avgAfter": 51.6,
       "avgPreserve": 93.8,
       "overBudgetCount": 0,
       "specModeCount": 0,
@@ -62,8 +62,8 @@
         {
           "id": "db-safety",
           "mode": "normal",
-          "saved": 0,
-          "after": 40,
+          "saved": 2,
+          "after": 38,
           "preserve": 100,
           "overBudget": false
         },
@@ -111,9 +111,9 @@
     },
     "speculative": {
       "speculative": true,
-      "elapsedMs": 7,
-      "avgSaved": 8.1,
-      "avgAfter": 52.5,
+      "elapsedMs": 42.5,
+      "avgSaved": 8.4,
+      "avgAfter": 52.3,
       "avgPreserve": 100,
       "overBudgetCount": 0,
       "specModeCount": 7,
@@ -137,8 +137,8 @@
         {
           "id": "db-safety",
           "mode": "normal",
-          "saved": 0,
-          "after": 40,
+          "saved": 2,
+          "after": 38,
           "preserve": 100,
           "overBudget": false
         },
@@ -152,7 +152,7 @@
         },
         {
           "id": "thai-filler-debug",
-          "mode": "spec:auto",
+          "mode": "spec:ultra",
           "saved": 24,
           "after": 55,
           "preserve": 100,
@@ -160,7 +160,7 @@
         },
         {
           "id": "thai-filler-install",
-          "mode": "spec:auto",
+          "mode": "spec:ultra",
           "saved": 14,
           "after": 56,
           "preserve": 100,
@@ -185,19 +185,19 @@
       ]
     },
     "normalLatency": {
-      "mean": 0.8,
-      "p50": 0.8,
-      "p95": 1.2,
-      "stddev": 0.2
+      "mean": 1.2,
+      "p50": 1.2,
+      "p95": 1.6,
+      "stddev": 0.1
     },
     "speculativeLatency": {
-      "mean": 8,
-      "p50": 7.6,
-      "p95": 10,
-      "stddev": 1
+      "mean": 30.2,
+      "p50": 15.3,
+      "p95": 71.2,
+      "stddev": 20.4
     },
     "specHitRatePercent": 87.5,
-    "slowdownMeanMs": 7.2,
+    "slowdownMeanMs": 29,
     "gate": {
       "mtpMinAveragePreservationPercent": 100,
       "mtpMinSpecHitRatePercent": 60,
@@ -216,29 +216,29 @@
       "actionRoutingOk": true
     },
     "delta": {
-      "elapsedMs": 6.3,
-      "avgSaved": -0.7,
-      "avgAfter": 0.6,
+      "elapsedMs": 41.3,
+      "avgSaved": -0.6,
+      "avgAfter": 0.7,
       "avgPreserve": 6.2
     },
     "drift": {
       "normalSaved": {
-        "mean": 8.8,
-        "p50": 8.8,
-        "p95": 8.8,
+        "mean": 9,
+        "p50": 9,
+        "p95": 9,
         "stddev": 0
       },
       "speculativeSaved": {
-        "mean": 8.1,
-        "p50": 8.1,
-        "p95": 8.1,
+        "mean": 8.4,
+        "p50": 8.4,
+        "p95": 8.4,
         "stddev": 0
       },
       "slowdownMs": {
-        "mean": 7.2,
-        "p50": 6.9,
-        "p95": 8.8,
-        "stddev": 0.9
+        "mean": 28.9,
+        "p50": 13.7,
+        "p95": 69.9,
+        "stddev": 20.4
       }
     },
     "policyExactTokenizer": false,
@@ -327,53 +327,11 @@
       ]
     }
   },
-  "wasteSignals": [
-    {
-      "id": "low_saving_cluster",
-      "severity": "warn",
-      "message": "3 samples have <=1% savings; consider prompt decomposition or selective-window tuning"
-    },
-    {
-      "id": "tool_cascade",
-      "severity": "warn",
-      "streak": 3,
-      "message": "3 consecutive low-saving technical turns detected; likely retry/tool cascade waste"
-    }
-  ],
-  "actionSuggestions": [
-    {
-      "id": "add_tool_circuit_breaker",
-      "severity": "medium",
-      "owner": "Agent Runtime Owner",
-      "routing": "warning_only",
-      "suggestion": "After 2 consecutive tool failures, stop retries and request narrowed scope or run diagnostics first."
-    },
-    {
-      "id": "tune_selective_window",
-      "severity": "medium",
-      "owner": "Compression Engine Owner",
-      "routing": "warning_only",
-      "suggestion": "Increase selective-window aggressiveness for low-value narrative lines while preserving technical tokens."
-    }
-  ],
+  "wasteSignals": [],
+  "actionSuggestions": [],
   "actionRouting": {
     "gateOk": true,
     "requiredActions": [],
-    "warningActions": [
-      {
-        "id": "add_tool_circuit_breaker",
-        "severity": "medium",
-        "owner": "Agent Runtime Owner",
-        "routing": "warning_only",
-        "suggestion": "After 2 consecutive tool failures, stop retries and request narrowed scope or run diagnostics first."
-      },
-      {
-        "id": "tune_selective_window",
-        "severity": "medium",
-        "owner": "Compression Engine Owner",
-        "routing": "warning_only",
-        "suggestion": "Increase selective-window aggressiveness for low-value narrative lines while preserving technical tokens."
-      }
-    ]
+    "warningActions": []
   }
 }

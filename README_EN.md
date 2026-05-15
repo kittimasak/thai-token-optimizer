@@ -98,17 +98,15 @@ Tokens can be reduced, but correctness, safety, and key constraints must not be 
 ┌─ Compression ────────────────┬─ Safety ─────────────────┬─ Operations ──────┐
 │ filler removal               │ task classifier           │ doctor            │
 │ semantic dedup               │ safe mode                 │ quality score     │
-│ selective context window     │ hard-constraint lock      │ coach mode        │
-│ budget optimizer             │ preservation checker      │ ops scan          │
-│ MTP speculative candidates   │ rollback-first workflow   │ fleet audit       │
-├─ Integration ────────────────┼─ Personalization ────────┼─ CI / Research ───┤
-│ Codex hooks                  │ tto keep                  │ strict benchmark  │
-│ Claude Code hooks            │ tto forget                │ MTP gate          │
-│ Gemini extension             │ user dictionary           │ drift history     │
-│ OpenCode plugin              │ code-aware protection     │ calibration gate  │
-│ OpenClaw / Hermes adapters   │ local persistent state    │ detector routing  │
+│ Aggressive Log Dedup         │ hard-constraint lock      │ coach mode        │
+│ Dynamic Masking              │ preservation checker      │ ops scan          │
+│ Sequence Detection           │ rollback-first workflow   │ fleet audit       │
+│ MTP speculative candidates   │ budget optimizer          │ context audit     │
 └──────────────────────────────┴──────────────────────────┴──────────────────┘
 ```
+
+---
+
 
 ---
 
@@ -788,12 +786,20 @@ Latest local real comparison (`without TTO` vs `with TTO`, 18 cases):
 ┌──────────────────┬────────────────────────────────┬────────────────────────────────────────────────┬───────────────────────────────────────────┐
 │ Comparison Topic │ Thai                           │ English                                        │ Mixed Language (Thai & English)           │
 ├──────────────────┼────────────────────────────────┼────────────────────────────────────────────────┼───────────────────────────────────────────┤
-│ Avg. Reduction   │ 30% - 50%                      │ 15% - 60%                                      │ 25% - 45%                                 │
-│ Core Mechanism   │ Filler Removal / Summarization │ Selective Windowing (Masking) / Prose Trimming │ Technical Anchor Compression              │
-│ What is Reduced  │ Polite words, conjunctions     │ Logs, Stack Traces, general prose              │ Thai surrounding technical terms          │
+│ Avg. Reduction   │ 30% - 50%                      │ 15% - 98% (Logs/ALD)                           │ 25% - 60%                                 │
+│ Core Mechanism   │ Filler Removal / Summarization │ Aggressive Log Dedup / Sequence Detection      │ Technical Anchor Compression              │
+│ What is Reduced  │ Polite words, conjunctions     │ Repeated Logs, Timestamps, Stack Traces        │ Thai surrounding technical terms          │
 │ What is Preserved│ Key meaning, numbers, units    │ Code, Paths, Versions, JSON Keys               │ Tech terms & Constraints in both languages│
 └──────────────────┴────────────────────────────────┴────────────────────────────────────────────────┴───────────────────────────────────────────┘
 ```
+
+#### Aggressive Log Deduplication (ALD) [v2.0+]
+Advanced log compression system capable of **98%++** token reduction for technical data:
+- **Dynamic Masking:** Automatically hides variable data (Timestamp, UUID, Hex, IPs) to reveal the underlying structure.
+- **Sequence Detection:** Detects repeating multi-line sequences (e.g., `[RUN]` followed by `[PASS]`) even with varying metadata.
+- **Maximum Capacity:** Capable of reducing massive logs (1,000+ lines) into 1-2 summary lines.
+
+---
 
 Notes:
 

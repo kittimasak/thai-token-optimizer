@@ -29,7 +29,8 @@ const FILLER_PATTERNS = [
   [/(จริงๆ แล้ว|จริง ๆ แล้ว|โดยทั่วไปแล้ว|โดยปกติแล้ว|ในส่วนของ|ในเรื่องของ|ในกรณีที่|ทำการ|สามารถที่จะ|สามารถ)/g, ''],
   [/(อาจจะ|น่าจะ|ค่อนข้าง|ประมาณว่า|เหมือนกับว่า|ซึ่งเป็น|ที่เป็น)/g, ''],
   [/(ขอให้ช่วย|ช่วยทำการ|รบกวนช่วย|อยากให้ช่วย|รบกวน)/g, 'ช่วย'],
-  [/(สวัสดีครับ|สวัสดีค่ะ|สวัสดี|ขอบพระคุณล่วงหน้าครับ|ขอบพระคุณล่วงหน้าค่ะ|ขอบพระคุณล่วงหน้า|ขอบคุณมากครับ|ขอบคุณมากค่ะ|ขอบคุณมาก)/g, '']
+  [/(สวัสดีครับ|สวัสดีค่ะ|สวัสดี|ขอบพระคุณล่วงหน้าครับ|ขอบพระคุณล่วงหน้าค่ะ|ขอบพระคุณล่วงหน้า|ขอบคุณมากครับ|ขอบคุณมากค่ะ|ขอบคุณมาก)/g, ''],
+  [/\b(please|could you|kindly|I would like you to|would you mind|thank you|sincerely|regards|best regards|thanks in advance|feel free to|in order to|due to the fact that|very much|in advance|just|simply)\b/gi, '']
 ];
 
 const REPLACEMENTS = [
@@ -50,7 +51,16 @@ const REPLACEMENTS = [
   ['อธิบายขั้นตอน', 'อธิบาย'],
   ['อย่างละเอียด', 'ละเอียด'],
   ['สาระสำคัญทั้งหมด', 'สาระสำคัญ'],
-  ['ความหมายเดิมเปลี่ยนไป', 'ความหมายเปลี่ยน']
+  ['ความหมายเดิมเปลี่ยนไป', 'ความหมายเปลี่ยน'],
+  ['information', 'info'],
+  ['configuration', 'config'],
+  ['specifications', 'specs'],
+  ['requirements', 'reqs'],
+  ['development', 'dev'],
+  ['production', 'prod'],
+  ['environment', 'env'],
+  ['documentation', 'docs'],
+  ['optimization', 'opt']
 ];
 
 const ULTRA_REPLACEMENTS = [
@@ -66,19 +76,35 @@ const ULTRA_REPLACEMENTS = [
 function normalizeSemanticKey(text) {
   const raw = String(text || '').trim();
   if (!raw) return '';
-  // If the line is only structural/punctuation, keep it as is to avoid empty key
-  if (/^[(){}\[\],.;:!?/\\|]+$/.test(raw)) return raw;
+  // If the line is only structural/punctuation, return empty to trigger exact match in aggressiveLogDedup
+  if (/^[(){}\[\]\s,.;:!?/\\|!@#$%^&*+=<>~`_-]+$/.test(raw)) return '';
   
-  return raw
+  let masked = raw
     .toLowerCase()
     .replace(/[“”"']/g, '')
-    .replace(/[(){}\[\],.;:!?/\\|]/g, ' ')
+    // Ignore Thai Particles/Fillers in Key
+    .replace(/(นะครับ|นะคะ|ครับ|ค่ะ|คะ|นะ|หน่อย|ด้วย|จริง ๆ|จริงๆ|ทำการ|สามารถ)/g, '')
+    // Dynamic Masking: Timestamps, Hex, Units (Preserving units)
+    .replace(/\b\d{2}:\d{2}:\d{2}[.\d]*\b/g, '[time]') 
+    .replace(/\b0x[a-f0-9]+\b/g, '[hex]')
+    .replace(/\b\d+(\.\d+)?(ms|s|mb|kb|gb|b|%)\b/g, '[val]$2')
+    // Additional Masking: ISO Time, UUID, IP, File
+    .replace(/\b\d{4}-\d{2}-\d{2}t\d{2}:\d{2}:\d{2}[.\d]*z?\b/g, '[time]')
+    .replace(/\b\d{4}-\d{2}-\d{2}\b/g, '[date]')
+    .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/g, '[uuid]')
+    .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[ip]')
+    .replace(/\b[a-z0-9_.-]+\.[a-z]{2,4}\b/g, '[file]')
+    .replace(/\b\d+\b/g, '[n]')
+    // Structural normalization
+    .replace(/[(){}\s,.;:/\\|@#$%^&*+=<>~`_-]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+
+  return masked;
 }
 
 const HARD_WORD_RE = /(```|`|https?:\/\/|~\/|\.\/|\/|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|\b(?:node|npm|pnpm|git|docker|tto|codex|claude)\b|codex_hooks)/i;
-const STRUCTURE_SENSITIVE_RE = /^(\s+["']?[A-Za-z0-9_.-]+["']?\s*[:=]|\s+[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\s*at\s+|.*\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b)/i;
+const STRUCTURE_SENSITIVE_RE = /^(\s*["']?(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level)[A-Za-z0-9_.-]+["']?\s*[:=]|\s*(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level)[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\s*at\s+|.*\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b|\s*(?:git|rm|npm|pnpm|yarn|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|tto|thai-token-optimizer)\b|\s*(?:DROP|TRUNCATE|DELETE|UPDATE|ALTER|INSERT)\b)/i;
 
 function collapseRepeatedPhrases(line) {
   const words = String(line || '').trim().split(/\s+/).filter(Boolean);
@@ -136,49 +162,134 @@ function aggressiveLogDedup(lines, level = 'auto') {
   while (i < lines.length) {
     const current = lines[i];
     const key = normalizeSemanticKey(current);
-    if (!key) { out.push(current); i++; continue; }
+    
+    // 1. Symbol/Punctuation handling: Exact match only
+    if (!key) {
+      let j = i + 1;
+      while (j < lines.length && lines[j] === current) j++;
+      const count = j - i;
+      if (count >= 3) {
+        out.push(`[${current}] รันซ้ำ ${count} ครั้ง`);
+        i = j;
+      } else {
+        out.push(lines[i++]);
+      }
+      continue;
+    }
 
-    // 1. Exact Repetition (Semantic Sequence Compression)
+    // 1.2 Exact Repetition (Semantic Sequence Compression) - Top Priority for size 1
     let j = i + 1;
     while (j < lines.length && normalizeSemanticKey(lines[j]) === key) j++;
     const exactCount = j - i;
-    if (exactCount >= 3) {
-      out.push(`[${current.replace(/\.+$/, '')}] รันซ้ำ ${exactCount} ครั้งเพื่ออัปเดตสถานะ`);
+    const savesSpace = (current.length * exactCount) > (current.length + 15);
+    if (exactCount >= 3 || (exactCount >= 2 && savesSpace)) {
+      out.push(`[${current.replace(/\.+$/, '')}] รันซ้ำ ${exactCount} ครั้ง`);
       i = j;
       continue;
     }
 
-    // 2. Pattern-Based Collapsing (Common Prefix)
-    // E.g. "กำลังตรวจสอบไฟล์ index.js", "กำลังตรวจสอบไฟล์ package.json"
-    const prefixMatch = current.match(/^([\u0E00-\u0E7F\s]+)/); // Thai prefix
-    if (prefixMatch && prefixMatch[1].length > 4) {
+    // 1.5 Sequence Detection (Multi-line Pattern)
+    let seqSizeMatched = 0;
+    let seqCount = 0;
+    for (let size = 2; size <= 5; size++) {
+      if (i + size * 2 > lines.length) continue;
+      
+      let hasSensitive = false;
+      const patternKeys = [];
+      for (let k = 0; k < size; k++) {
+        if (STRUCTURE_SENSITIVE_RE.test(lines[i + k])) {
+          hasSensitive = true;
+          break;
+        }
+        patternKeys.push(normalizeSemanticKey(lines[i + k]));
+      }
+      if (hasSensitive) continue;
+
+      let matchCount = 1;
+      while (i + (matchCount + 1) * size <= lines.length) {
+        let batchMatch = true;
+        for (let k = 0; k < size; k++) {
+          if (normalizeSemanticKey(lines[i + matchCount * size + k]) !== patternKeys[k]) {
+            batchMatch = false;
+            break;
+          }
+        }
+        if (!batchMatch) break;
+        matchCount++;
+      }
+
+      if (matchCount >= 2) {
+        seqSizeMatched = size;
+        seqCount = matchCount;
+        break;
+      }
+    }
+
+    if (seqSizeMatched > 0) {
+      const seqLines = lines.slice(i, i + seqSizeMatched);
+      const labels = seqLines.map(l => {
+        const clean = l.replace(/^\[[time|date|val|uuid|hex|ip|file|n]+\]\s*/i, '').replace(/\.{2,}/g, '').trim();
+        const m = clean.match(/^\[?([A-Z0-9/_-]+)\]?/i);
+        if (m && m[1].length > 4) return m[1];
+        const words = clean.split(/[:\s]/).filter(Boolean);
+        if (words.length >= 2 && words[0].length >= 3) return words.slice(0, 2).join(' ');
+        return words[0] || 'seq';
+      }).join('/');
+      out.push(`[${labels}] sequence detected ${seqCount} times`);
+      i += seqCount * seqSizeMatched;
+      continue;
+    }
+
+    // Safety: If it's a structure sensitive line (e.g. destructive command),
+    // skip aggressive dedup to preserve exactness.
+    if (STRUCTURE_SENSITIVE_RE.test(current)) {
+      out.push(current);
+      i++;
+      continue;
+    }
+
+    // 3. Pattern-Based Collapsing (Common Prefix)
+    const prefixMatch = current.match(/^([\u0E00-\u0E7F\s]+)([:\s-]*)/); // Thai prefix and optional separators
+    if (prefixMatch && prefixMatch[1].length > 6) {
       const prefix = prefixMatch[1];
+      const separator = prefixMatch[2] || '';
       let k = i + 1;
-      const items = [current.slice(prefix.length).replace(/\.+$/, '').trim()];
-      while (k < lines.length && lines[k].startsWith(prefix)) {
-        items.push(lines[k].slice(prefix.length).replace(/\.+$/, '').trim());
+      const fullPrefix = prefix + separator;
+      const items = [current.slice(fullPrefix.length).replace(/\.+$/, '').trim()].filter(Boolean);
+      while (k < lines.length && lines[k].startsWith(fullPrefix)) {
+        const item = lines[k].slice(fullPrefix.length).replace(/\.+$/, '').trim();
+        if (item) items.push(item);
         k++;
       }
-      if (items.length >= 3) {
-        out.push(`${prefix.trim()} [${items.join(', ')}] (${items.length} รายการ)`);
+      if (items.length >= 2) {
+        out.push(`${prefix.trim()}${separator} [${items.join(', ')}] (${items.length} รายการ)`);
         i = k;
         continue;
       }
     }
 
-    // 3. Numerical Aggregation / Similarity (Levenshtein)
-    // E.g. "พบข้อผิดพลาด 1 จุด" x 5
+    // 4. Numerical Aggregation / Similarity (Levenshtein)
     let l = i + 1;
+    let lastMatched = current;
     while (l < lines.length) {
-      const dist = levenshtein(current, lines[l]);
-      const maxLen = Math.max(current.length, lines[l].length);
+      if (STRUCTURE_SENSITIVE_RE.test(lines[l])) break;
+      const nextKey = normalizeSemanticKey(lines[l]);
+      if (!nextKey) break;
+
+      // Optimization: If length difference is huge, they can't be similar
+      if (Math.abs(lastMatched.length - lines[l].length) > lastMatched.length * 0.8) break;
+
+      const dist = levenshtein(normalizeSemanticKey(lastMatched), normalizeSemanticKey(lines[l]));
+      const maxLen = Math.max(normalizeSemanticKey(lastMatched).length, normalizeSemanticKey(lines[l]).length);
       const similarity = 1 - dist / maxLen;
-      if (similarity < 0.6) break;
+      if (similarity < 0.25) break; // Maximum capacity drift coverage
+      lastMatched = lines[l];
       l++;
     }
     const simCount = l - i;
-    if (simCount >= 3) {
-      out.push(`${current.replace(/\d+/, simCount).replace(/(\d+)\s*จุด/, simCount + ' จุด')} (พบซ้ำ ${simCount} ครั้งในบรรทัดใกล้เคียงกัน)`);
+    const simSavesSpace = (current.length * simCount) > (current.length + 18);
+    if (simCount >= 3 || (simCount >= 2 && simSavesSpace)) {
+      out.push(`${current.replace(/\d+/, simCount).replace(/(\d+)\s*จุด/, simCount + ' จุด')} (พบซ้ำ ${simCount} ครั้ง)`);
       i = l;
       continue;
     }
@@ -194,24 +305,25 @@ function semanticDedup(text, level = 'auto') {
   const dedupBlocks = [];
 
   for (const block of blocks) {
-    let lines = block.split('\n').map(x => STRUCTURE_SENSITIVE_RE.test(x) ? x : collapseRepeatedPhrases(x)).filter(Boolean);
+    const rawLines = block.split('\n').filter(Boolean);
     
-    // Apply Aggressive Log Deduplication
-    if (level !== 'lite') {
-      lines = aggressiveLogDedup(lines, level);
-    }
+    // Care-aware preprocessing: only collapse phrases if NOT structure-sensitive
+    const preprocessed = rawLines.map(line => {
+      if (STRUCTURE_SENSITIVE_RE.test(line)) return line;
+      return collapseRepeatedPhrases(line);
+    });
+
+    const deduped = (level === 'lite') ? preprocessed : aggressiveLogDedup(preprocessed, level);
 
     const seenLine = new Set();
     const keptLines = [];
     let politeSuffix = '';
 
-    for (const line of lines) {
+    for (const line of deduped) {
       const key = normalizeSemanticKey(line);
-      if (!key) continue;
-      if (seenLine.has(key)) continue;
-      
-      // Polite Particle & Filler Stripping (Aggressive)
       let processedLine = line;
+
+      // Polite Particle & Filler Stripping (Aggressive)
       if (level === 'full' || level === 'ultra' || level === 'auto') {
         const m = processedLine.match(/(เสร็จแล้ว|เรียบร้อยแล้ว|แล้ว)(ครับ|ค่ะ|นะครับ|นะคะ)$/);
         if (m) {
@@ -220,13 +332,24 @@ function semanticDedup(text, level = 'auto') {
         }
       }
 
+      if (!key) {
+        if (!seenLine.has(processedLine)) {
+          seenLine.add(processedLine);
+          keptLines.push(processedLine);
+        }
+        continue;
+      }
+
+      const isSensitive = STRUCTURE_SENSITIVE_RE.test(line);
+      const isSummary = line.includes('รันซ้ำ') || line.includes('พบซ้ำ');
+
+      if (seenLine.has(key) && !isSensitive && !isSummary) continue;
       seenLine.add(key);
       keptLines.push(processedLine);
     }
 
     let merged = keptLines.join('\n').trim();
     if (politeSuffix && keptLines.length > 1) {
-      // Grouping actions: [A, B, C] + Suffix
       if (keptLines.every(l => !l.includes('\n'))) {
         merged = `[${keptLines.join(', ')}] ${politeSuffix}`;
       } else {
@@ -345,15 +468,17 @@ function selectiveWindowCompress(text, level = 'auto', semanticBlocks = []) {
     for (const [from, to] of ULTRA_REPLACEMENTS) out = out.split(from).join(to);
   }
   for (const [pattern, repl] of FILLER_PATTERNS) {
-    // Skip particle removal for auto/full/ultra to let semanticDedup handle grouping
-    if ((level === 'auto' || level === 'full' || level === 'ultra') && 
-        (pattern.source.includes('ครับ') || pattern.source.includes('ค่ะ'))) {
+    // Skip particle removal for auto/full to let semanticDedup handle grouping
+    const isParticle = pattern.source.includes('ครับ') || pattern.source.includes('ค่ะ');
+    if (isParticle && level !== 'ultra' && (level === 'auto' || level === 'full')) {
       continue;
     }
+    const before = out;
     out = out.replace(pattern, repl);
+    if (out !== before) console.log(`DEBUG: Replaced ${pattern.source} -> "${out}"`);
   }
   // Avoid removing space before punctuation if it looks like a path or special technical notation
-  out = out.replace(/\s+([,;:!?])/g, '$1').replace(/[ \t]+\n/g, '\n');
+  out = out.replace(/[ \t]+([,;:!?])/g, '$1').replace(/[ \t]+\n/g, '\n');
   // Specifically handle '.' to avoid breaking ./ or file extensions
   out = out.replace(/\s+\.(?!\/|\w)/g, '.');
 
@@ -366,12 +491,14 @@ function selectiveWindowCompress(text, level = 'auto', semanticBlocks = []) {
       .replace(/อย่างละเอียด/g, 'ละเอียด')
       .replace(/แบบละเอียด/g, 'ละเอียด')
       .replace(/มีอะไรบ้าง/g, 'มีอะไร')
-      .replace(/ควรทำอย่างไร/g, 'ทำอย่างไร');
+      .replace(/ควรทำอย่างไร/g, 'ทำอย่างไร')
+      .replace(/(นะครับ|ครับ|ค่ะ|คะ|นะ)(?=[ \t]+)/g, ''); // Handle middle particles (only followed by space/tab)
   }
   
   if (level === 'ultra') {
-    // Aggressive Thai particle removal
+    // Aggressive Thai particle removal (exhaustive)
     out = out
+      .replace(/(นะครับ|นะครับ|นะค่ะ|นะคะ|ครับ|ค่ะ|คะ|นะ)/g, '')
       .replace(/(ที่|ซึ่ง|อัน)(?=\s)/g, '')
       .replace(/เหล่านั้น/g, 'พวกนั้น')
       .replace(/จำนวนมาก/g, 'เยอะ')
@@ -427,7 +554,9 @@ module.exports = {
   compressSegment,
   formatCompressionReport,
   semanticDedup,
+  aggressiveLogDedup,
   collapseRepeatedPhrases,
   selectiveWindowCompress,
-  normalizeSemanticKey
+  normalizeSemanticKey,
+  STRUCTURE_SENSITIVE_RE
 };

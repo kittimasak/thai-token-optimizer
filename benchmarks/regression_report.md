@@ -1,5 +1,5 @@
 # Thai Token Optimizer v2.0 Strict Regression Report
-Generated: 2026-05-15T10:18:27.743Z
+Generated: 2026-05-15T15:32:45.547Z
 Samples: 8
 Average estimated saving: 12%
 Minimum preservation: 100%
@@ -8,37 +8,37 @@ Strict gate: PASS
 |---|---:|---:|---:|---:|---|
 | constraint-version | 52 | 52 | 0% | 100% | - |
 | code-command | 57 | 57 | 0% | 100% | - |
-| db-safety | 39 | 39 | 0% | 100% | database_migration, production_deploy |
+| db-safety | 39 | 36 | 7.7% | 100% | database_migration, production_deploy |
 | research | 52 | 50 | 3.8% | 100% | - |
-| thai-filler-debug | 77 | 54 | 29.9% | 100% | - |
-| thai-filler-install | 68 | 54 | 20.6% | 100% | - |
+| thai-filler-debug | 77 | 57 | 26% | 100% | - |
+| thai-filler-install | 68 | 57 | 16.2% | 100% | - |
 | thai-filler-research | 67 | 53 | 20.9% | 100% | - |
 | thai-filler-report | 62 | 49 | 21% | 100% | - |
 ## MTP / Speculative Comparison
 Budget: 80 | Target: codex
 Runs: 9 (warmup: 1, seed: 20260512)
-Normal latency (mean/p50/p95/stddev): 0.8/0.8/1.2/0.2 ms
-Spec latency   (mean/p50/p95/stddev): 8/7.6/10/1 ms
-Slowdown mean (spec-normal): 7.2 ms
+Normal latency (mean/p50/p95/stddev): 1.2/1.2/1.6/0.1 ms
+Spec latency   (mean/p50/p95/stddev): 30.2/15.3/71.2/20.4 ms
+Slowdown mean (spec-normal): 29 ms
 Spec hit rate: 87.5%
 Enhanced gain on corpus_long_repetitive_mixed_tech_v1: 12233.3% (required >= 12%)
 MTP gate: PASS
 ## Drift Monitor (repeated-run stability)
-Normal saved   (mean/p50/p95/stddev): 8.8/8.8/8.8/0
-Spec saved     (mean/p50/p95/stddev): 8.1/8.1/8.1/0
-Slowdown (ms)  (mean/p50/p95/stddev): 7.2/6.9/8.8/0.9
+Normal saved   (mean/p50/p95/stddev): 9/9/9/0
+Spec saved     (mean/p50/p95/stddev): 8.4/8.4/8.4/0
+Slowdown (ms)  (mean/p50/p95/stddev): 28.9/13.7/69.9/20.4
 | Mode | Avg Saved | Avg After | Avg Preserve | Over Budget | Spec Mode Hits |
 |---|---:|---:|---:|---:|---:|
-| normal | 8.8 | 51.9 | 93.8% | 0 | 0 |
-| speculative | 8.1 | 52.5 | 100% | 0 | 7 |
+| normal | 9 | 51.6 | 93.8% | 0 | 0 |
+| speculative | 8.4 | 52.3 | 100% | 0 | 7 |
 | ID | Mode | Saved | After | Preserve | Over Budget |
 |---|---|---:|---:|---:|---|
 | constraint-version | spec:lite | 0 | 53 | 100% | no |
 | code-command | spec:lite | 0 | 58 | 100% | no |
-| db-safety | normal | 0 | 40 | 100% | no |
+| db-safety | normal | 2 | 38 | 100% | no |
 | research | spec:lite | 0 | 54 | 100% | no |
-| thai-filler-debug | spec:auto | 24 | 55 | 100% | no |
-| thai-filler-install | spec:auto | 14 | 56 | 100% | no |
+| thai-filler-debug | spec:ultra | 24 | 55 | 100% | no |
+| thai-filler-install | spec:ultra | 14 | 56 | 100% | no |
 | thai-filler-research | spec:auto | 14 | 54 | 100% | no |
 | thai-filler-report | spec:lite | 13 | 50 | 100% | no |
 ## Enhanced Corpus Gate (long repetitive narrative + mixed technical blocks)
@@ -70,15 +70,9 @@ Action routing gate: PASS
 | guard-mixed-narrative | 0 | 0 | 100% | 100% |
 | guard-safety-critical | 1 | 1 | 100% | 100% |
 ## Waste Detector Signals
-| ID | Severity | Message |
-|---|---|---|
-| low_saving_cluster | warn | 3 samples have <=1% savings; consider prompt decomposition or selective-window tuning |
-| tool_cascade | warn | 3 consecutive low-saving technical turns detected; likely retry/tool cascade waste |
+No significant waste signals detected.
 ## Detector Action Suggestions
-| ID | Severity | Owner | Routing | Suggestion |
-|---|---|---|---|---|
-| add_tool_circuit_breaker | medium | Agent Runtime Owner | warning_only | After 2 consecutive tool failures, stop retries and request narrowed scope or run diagnostics first. |
-| tune_selective_window | medium | Compression Engine Owner | warning_only | Increase selective-window aggressiveness for low-value narrative lines while preserving technical tokens. |
+No action suggestions.
 ## Notes
 - Version remains Thai Token Optimizer v2.0 / package 2.0.0.
 - Exact tokenizer is optional; if unavailable the estimator falls back to heuristic mode.
