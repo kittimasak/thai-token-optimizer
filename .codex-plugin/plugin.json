@@ -1,49 +1,20 @@
 {
   "name": "thai-token-optimizer",
   "version": "2.0.0",
-  "description": "Thai Token Optimizer v2.0 — adaptive Thai token optimization for Codex using lifecycle hooks, compact Thai policy, MTP-aware compression guidance, quality checks, and safety preservation.",
-  "author": {
-    "name": "Dr.Kittimasak Naijit",
-    "url": "https://github.com/kittimasak"
-  },
-  "homepage": "https://github.com/kittimasak/thai-token-optimizer",
+  "description": "Advanced Thai token optimization for coding agents with code-aware preservation.",
+  "author": "Dr.Kittimasak Naijit",
   "repository": "https://github.com/kittimasak/thai-token-optimizer",
+  "homepage": "https://github.com/kittimasak/thai-token-optimizer",
   "license": "MIT",
-  "keywords": [
-    "codex",
-    "hooks",
-    "thai",
-    "token",
-    "prompt-compression",
-    "productivity",
-    "safety",
-    "local-first",
-    "mtp",
-    "speculative-decoding",
-    "quality-score",
-    "coach-mode",
-    "fleet-audit",
-    "context-audit",
-    "codex-plugin"
+  "type": "agent-hook",
+  "events": [
+    "SessionStart",
+    "UserPromptSubmit",
+    "PreToolUse",
+    "PostToolUse",
+    "Stop"
   ],
-  "skills": "./skills/",
-  "hooks": "./hooks/hooks.json",
-  "commands": "./commands/",
-  "interface": {
-    "displayName": "Thai Token Optimizer",
-    "shortDescription": "Compact Thai + safety-aware Codex hooks for TTO v2.0",
-    "longDescription": "Thai Token Optimizer v2.0 adds Codex lifecycle hooks, compact Thai behavior, safety classification, exact preservation of commands/paths/errors, MTP/speculative compression guidance, quality score, coach mode, ops analytics, fleet audit, checkpoint/cache/context commands, and rollback-first workflows.",
-    "developerName": "Dr.Kittimasak Naijit",
-    "category": "Productivity",
-    "capabilities": [
-      "Read"
-    ],
-    "defaultPrompt": [
-      "token thai auto",
-      "tto dashboard --view overview",
-      "tto quality --pretty",
-      "tto benchmark --pretty --strict --default-policy --mtp"
-    ],
-    "brandColor": "#0EA5E9"
+  "engines": {
+    "node": ">=18"
   }
 }
