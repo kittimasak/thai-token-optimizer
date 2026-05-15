@@ -101,7 +101,8 @@ Tokens can be reduced, but correctness, safety, and key constraints must not be 
 │ Aggressive Log Dedup         │ hard-constraint lock      │ coach mode        │
 │ Dynamic Masking              │ preservation checker      │ ops scan          │
 │ Sequence Detection           │ rollback-first workflow   │ fleet audit       │
-│ MTP speculative candidates   │ budget optimizer          │ context audit     │
+│ Smart Middle-Truncation      │ budget optimizer          │ context audit     │
+│ MTP speculative candidates   │                           │                   │
 └──────────────────────────────┴──────────────────────────┴──────────────────┘
 ```
 
@@ -798,6 +799,12 @@ Advanced log compression system capable of **98%++** token reduction for technic
 - **Dynamic Masking:** Automatically hides variable data (Timestamp, UUID, Hex, IPs) to reveal the underlying structure.
 - **Sequence Detection:** Detects repeating multi-line sequences (e.g., `[RUN]` followed by `[PASS]`) even with varying metadata.
 - **Maximum Capacity:** Capable of reducing massive logs (1,000+ lines) into 1-2 summary lines.
+
+#### Smart Middle-Truncation (SMT) [v2.0+]
+Token management technique for when data exceeds the budget, avoiding simple tail-truncation:
+- **Head-Tail Preservation:** Always preserves the "Purpose" (beginning) and "Result" (end).
+- **Context Continuity:** Prunes only the middle details, ensuring AI Agents don't lose logic flow.
+- **Iterative Pruning:** Sequentially summarizes details to fit even the strictest budgets.
 
 ---
 

@@ -26,7 +26,7 @@ const { appendMissingConstraints, extractConstraints } = require('./tto-constrai
 const { collectProtectedRanges } = require('./tto-code-aware-parser');
 const { classifyTask, TIERS } = require('./tto-profiles');
 
-const HARD_LINE_RE = /(^\s*\|.*\|\s*$|^\s*[A-Za-z0-9_.-]+[ \t]*:[ \t]*$|ห้าม|ต้อง|เด็ดขาด|must|must not|do not|never|keep|preserve|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|```|`|https?:\/\/|~\/|\.\/|\/|\b[A-Za-z]:\\|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module|EADDRINUSE)\b|\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|codex_hooks\s*=\s*true)/i;
+const HARD_LINE_RE = /(^\s*\|.*\|\s*$|^\s*[A-Za-z0-9_.-]+[ \t]*:[ \t]*$|ห้าม|ต้อง|เด็ดขาด|must|must not|do not|never|keep|preserve|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|```|`|https?:\/\/|~\/|\.\/|\b[A-Za-z]:\\|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module|EADDRINUSE)\b|\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|codex_hooks\s*=\s*true)/i;
 const STRUCTURE_SENSITIVE_LINE_RE = /^(\s+["']?[A-Za-z0-9_.-]+["']?\s*[:=]|\s+[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\s*at\s+|.*\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b)/i;
 
 function normalizeBudgetLine(line) {
@@ -68,11 +68,15 @@ function enforcePreservation(original, optimized, budget = 0) {
   return out.trim();
 }
 
-function safeLineScore(line, tier = TIERS.ROUTINE) {
+function safeLineScore(line, tier = TIERS.ROUTINE, idx = -1, total = 0) {
   // Higher score = safer/more valuable to keep.
   let score = 0;
   if (HARD_LINE_RE.test(line)) score += 1000;
   
+  // Head/Tail priority for SMT continuity (Equal high priority)
+  if (idx === 0) score += 500;
+  if (idx === total - 1 && total > 1) score += 500;
+
   // Tier-based weighting
   if (tier === TIERS.CRITICAL) score += 500;
   if (tier === TIERS.INFORMATIONAL) score -= 100;
@@ -85,9 +89,23 @@ function safeLineScore(line, tier = TIERS.ROUTINE) {
 
 function trimPlainLine(line, maxChars, tier = TIERS.ROUTINE) {
   const s = String(line || '').trim();
-  if (!s || s.length <= maxChars || HARD_LINE_RE.test(s)) return s;
+  if (!s || s.length <= maxChars) return s;
   
-  // Aggressive trimming for Informational tier
+  // Smart Middle-Truncation (SMT) for technical/prose continuity
+  if (s.length > 30 && maxChars >= 20) {
+    const headLen = Math.floor(maxChars * 0.25);
+    const tailLen = Math.floor(maxChars * 0.4);
+    const middlePlaceholder = ' ... ';
+    
+    // Only apply if it actually saves significant space and leaves meaningful head/tail
+    if (headLen + tailLen + middlePlaceholder.length <= maxChars) {
+      const head = s.slice(0, headLen).trim();
+      const tail = s.slice(-tailLen).trim();
+      return `${head}${middlePlaceholder}${tail}`;
+    }
+  }
+
+  // Aggressive trimming for Informational tier (Fallback)
   const ratio = tier === TIERS.INFORMATIONAL ? 0.4 : 0.65;
   const targetLen = Math.max(30, Math.floor(s.length * ratio));
   
@@ -108,10 +126,32 @@ function trimPlainLine(line, maxChars, tier = TIERS.ROUTINE) {
 
 function trimToBudget(text, budget, target = 'generic', original = text, tier = TIERS.ROUTINE) {
   let out = String(text || '').trim();
+  const currentTokens = estimateTokens(out, target).estimatedTokens;
   if (!budget || budget <= 0) return enforcePreservation(original, out, budget);
-  if (estimateTokens(out, target).estimatedTokens <= budget) return enforcePreservation(original, out, budget);
+  if (currentTokens <= budget) return enforcePreservation(original, out, budget);
 
   let lines = out.split(/\n+/).map(normalizeBudgetLine).filter(Boolean);
+
+  // 1. Smart Middle-Truncation (SMT) for multi-line blocks - PRIORITY
+  if (lines.length > 5 && tier !== TIERS.CRITICAL) {
+    let headCount = Math.max(1, Math.floor(lines.length * 0.25));
+    let tailCount = Math.max(1, Math.floor(lines.length * 0.4));
+    
+    // Iteratively shrink head/tail until it fits or reaches 1/1
+    while (headCount >= 1 && tailCount >= 1) {
+      const head = lines.slice(0, headCount);
+      const tail = lines.slice(-tailCount);
+      const middleMsg = `... [ย่อรายละเอียด ${lines.length - headCount - tailCount} บรรทัด] ...`;
+      const smtCandidate = [...head, middleMsg, ...tail];
+      if (estimateTokens(smtCandidate.join('\n'), target).estimatedTokens <= budget) {
+        lines = smtCandidate;
+        break;
+      }
+      if (headCount > 1) headCount--;
+      else if (tailCount > 1) tailCount--;
+      else break;
+    }
+  }
 
   // Tier 1 (Critical) is very reluctant to remove lines unless budget is tight
   let minLines = (tier === TIERS.CRITICAL && (!budget || budget > 50)) ? Math.max(1, lines.length - 1) : 1;
@@ -124,7 +164,7 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
     let lowest = Infinity;
     for (let i = 0; i < lines.length; i++) {
       if (HARD_LINE_RE.test(lines[i])) continue;
-      const score = safeLineScore(lines[i], tier);
+      const score = safeLineScore(lines[i], tier, i, lines.length);
       if (score < lowest) { lowest = score; removeIdx = i; }
     }
     if (removeIdx < 0) break;
@@ -137,10 +177,12 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
   // Shorten non-hard plain lines
   lines = out.split(/\n+/).map(normalizeBudgetLine).filter(Boolean);
   for (let i = 0; i < lines.length && estimateTokens(lines.join('\n'), target).estimatedTokens > budget; i++) {
-    if (HARD_LINE_RE.test(lines[i])) continue;
-    // For very tight budget, be even more aggressive (0.3 ratio)
+    const isHard = HARD_LINE_RE.test(lines[i]);
+    if (isHard) continue;
+    const currentLen = lines[i].length;
     const ratio = budget < 40 ? 0.3 : (tier === TIERS.INFORMATIONAL ? 0.4 : 0.65);
-    lines[i] = trimPlainLine(lines[i], Math.max(20, Math.floor(lines[i].length * ratio)), tier);
+    const targetCharLen = Math.max(20, Math.floor(currentLen * ratio));
+    lines[i] = trimPlainLine(lines[i], targetCharLen, tier);
   }
   out = lines.join('\n').trim();
 
@@ -148,7 +190,7 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
   if (budget > 0 && estimateTokens(lines.join('\n'), target).estimatedTokens > budget) {
     const items = lines.map((line, idx) => {
       const tokens = Math.max(1, estimateTokens(line, target).estimatedTokens);
-      const utility = safeLineScore(line, tier);
+      const utility = safeLineScore(line, tier, idx, lines.length);
       const hard = HARD_LINE_RE.test(line);
       return { idx, line, tokens, utility, hard, ratio: utility / tokens };
     });
@@ -162,6 +204,12 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
         used += item.tokens;
       }
     }
+    
+    // Safety: If nothing was selected but we had optional lines, keep the best one
+    if (selected.length === 0 && optional.length > 0) {
+      selected.push(optional[0]);
+    }
+
     const selectedIdx = new Set(selected.map(i => i.idx));
     lines = lines.filter((_, idx) => selectedIdx.has(idx));
   }
@@ -172,7 +220,7 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
     let lowest = Infinity;
     for (let i = 0; i < lines.length; i++) {
       if (HARD_LINE_RE.test(lines[i])) continue;
-      const score = safeLineScore(lines[i], tier);
+      const score = safeLineScore(lines[i], tier, i, lines.length);
       if (score < lowest) { lowest = score; removeIdx = i; }
     }
     if (removeIdx < 0) break;
@@ -183,7 +231,15 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
   // UNLESS it's a hard line (commands, constraints, versions) - Mandate v2.0
   if (budget > 0 && lines.length === 1 && estimateTokens(lines[0], target).estimatedTokens > budget) {
     if (!HARD_LINE_RE.test(lines[0])) {
-      lines[0] = lines[0].slice(0, Math.floor(lines[0].length * (budget / estimateTokens(lines[0], target).estimatedTokens))).trim();
+      const currentLen = lines[0].length;
+      const targetCharLen = Math.floor(currentLen * (budget / estimateTokens(lines[0], target).estimatedTokens));
+      // Force SMT for single line emergency pass
+      lines[0] = trimPlainLine(lines[0], targetCharLen, tier);
+      
+      // Fallback if SMT didn't fire or result is still too long
+      if (estimateTokens(lines[0], target).estimatedTokens > budget) {
+        lines[0] = lines[0].slice(0, targetCharLen).trim();
+      }
     }
   }
   
