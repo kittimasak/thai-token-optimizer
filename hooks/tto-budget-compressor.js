@@ -26,8 +26,8 @@ const { appendMissingConstraints, extractConstraints } = require('./tto-constrai
 const { collectProtectedRanges } = require('./tto-code-aware-parser');
 const { classifyTask, TIERS } = require('./tto-profiles');
 
-const HARD_LINE_RE = /(^\s*\|.*\|\s*$|^\s*[A-Za-z0-9_.-]+[ \t]*:[ \t]*$|(?:\s|^)(ห้าม|ต้อง|เด็ดขาด)(?:\s|$)|must|must not|do not|never|\bkeep\b|\bpreserve\b|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|```|`|https?:\/\/|~\/|\.\/|\b[A-Za-z]:\\|^\s*at\s+|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module|EADDRINUSE)\b|(?::\s*|^\s*)(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|codex_hooks\s*=\s*true|sequence detected|รันซ้ำ|พบซ้ำ|ย่อรายละเอียด)/i;
-const STRUCTURE_SENSITIVE_LINE_RE = /^(\s*at\s+.*|\s*["']?(?!Progress|Step|Mission|Task|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status|[0-9]+)[A-Za-z0-9_.-]+["']?\s*[:=]|\s*(?!Progress|Step|Mission|Task|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status|[0-9]+)[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b|^\s*(?:MISSION|CONTEXT|CONCLUSION|OVERVIEW|SUMMARY|RESULT|PURPOSE|OBJECTIVE|สรุป|เป้าหมาย)\s*:?$|^\s*(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|\s*(?:DROP|TRUNCATE|DELETE|UPDATE|ALTER|INSERT)\b)/i;
+const HARD_LINE_RE = /(^\s*\|.*\|\s*$|^\s*[A-Za-z0-9_.-]+[ \t]*:[ \t]*$|(?:\s|^)(ห้าม|ต้อง|เด็ดขาด)(?:\s|$)|must|must not|do not|never|\bkeep\b|\bpreserve\b|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|\.(?:js|ts|tsx|jsx|py|go|rs|c|cpp|h|java|php|rb|sh|md|json|yaml|yml|toml|xml|html|css|sql|log)\b|```|`|https?:\/\/|~\/|\.\/|\b[A-Za-z]:\\|^\s*at\s+|^\s*\[[\!\?\+\-AMD R]\]|^\s*On\s+\b|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module|EADDRINUSE)\b|(?::\s*|^\s*)(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|codex_hooks\s*=\s*true|sequence detected|รันซ้ำ|พบซ้ำ|ย่อรายละเอียด)/i;
+const STRUCTURE_SENSITIVE_LINE_RE = /^(\s*at\s+.*|^\s*\[[\!\?\+\-AMD R]\]|^\s*On\s+\b|\s*["']?(?!Progress|Step|Mission|Task|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status|[0-9]+)[A-Za-z0-9_.-]+["']?\s*[:=]|\s*(?!Progress|Step|Mission|Task|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status|[0-9]+)[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b|^\s*(?:MISSION|CONTEXT|CONCLUSION|OVERVIEW|SUMMARY|RESULT|PURPOSE|OBJECTIVE|สรุป|เป้าหมาย)\s*:?$|^\s*(?:node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|\s*(?:DROP|TRUNCATE|DELETE|UPDATE|ALTER|INSERT)\b)/i;
 function normalizeBudgetLine(line) {
   const raw = String(line || '');
   if (/^\s{2,}at\s+/i.test(raw)) return raw.replace(/[ \t]+$/g, '');
@@ -128,22 +128,25 @@ function enforcePreservation(original, optimized, budget = 0) {
 function safeLineScore(line, tier = TIERS.ROUTINE, idx = -1, total = 0) {
   // Higher score = safer/more valuable to keep.
   let score = 0;
-  if (HARD_LINE_RE.test(line)) score += 1000;
+  // Technical markers or structural anchors get top priority
+  if (HARD_LINE_RE.test(line)) score += 5000;
+  if (STRUCTURE_SENSITIVE_LINE_RE.test(line)) score += 2000;
 
-  // Semantic Anchor awareness: Keep headers like "BLOCK A:" or "STEP 1:"
-  if (/^[A-Z0-9_\/ ]+:/.test(line)) score += 2000;
+  // Header and Marker Bonus
+  if (String(line).trim().endsWith(':')) score += 3000;
+  if (/^\s*\[[\!\?\+\-AMD R]\]/.test(line)) score += 2000;
 
   // English Logical Anchors: MISSION, CONTEXT, CONCLUSION, etc.
-  if (/^(MISSION|CONTEXT|CONCLUSION|STEP \d+|OVERVIEW|RESULT|SUMMARY):/i.test(line)) score += 5000;
+  if (/^(MISSION|CONTEXT|CONCLUSION|STEP \d+|OVERVIEW|RESULT|SUMMARY|PURPOSE|OBJECTIVE|สรุป|เป้าหมาย):/i.test(line)) score += 5000;
 
-  // ALD Summary Score: Summaries are EXTREMELY high value as they represent many lines.
+  // ALD Summary Score: Summaries are EXTREMELY high value
   if (/sequence detected|รันซ้ำ|พบซ้ำ|ย่อรายละเอียด/.test(line)) score += 5000;
 
   // ALD Remnant Score: Technical lists are valuable but prunable if long
   if (/^รายการเทคนิคคงเดิม:/.test(line)) score -= 500;
-  if (/^-\s/.test(line)) score -= 1000; // Drastic reduction for list items
+  if (/^-\s/.test(line)) score -= 1000; // List items are less valuable than headers
 
-  // Head/Tail priority for SMT continuity (Equal high priority)
+  // Head/Tail priority for SMT continuity
   if (idx === 0) score += 3000; 
   if (idx === total - 1 && total > 1) score += 2500;
 
@@ -153,7 +156,6 @@ function safeLineScore(line, tier = TIERS.ROUTINE, idx = -1, total = 0) {
 
   if (/error|exception|stack|trace|production|rollback|backup|security|secret|token|password/i.test(line)) score += 200;
   if (/semantic preservation|tokenizer|benchmark|regression gate/i.test(line)) score += 100;
-  score += Math.min(40, String(line).length / 8);
   return score;
 }
 
@@ -212,25 +214,43 @@ function trimToBudget(text, budget, target = 'generic', original = text, tier = 
 
   // 1. Smart Middle-Truncation (SMT) for multi-line blocks - PRIORITY
   if (lines.length > 5 && tier !== TIERS.CRITICAL) {
-    let headCount = Math.max(1, Math.floor(lines.length * 0.25));
-    let tailCount = Math.max(1, Math.floor(lines.length * 0.4));
-    
-    // Iteratively shrink head/tail until it fits or reaches 1/1
-    while (headCount >= 1 && tailCount >= 1) {
-      const head = lines.slice(0, headCount);
-      const tail = lines.slice(-tailCount);
-      const middleMsg = `... [ย่อรายละเอียด ${lines.length - headCount - tailCount} บรรทัด] ...`;
-      const smtCandidate = [...head, middleMsg, ...tail];
-      if (estimateTokens(smtCandidate.join('\n'), target).estimatedTokens <= budget) {
-        lines = smtCandidate;
-        break;
-      }
-      if (headCount > 1) headCount--;
-      else if (tailCount > 1) tailCount--;
-      else break;
-    }
-  }
+    const scored = lines.map((l, i) => ({ line: l, score: safeLineScore(l, tier, i, lines.length), idx: i }));
 
+    // Always keep First and Last
+    const keepIdx = new Set([0, lines.length - 1]);
+
+    // Fill until budget or until all high-value lines are included
+    const sorted = scored.filter(s => s.idx !== 0 && s.idx !== lines.length - 1)
+      .sort((a, b) => b.score - a.score);
+
+    for (const s of sorted) {
+      const candidateIdx = new Set([...keepIdx, s.idx]);
+      const candidate = lines.filter((_, i) => candidateIdx.has(i)).join('\n');
+      if (estimateTokens(candidate, target).estimatedTokens <= budget) {
+        keepIdx.add(s.idx);
+      } else {
+        // If we hit budget but the line is VERY high value (Hard Line), keep it anyway if it's short
+        if (s.score >= 5000 && s.line.length < 50 && keepIdx.size < 10) {
+           keepIdx.add(s.idx);
+        } else {
+           break;
+        }
+      }
+    }
+
+    const finalLines = [];
+    let lastIdx = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (keepIdx.has(i)) {
+        if (lastIdx !== -1 && i > lastIdx + 1) {
+          finalLines.push(`... [ย่อรายละเอียด ${i - lastIdx - 1} บรรทัด] ...`);
+        }
+        finalLines.push(lines[i]);
+        lastIdx = i;
+      }
+    }
+    lines = finalLines;
+  }
   // Tier 1 (Critical) is very reluctant to remove lines unless budget is tight
   // (Legacy while loop removed to favor global budget optimizer)
 

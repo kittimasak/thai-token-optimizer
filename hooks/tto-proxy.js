@@ -81,7 +81,24 @@ async function runProxy(command, args, options = {}) {
       }
 
       // Pre-process with specialized command lens
-      const lensOutput = applyLens(command, args, fullOutput, { silent });
+      // Try to find a lens for the command or any arg if command is 'node'/'npm'
+      let lensCmd = command;
+      const knownLenses = ['git', 'docker', 'kubectl', 'npm', 'pnpm', 'yarn', 'bun'];
+      
+      const findLens = (cmd, args) => {
+        const c = String(cmd).toLowerCase();
+        if (knownLenses.includes(c)) return c;
+        for (const arg of args) {
+          const a = String(arg).toLowerCase();
+          for (const k of knownLenses) {
+            if (a.includes(k)) return k;
+          }
+        }
+        return c;
+      };
+      
+      lensCmd = findLens(command, args);
+      const lensOutput = applyLens(lensCmd, args, fullOutput, { silent });
 
       // Use compressToBudget for SMT (Smart Middle Truncation) support
       const result = compressToBudget(lensOutput, { 
