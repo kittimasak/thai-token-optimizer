@@ -106,8 +106,8 @@ function normalizeSemanticKey(text) {
   return masked;
 }
 
-const HARD_WORD_RE = /(```|`|https?:\/\/|~\/|\.\/|\/|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|\b(?:node|npm|pnpm|git|docker|tto|codex|claude)\b|codex_hooks)/i;
-const STRUCTURE_SENSITIVE_RE = /^(\s*at\s+.*|\s*["']?(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status)[A-Za-z0-9_.-]+["']?\s*[:=]|\s*(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status)[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b|\s*(?:MISSION|CONTEXT|CONCLUSION|OVERVIEW|SUMMARY|RESULT|git|rm|npm|pnpm|yarn|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|\s*(?:DROP|TRUNCATE|DELETE|UPDATE|ALTER|INSERT)\b)/i;
+const HARD_WORD_RE = /(```|`|https?:\/\/|~\/|\.\/|\/|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|\b(?:at|node|npm|pnpm|git|docker|tto|codex|claude)\b|codex_hooks)/i;
+const STRUCTURE_SENSITIVE_RE = /^(\s*at\s+.*|\s*["']?(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status)[A-Za-z0-9_.-]+["']?\s*[:=]|\s*(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status)[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b|\s*(?:MISSION|CONTEXT|CONCLUSION|OVERVIEW|SUMMARY|RESULT|node|npm|npx|pnpm|yarn|bun|git|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|\s*(?:DROP|TRUNCATE|DELETE|UPDATE|ALTER|INSERT)\b)/i;
 
 
 function collapseRepeatedPhrases(line) {
@@ -183,7 +183,7 @@ function aggressiveLogDedup(lines, level = 'auto') {
 
     // 1.1 Safety: If it's a structure sensitive line (e.g. destructive command),
     // skip aggressive dedup to preserve exactness.
-    if (/^\s{2,}at\s+/i.test(current) || STRUCTURE_SENSITIVE_RE.test(current)) {
+    if (STRUCTURE_SENSITIVE_RE.test(current)) {
       out.push(current);
       i++;
       continue;
