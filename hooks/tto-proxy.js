@@ -11,8 +11,10 @@
  */
 
 const { spawn } = require('child_process');
-const { compressPrompt } = require('./tto-compressor');
+const { compressToBudget } = require('./tto-budget-compressor');
 const { estimateSavings } = require('./tto-token-estimator');
+
+const MAX_PROXY_BUFFER_CHARS = 1024 * 1024; // 1MB safety cap for proxy mode
 
 /**
  * Runs a command and proxies its output through TTO compression.
@@ -20,7 +22,7 @@ const { estimateSavings } = require('./tto-token-estimator');
 async function runProxy(command, args, options = {}) {
   const level = options.level || 'auto';
   const target = options.target || 'codex';
-  const budget = options.budget || 0;
+  const budget = options.budget || 2500; // Default budget cap for proxy observations
   const silent = options.silent || false;
 
   if (!command) {
@@ -30,7 +32,7 @@ async function runProxy(command, args, options = {}) {
 
   if (!silent) {
     process.stdout.write(`[TTO-Proxy] Command: ${command} ${args.join(' ')}\n`);
-    process.stdout.write(`[TTO-Proxy] Level: ${level}, Target: ${target}\n\n`);
+    process.stdout.write(`[TTO-Proxy] Mode: Full Capacity (Budget: ${budget}, Target: ${target})\n\n`);
   }
 
   const child = spawn(command, args, {
@@ -41,29 +43,52 @@ async function runProxy(command, args, options = {}) {
 
   let stdoutBuffer = '';
   let stderrBuffer = '';
+  let totalChars = 0;
+  let truncated = false;
 
-  child.stdout.on('data', (data) => {
-    stdoutBuffer += data.toString();
-    // In a future version, we could implement real-time streaming here
-  });
+  const onData = (data, isStderr) => {
+    const chunk = data.toString();
+    if (totalChars + chunk.length > MAX_PROXY_BUFFER_CHARS) {
+      if (!truncated) {
+        const remaining = MAX_PROXY_BUFFER_CHARS - totalChars;
+        if (remaining > 0) {
+          if (isStderr) stderrBuffer += chunk.slice(0, remaining);
+          else stdoutBuffer += chunk.slice(0, remaining);
+        }
+        truncated = true;
+      }
+      return;
+    }
+    if (isStderr) stderrBuffer += chunk;
+    else stdoutBuffer += chunk;
+    totalChars += chunk.length;
+  };
 
-  child.stderr.on('data', (data) => {
-    stderrBuffer += data.toString();
-  });
+  child.stdout.on('data', (data) => onData(data, false));
+  child.stderr.on('data', (data) => onData(data, true));
 
   return new Promise((resolve) => {
     child.on('close', (code) => {
-      const fullOutput = (stdoutBuffer + stderrBuffer).trim();
+      let fullOutput = (stdoutBuffer + stderrBuffer).trim();
+      if (truncated) {
+        fullOutput += '\n... [Proxy Buffer Exceeded 1MB, output truncated locally] ...';
+      }
       
       if (!fullOutput) {
         resolve(code);
         return;
       }
 
-      // Perform compression
-      // We use compressPrompt which internally uses ALD/SMT if needed
-      const optimized = compressPrompt(fullOutput, { level, target });
-      const stats = estimateSavings(fullOutput, optimized, target);
+      // Use compressToBudget for SMT (Smart Middle Truncation) support
+      const result = compressToBudget(fullOutput, { 
+        budget, 
+        target, 
+        level,
+        speculative: true 
+      });
+
+      const optimized = result.optimized;
+      const stats = result.savings;
 
       process.stdout.write(optimized + '\n\n');
 
