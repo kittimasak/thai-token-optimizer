@@ -13,6 +13,7 @@
 const { spawn } = require('child_process');
 const { compressToBudget } = require('./tto-budget-compressor');
 const { estimateSavings } = require('./tto-token-estimator');
+const { applyLens } = require('./lenses/index');
 
 const MAX_PROXY_BUFFER_CHARS = 1024 * 1024; // 1MB safety cap for proxy mode
 
@@ -79,8 +80,11 @@ async function runProxy(command, args, options = {}) {
         return;
       }
 
+      // Pre-process with specialized command lens
+      const lensOutput = applyLens(command, args, fullOutput, { silent });
+
       // Use compressToBudget for SMT (Smart Middle Truncation) support
-      const result = compressToBudget(fullOutput, { 
+      const result = compressToBudget(lensOutput, { 
         budget, 
         target, 
         level,
