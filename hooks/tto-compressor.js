@@ -316,9 +316,13 @@ function semanticDedup(text, level = 'auto') {
   const seenBlock = new Set();
   const dedupBlocks = [];
 
-  for (const block of blocks) {
+  for (let bIdx = 0; bIdx < blocks.length; bIdx++) {
+    const block = blocks[bIdx];
     const rawLines = block.split('\n').filter(Boolean);
-    
+    if (!block.trim()) continue;
+
+    if (rawLines.length > 3) console.log(`TRACE-DEDUP: block[${bIdx}] totalLines=${rawLines.length}, first="${rawLines[0].slice(0, 30)}..."`);
+
     // Care-aware preprocessing: only collapse phrases if NOT structure-sensitive
     const preprocessed = rawLines.map((line, idx) => {
       // Explicit Stack Trace / Indented line check
@@ -542,6 +546,8 @@ function compressPrompt(text, options = {}) {
 
   const compressed = transformSemanticAware(original, seg => compressSegment(seg, level));
   let normalized = compressed.replace(/\n{3,}/g, '\n\n').trim();
+
+  if (!options.silent) console.log(`DEBUG-NORM: len=${normalized.length}, blocks=${normalized.split(/\n{2,}/).length}`);
 
   // ALWAYS apply semanticDedup for auto/full/ultra to handle ALD
   if (options.semanticDedup !== false && (level === 'auto' || level === 'full' || level === 'ultra')) {

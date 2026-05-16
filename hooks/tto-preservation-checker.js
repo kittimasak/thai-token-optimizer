@@ -4,55 +4,40 @@
  * Thai Token Optimizer v2.0
  * ============================================================================
  * Description : 
- * A Thai token optimization tool for AI coding agents that keeps commands, code, and technical details accurate.
- *
- * Author      : Dr.Kittimasak Naijit
- * Repository  : https://github.com/kittimasak/thai-token-optimizer
- *
- * Copyright (c) 2026 Dr.Kittimasak Naijit
- *
- * Notes:
- * - Do not remove code-aware preservation, safety checks, or rollback behavior.
- * - This file is part of the Thai Token Optimizer local-first CLI/hook system.
+ * Validates technical preservation across original and optimized text.
  * ============================================================================
  */
 
-
-
 const { extractConstraints, containsConstraint } = require('./tto-constraint-locker');
+const { normalizedIncludes } = require('./tto-utils');
 
 const IMPORTANT_PATTERNS = {
   urls: /https?:\/\/[^\s)]+/g,
   winPaths: /\b[A-Za-z]:\\[A-Za-z0-9._@%+\-\\]+/g,
   paths: /\b(?:[A-Za-z]:)?(?:\.?\.\/|~\/|\/)[A-Za-z0-9._@%+\-/]+/g,
   files: /\b[A-Za-z0-9_-]+\.(?:js|mjs|cjs|ts|tsx|jsx|json|yaml|yml|toml|env|md|py|php|sql|sh|bash|zsh|txt|zip)\b/g,
+  commands: /\b(?:git|npm|npx|pnpm|yarn|bun|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b/gi,
   versions: /\bv?\d+\.\d+(?:\.\d+)?(?:[-+][A-Za-z0-9.-]+)?\b/g,
+  ips: /\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g,
   numbers: /\b\d{3,}(?:\.\d+)?%?\b/g,
-  env: /\b[A-Z][A-Z0-9_]{2,}\b/g,
-  techPhrases: /\b(?:payment gateway|security vulnerabilities|deep learning|face recognition|rest api|micro batching|data warehouse|logic continuity)\b/gi,
-  commands: /\b(?:node|npm|npx|pnpm|yarn|bun|git|docker|kubectl|curl|python3?|pip3?|php|mysql|psql|codex|claude|tto|thai-token-optimizer)\b(?:\s+[A-Za-z0-9_./:@#=+\-]+){0,6}/gi
+  hex: /\b0x[a-f0-9]+\b/gi
 };
-
-function uniqueMatches(text, pattern) {
-  text = String(text || '');
-  pattern.lastIndex = 0;
-  const out = [];
-  const seen = new Set();
-  let m;
-  while ((m = pattern.exec(text)) !== null) {
-    const value = m[0].trim();
-    if (value && !seen.has(value)) { seen.add(value); out.push(value); }
-    if (m[0].length === 0) pattern.lastIndex++;
-  }
-  return out;
-}
 
 function collectImportantItems(text) {
   const items = [];
+  const raw = String(text || '');
+  
   for (const [type, pattern] of Object.entries(IMPORTANT_PATTERNS)) {
-    for (const value of uniqueMatches(text, pattern)) items.push({ type, value });
+    pattern.lastIndex = 0;
+    let m;
+    while ((m = pattern.exec(raw)) !== null) {
+      if (m[0]) items.push({ type, value: m[0] });
+    }
   }
+
+  // Also include semantic constraints
   for (const value of extractConstraints(text)) items.push({ type: 'constraints', value });
+
   const seen = new Set();
   return items.filter(item => {
     const key = `${item.type}:${item.value}`;
@@ -62,33 +47,27 @@ function collectImportantItems(text) {
   });
 }
 
-function normalizedIncludes(haystack, needle) {
-  const h = String(haystack || '').toLowerCase();
-  const n = String(needle || '').toLowerCase();
-  if (!n) return true;
-  
-  // Collapse whitespace for loose matching
-  const hNorm = h.replace(/\s+/g, ' ');
-  const nNorm = n.replace(/\s+/g, ' ');
-  
-  if (hNorm.includes(nNorm)) return true;
-  
-  if (n.length > 60) {
-    const tokens = n.match(/[A-Za-z0-9_.:@#=+\-/]+|[\u0E00-\u0E7F]+/g) || [];
-    const important = tokens.filter(t => t.length > 1).slice(0, 12);
-    return important.length > 0 && important.every(t => h.includes(t.toLowerCase()));
-  }
-  return false;
-}
-
 function checkPreservation(original, optimized) {
   const items = collectImportantItems(original);
-  const missing = items.filter(item => item.type === 'constraints' ? !containsConstraint(optimized, item.value) : !normalizedIncludes(optimized, item.value));
+  const missing = items.filter(item => {
+    if (item.type === 'constraints') return !containsConstraint(optimized, item.value);
+    return !normalizedIncludes(optimized, item.value);
+  });
+  
   const total = items.length;
   const preserved = total - missing.length;
   const preservationPercent = total === 0 ? 100 : Math.round((preserved / total) * 1000) / 10;
   const risk = missing.some(m => m.type === 'constraints') ? 'high' : missing.length ? 'medium' : 'low';
-  return { total, preserved, missingCount: missing.length, preservationPercent, risk, missing, items };
+
+  return { 
+    total, 
+    preserved, 
+    missingCount: missing.length, 
+    preservationPercent, 
+    risk, 
+    missing, 
+    items 
+  };
 }
 
 if (require.main === module) {
@@ -99,4 +78,9 @@ if (require.main === module) {
   process.stdout.write(JSON.stringify(checkPreservation(original, optimized), null, 2) + '\n');
 }
 
-module.exports = { IMPORTANT_PATTERNS, collectImportantItems, checkPreservation, normalizedIncludes };
+module.exports = { 
+    IMPORTANT_PATTERNS, 
+    collectImportantItems, 
+    checkPreservation, 
+    normalizedIncludes 
+};

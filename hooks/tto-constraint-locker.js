@@ -20,6 +20,7 @@
 
 
 const { extractSymbols } = require('./tto-semantic-analyzer');
+const { normalizedIncludes } = require('./tto-utils');
 
 const LOCK_KEYWORDS = /(?:ห้าม|ต้อง(?!การ)|เด็ดขาด|คงเดิม|ห้ามเปลี่ยน|ไม่เปลี่ยน|อย่าเปลี่ยน|เท่านั้น|must|must not|do not|never|keep|preserve)/gi;
 const TECHNICAL_PATTERNS = [
@@ -33,7 +34,7 @@ const TECHNICAL_PATTERNS = [
   /\b[A-Za-z0-9_./@#-]*[0-9_/@#-][A-Za-z0-9_./@#-]{2,}\b/gi
 ];
 
-const LOG_OR_NOISE_RE = /^(?:\[[\d\s-:.TZ]+\]|(?:\d{4}-\d{2}-\d{2}|\d{2}:\d{2}:\d{2})|\[\d+\]|[\w\s.-]+:|\s*at\s+[\w.<>]+\s+\(|\[[#=-]+\]|\s*[\d.]+(?:%|MB|KB|GB|B)\s*)/i;
+const LOG_OR_NOISE_RE = /^(?:\[[\d\s-:.TZ]+\]|(?:\d{4}-\d{2}-\d{2}|\d{2}:\d{2}:\d{2})|\[\d+\]|[\w\s.-]+:|\s*at\s+[\w.<>]+\s+\(|\[[#=-]+\]|\s*[\d.]+(?:%|MB|KB|GB|B)\s*|[\w\s.-]+\.(?:js|ts|log|md|py|sh|txt|json|yaml|yml|toml|zip|exe|bin|obj|o|a|so|dll|dylib)\s*$)/i;
 
 function hasLockKeyword(text) {
   LOCK_KEYWORDS.lastIndex = 0;
@@ -112,7 +113,7 @@ function extractSemanticBlocks(text) {
 function containsConstraint(output, block) {
   const out = String(output || '');
   if (typeof block === 'string') {
-    if (out.includes(block)) return true;
+    if (normalizedIncludes(out, block)) return true;
     const targets = [];
     for (const pattern of TECHNICAL_PATTERNS) {
       pattern.lastIndex = 0;
@@ -132,7 +133,7 @@ function containsConstraint(output, block) {
     return targetsPresent && keywordsPresent && structuralPresent;
   }
 
-  if (out.includes(block.raw)) return true;
+  if (normalizedIncludes(out, block.raw)) return true;
 
   // Semantic verification: All technical targets AND hard keywords must be present
   const targetsPresent = (block.targets || []).every(t => out.includes(t));
