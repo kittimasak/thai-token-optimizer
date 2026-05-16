@@ -960,6 +960,13 @@ Configure your agent to use TTO-Proxy as a tool wrapper (e.g., in `.claude/setti
 }
 ```
 
+### 22.3 Specialized Command Lenses
+
+TTO-Proxy features "Context-Aware Optimization" through Specialized Lenses. Instead of blindly compressing text, the proxy detects the underlying command (e.g., `git`, `docker`, `npm`) and applies surgical parsing:
+*   **Git Lens:** Translates verbose official Thai git outputs into compact, universal technical symbols (e.g., `ไฟล์ที่ถูกแก้ไขแต่ยังไม่ได้จัดเตรียมสำหรับการ commit` → `[!] ไม่ได้ stage:` or `[M]`).
+*   **Precision:** Reduces specific command noise by up to 90% before it even hits the generic ALD/SMT compression engine.
+*   **Mixed Language Support:** Seamlessly parses both English and Thai command outputs while preserving 100% of technical arguments, paths, and status codes.
+
 ---
 
 ## 21) License
