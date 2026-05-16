@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-15T15:32:45.548Z",
+  "generatedAt": "2026-05-16T02:15:50.213Z",
   "strict": true,
   "mtp": true,
   "reportPath": "benchmarks/regression_report.md",
@@ -36,9 +36,9 @@
     "warmup": 1,
     "normal": {
       "speculative": false,
-      "elapsedMs": 1.2,
-      "avgSaved": 9,
-      "avgAfter": 51.6,
+      "elapsedMs": 1.4,
+      "avgSaved": 7.5,
+      "avgAfter": 55.5,
       "avgPreserve": 93.8,
       "overBudgetCount": 0,
       "specModeCount": 0,
@@ -70,8 +70,8 @@
         {
           "id": "research",
           "mode": "normal",
-          "saved": 12,
-          "after": 42,
+          "saved": 0,
+          "after": 73,
           "preserve": 50,
           "overBudget": false
         },
@@ -111,9 +111,9 @@
     },
     "speculative": {
       "speculative": true,
-      "elapsedMs": 42.5,
-      "avgSaved": 8.4,
-      "avgAfter": 52.3,
+      "elapsedMs": 13.2,
+      "avgSaved": 7.9,
+      "avgAfter": 52.8,
       "avgPreserve": 100,
       "overBudgetCount": 0,
       "specModeCount": 7,
@@ -168,9 +168,9 @@
         },
         {
           "id": "thai-filler-research",
-          "mode": "spec:auto",
-          "saved": 14,
-          "after": 54,
+          "mode": "spec:lite",
+          "saved": 10,
+          "after": 58,
           "preserve": 100,
           "overBudget": false
         },
@@ -185,19 +185,19 @@
       ]
     },
     "normalLatency": {
-      "mean": 1.2,
-      "p50": 1.2,
-      "p95": 1.6,
-      "stddev": 0.1
+      "mean": 1.5,
+      "p50": 1.5,
+      "p95": 1.9,
+      "stddev": 0.2
     },
     "speculativeLatency": {
-      "mean": 30.2,
-      "p50": 15.3,
-      "p95": 71.2,
-      "stddev": 20.4
+      "mean": 14.4,
+      "p50": 14.1,
+      "p95": 17.8,
+      "stddev": 1.3
     },
     "specHitRatePercent": 87.5,
-    "slowdownMeanMs": 29,
+    "slowdownMeanMs": 12.9,
     "gate": {
       "mtpMinAveragePreservationPercent": 100,
       "mtpMinSpecHitRatePercent": 60,
@@ -216,29 +216,29 @@
       "actionRoutingOk": true
     },
     "delta": {
-      "elapsedMs": 41.3,
-      "avgSaved": -0.6,
-      "avgAfter": 0.7,
+      "elapsedMs": 11.8,
+      "avgSaved": 0.4,
+      "avgAfter": -2.7,
       "avgPreserve": 6.2
     },
     "drift": {
       "normalSaved": {
-        "mean": 9,
-        "p50": 9,
-        "p95": 9,
+        "mean": 7.5,
+        "p50": 7.5,
+        "p95": 7.5,
         "stddev": 0
       },
       "speculativeSaved": {
-        "mean": 8.4,
-        "p50": 8.4,
-        "p95": 8.4,
+        "mean": 7.9,
+        "p50": 7.9,
+        "p95": 7.9,
         "stddev": 0
       },
       "slowdownMs": {
-        "mean": 28.9,
-        "p50": 13.7,
-        "p95": 69.9,
-        "stddev": 20.4
+        "mean": 12.9,
+        "p50": 12.5,
+        "p95": 15.9,
+        "stddev": 1.1
       }
     },
     "policyExactTokenizer": false,
@@ -327,11 +327,34 @@
       ]
     }
   },
-  "wasteSignals": [],
-  "actionSuggestions": [],
+  "wasteSignals": [
+    {
+      "id": "output_waste",
+      "severity": "warn",
+      "count": 3,
+      "message": "3 prompts still have low savings; output verbosity likely disproportionate to task complexity"
+    }
+  ],
+  "actionSuggestions": [
+    {
+      "id": "reduce_output_verbosity",
+      "severity": "medium",
+      "owner": "Prompt Quality Owner",
+      "routing": "warning_only",
+      "suggestion": "Switch to compact response template and cap verbose explanations unless explicitly requested."
+    }
+  ],
   "actionRouting": {
     "gateOk": true,
     "requiredActions": [],
-    "warningActions": []
+    "warningActions": [
+      {
+        "id": "reduce_output_verbosity",
+        "severity": "medium",
+        "owner": "Prompt Quality Owner",
+        "routing": "warning_only",
+        "suggestion": "Switch to compact response template and cap verbose explanations unless explicitly requested."
+      }
+    ]
   }
 }

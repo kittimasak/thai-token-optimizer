@@ -71,8 +71,8 @@ function detectOutputWasteSignal(rows = []) {
   const suspects = rows.filter(r => {
     const beforeTokens = Number(r.before?.estimatedTokens || 0);
     const saving = Number(r.savingPercent || 0);
-    // Increased threshold from 35 to 60 tokens for suspicion
-    return beforeTokens >= 60 && saving <= 5;
+    // Suspicious if prompt is at least medium length (30 tokens) but has very low savings
+    return beforeTokens >= 30 && saving <= 5;
   });
   if (suspects.length >= 3) {
     return {

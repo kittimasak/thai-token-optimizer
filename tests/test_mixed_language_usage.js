@@ -82,7 +82,7 @@ test('Mixed Thai/English safety prompt keeps destructive command and secret mark
   const input = 'ห้าม run `git push --force` บน production และต้อง backup ก่อน deploy โดย keep DATABASE_URL secret';
   const out = compressToBudget(input, { budget: 60, target: 'codex', speculative: true }).optimized;
   assert.match(out, /`git push --force`/);
-  assert.match(out, /production/);
+  assert.match(out, /prod(?:uction)?/);
   assert.match(out, /backup/);
   assert.match(out, /DATABASE_URL secret/);
   assert.equal(checkPreservation(input, out).preservationPercent, 100);

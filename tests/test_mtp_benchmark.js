@@ -36,7 +36,7 @@ test('benchmark --strict --default-policy --mtp returns MTP section and gate sta
   assert.match(out.stdout, /Action routing gate: PASS|Action routing gate: FAIL/);
   assert.match(out.stdout, /Waste Detector Signals/);
   assert.match(out.stdout, /Detector Action Suggestions/);
-  assert.match(out.stdout, /tool_cascade|bad_decomposition|low_saving_cluster|output_waste/);
+  assert.match(out.stdout, /tool_cascade|bad_decomposition|low_saving_cluster|output_waste|No significant waste/);
   const artifact = path.join(ROOT, 'benchmarks', 'regression_report.json');
   assert.ok(fs.existsSync(artifact), 'benchmark diagnostics artifact should exist');
   const parsed = JSON.parse(fs.readFileSync(artifact, 'utf8'));

@@ -107,7 +107,8 @@ function normalizeSemanticKey(text) {
 }
 
 const HARD_WORD_RE = /(```|`|https?:\/\/|~\/|\.\/|\/|version|เวอร์ชัน|v\d+(?:\.\d+)*|\b\d+\.\d+\.\d+\b|\b(?:node|npm|pnpm|git|docker|tto|codex|claude)\b|codex_hooks)/i;
-const STRUCTURE_SENSITIVE_RE = /^(\s*["']?(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status)[A-Za-z0-9_.-]+["']?\s*[:=]|\s*(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status)[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\s*at\s+[a-z0-9_<>]+\s*\(|.*\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b|\s*(?:MISSION|CONTEXT|CONCLUSION|OVERVIEW|SUMMARY|RESULT|git|rm|npm|pnpm|yarn|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|tto|thai-token-optimizer)\b|\s*(?:DROP|TRUNCATE|DELETE|UPDATE|ALTER|INSERT)\b)/i;
+const STRUCTURE_SENSITIVE_RE = /^(\s*at\s+.*|\s*["']?(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status)[A-Za-z0-9_.-]+["']?\s*[:=]|\s*(?!Progress|Step|INFO|WARN|DEBUG|TRACE|LOG|Level|Memory|Usage|Current|Size|Status)[A-Za-z0-9_.-]+\s*:|\s*[-*]\s+["']?[A-Za-z0-9_.-]+["']?\s*:|\s*\|.*\|\s*$|\b(?:ERROR|WARN|Exception|TypeError|ReferenceError|Cannot find module)\b|\s*(?:MISSION|CONTEXT|CONCLUSION|OVERVIEW|SUMMARY|RESULT|git|rm|npm|pnpm|yarn|docker|docker-compose|kubectl|helm|ssh|scp|rsync|curl|wget|python3?|pip3?|php|composer|mysql|psql|sqlite3|redis-cli|mongosh|ollama|codex|claude|tto|thai-token-optimizer)\b|\s*(?:DROP|TRUNCATE|DELETE|UPDATE|ALTER|INSERT)\b)/i;
+
 
 function collapseRepeatedPhrases(line) {
   const words = String(line || '').trim().split(/\s+/).filter(Boolean);
@@ -180,6 +181,14 @@ function aggressiveLogDedup(lines, level = 'auto') {
       continue;
     }
 
+    // 1.1 Safety: If it's a structure sensitive line (e.g. destructive command),
+    // skip aggressive dedup to preserve exactness.
+    if (/^\s{2,}at\s+/i.test(current) || STRUCTURE_SENSITIVE_RE.test(current)) {
+      out.push(current);
+      i++;
+      continue;
+    }
+
     // 1.2 Exact Repetition (Semantic Sequence Compression) - Top Priority for size 1
     let j = i + 1;
     while (j < lines.length && normalizeSemanticKey(lines[j]) === key) j++;
@@ -248,14 +257,6 @@ function aggressiveLogDedup(lines, level = 'auto') {
       continue;
     }
 
-    // Safety: If it's a structure sensitive line (e.g. destructive command),
-    // skip aggressive dedup to preserve exactness.
-    if (STRUCTURE_SENSITIVE_RE.test(current)) {
-      out.push(current);
-      i++;
-      continue;
-    }
-
     // 3. Pattern-Based Collapsing (Common Prefix)
     const prefixMatch = current.match(/^([\u0E00-\u0E7F\s]+)([:\s-]*)/); // Thai prefix and optional separators
     if (prefixMatch && prefixMatch[1].length > 6) {
@@ -316,8 +317,12 @@ function semanticDedup(text, level = 'auto') {
     const rawLines = block.split('\n').filter(Boolean);
     
     // Care-aware preprocessing: only collapse phrases if NOT structure-sensitive
-    const preprocessed = rawLines.map(line => {
-      if (STRUCTURE_SENSITIVE_RE.test(line)) return line;
+    const preprocessed = rawLines.map((line, idx) => {
+      // Explicit Stack Trace / Indented line check
+      if (/^\s{2,}at\s+/i.test(line)) return line;
+      
+      const match = STRUCTURE_SENSITIVE_RE.test(line);
+      if (match) return line;
       return collapseRepeatedPhrases(line);
     });
 
@@ -486,7 +491,6 @@ function selectiveWindowCompress(text, level = 'auto', semanticBlocks = []) {
     }
     const before = out;
     out = out.replace(pattern, repl);
-    if (out !== before) console.log(`DEBUG: Replaced ${pattern.source} -> "${out}"`);
   }
   // Avoid removing space before punctuation if it looks like a path or special technical notation
   out = out.replace(/[ \t]+([,;:!?])/g, '$1').replace(/[ \t]+\n/g, '\n');

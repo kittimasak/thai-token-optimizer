@@ -1,5 +1,5 @@
 # Thai Token Optimizer v2.0 Strict Regression Report
-Generated: 2026-05-15T15:32:45.547Z
+Generated: 2026-05-16T02:15:50.212Z
 Samples: 8
 Average estimated saving: 12%
 Minimum preservation: 100%
@@ -17,20 +17,20 @@ Strict gate: PASS
 ## MTP / Speculative Comparison
 Budget: 80 | Target: codex
 Runs: 9 (warmup: 1, seed: 20260512)
-Normal latency (mean/p50/p95/stddev): 1.2/1.2/1.6/0.1 ms
-Spec latency   (mean/p50/p95/stddev): 30.2/15.3/71.2/20.4 ms
-Slowdown mean (spec-normal): 29 ms
+Normal latency (mean/p50/p95/stddev): 1.5/1.5/1.9/0.2 ms
+Spec latency   (mean/p50/p95/stddev): 14.4/14.1/17.8/1.3 ms
+Slowdown mean (spec-normal): 12.9 ms
 Spec hit rate: 87.5%
 Enhanced gain on corpus_long_repetitive_mixed_tech_v1: 12233.3% (required >= 12%)
 MTP gate: PASS
 ## Drift Monitor (repeated-run stability)
-Normal saved   (mean/p50/p95/stddev): 9/9/9/0
-Spec saved     (mean/p50/p95/stddev): 8.4/8.4/8.4/0
-Slowdown (ms)  (mean/p50/p95/stddev): 28.9/13.7/69.9/20.4
+Normal saved   (mean/p50/p95/stddev): 7.5/7.5/7.5/0
+Spec saved     (mean/p50/p95/stddev): 7.9/7.9/7.9/0
+Slowdown (ms)  (mean/p50/p95/stddev): 12.9/12.5/15.9/1.1
 | Mode | Avg Saved | Avg After | Avg Preserve | Over Budget | Spec Mode Hits |
 |---|---:|---:|---:|---:|---:|
-| normal | 9 | 51.6 | 93.8% | 0 | 0 |
-| speculative | 8.4 | 52.3 | 100% | 0 | 7 |
+| normal | 7.5 | 55.5 | 93.8% | 0 | 0 |
+| speculative | 7.9 | 52.8 | 100% | 0 | 7 |
 | ID | Mode | Saved | After | Preserve | Over Budget |
 |---|---|---:|---:|---:|---|
 | constraint-version | spec:lite | 0 | 53 | 100% | no |
@@ -39,7 +39,7 @@ Slowdown (ms)  (mean/p50/p95/stddev): 28.9/13.7/69.9/20.4
 | research | spec:lite | 0 | 54 | 100% | no |
 | thai-filler-debug | spec:ultra | 24 | 55 | 100% | no |
 | thai-filler-install | spec:ultra | 14 | 56 | 100% | no |
-| thai-filler-research | spec:auto | 14 | 54 | 100% | no |
+| thai-filler-research | spec:lite | 10 | 58 | 100% | no |
 | thai-filler-report | spec:lite | 13 | 50 | 100% | no |
 ## Enhanced Corpus Gate (long repetitive narrative + mixed technical blocks)
 Corpus: benchmarks/corpus_long_repetitive_mixed_tech_v1.jsonl
@@ -70,9 +70,13 @@ Action routing gate: PASS
 | guard-mixed-narrative | 0 | 0 | 100% | 100% |
 | guard-safety-critical | 1 | 1 | 100% | 100% |
 ## Waste Detector Signals
-No significant waste signals detected.
+| ID | Severity | Message |
+|---|---|---|
+| output_waste | warn | 3 prompts still have low savings; output verbosity likely disproportionate to task complexity |
 ## Detector Action Suggestions
-No action suggestions.
+| ID | Severity | Owner | Routing | Suggestion |
+|---|---|---|---|---|
+| reduce_output_verbosity | medium | Prompt Quality Owner | warning_only | Switch to compact response template and cap verbose explanations unless explicitly requested. |
 ## Notes
 - Version remains Thai Token Optimizer v2.0 / package 2.0.0.
 - Exact tokenizer is optional; if unavailable the estimator falls back to heuristic mode.
