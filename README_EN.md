@@ -54,7 +54,8 @@ Notes:
 │ 13) Terminal UI           14) Policy and Config    15) CI Pipeline          │
 ├─ Operations ───────────────────────────────────────────────────────────────┤
 │ 16) Real Reduction        17) Runtime Artifacts    18) Troubleshooting      │
-│ 19) Development           20) Safety Checklist     21) License             │
+│ 19) Development           20) Safety Checklist     22) Shell Proxy Mode     │
+│ 21) License                                                                │
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -102,7 +103,7 @@ Tokens can be reduced, but correctness, safety, and key constraints must not be 
 │ Dynamic Masking              │ preservation checker      │ ops scan          │
 │ Sequence Detection           │ rollback-first workflow   │ fleet audit       │
 │ Smart Middle-Truncation      │ budget optimizer          │ context audit     │
-│ MTP speculative candidates   │                           │                   │
+│ MTP speculative candidates   │                           │ tto proxy (new)   │
 └──────────────────────────────┴──────────────────────────┴──────────────────┘
 ```
 
@@ -923,6 +924,40 @@ Example:
 tto backup all
 tto rollback latest --dry-run
 tto doctor --pretty
+```
+
+---
+
+## 22) Shell Proxy Mode (TTO-Proxy)
+
+TTO-Proxy wraps shell commands to compress their output **before** it reaches the AI agent. This saves input tokens and helps the AI focus on critical errors.
+
+### 22.1 Basic Usage
+
+```bash
+tto proxy <command> [args...]
+tto run <command> [args...]
+```
+
+Example:
+
+```bash
+tto proxy npm run test
+tto run git status
+```
+
+### 22.2 Agent Integration
+
+Configure your agent to use TTO-Proxy as a tool wrapper (e.g., in `.claude/settings.json`):
+
+```json
+{
+  "tools": {
+    "BashCommand": {
+      "wrapper": "tto proxy --silent --"
+    }
+  }
+}
 ```
 
 ---

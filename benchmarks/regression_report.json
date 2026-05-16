@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-16T03:19:22.742Z",
+  "generatedAt": "2026-05-16T03:27:05.210Z",
   "strict": true,
   "mtp": true,
   "reportPath": "benchmarks/regression_report.md",
@@ -111,7 +111,7 @@
     },
     "speculative": {
       "speculative": true,
-      "elapsedMs": 13.8,
+      "elapsedMs": 13.7,
       "avgSaved": 7.9,
       "avgAfter": 52.8,
       "avgPreserve": 100,
@@ -185,16 +185,16 @@
       ]
     },
     "normalLatency": {
-      "mean": 2,
+      "mean": 1.5,
       "p50": 1.4,
-      "p95": 6.8,
-      "stddev": 1.7
+      "p95": 1.9,
+      "stddev": 0.2
     },
     "speculativeLatency": {
-      "mean": 14.9,
-      "p50": 14.5,
-      "p95": 19.9,
-      "stddev": 1.8
+      "mean": 14.4,
+      "p50": 14,
+      "p95": 17.6,
+      "stddev": 1.2
     },
     "specHitRatePercent": 87.5,
     "slowdownMeanMs": 12.9,
@@ -216,7 +216,7 @@
       "actionRoutingOk": true
     },
     "delta": {
-      "elapsedMs": 12.4,
+      "elapsedMs": 12.3,
       "avgSaved": 0.4,
       "avgAfter": -2.7,
       "avgPreserve": 6.2
@@ -235,10 +235,10 @@
         "stddev": 0
       },
       "slowdownMs": {
-        "mean": 12.8,
-        "p50": 12.9,
-        "p95": 13.5,
-        "stddev": 0.5
+        "mean": 12.9,
+        "p50": 12.6,
+        "p95": 15.7,
+        "stddev": 1.1
       }
     },
     "policyExactTokenizer": false,
