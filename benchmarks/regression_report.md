@@ -1,5 +1,5 @@
 # Thai Token Optimizer v2.0 Strict Regression Report
-Generated: 2026-05-16T05:41:47.806Z
+Generated: 2026-05-16T07:21:10.156Z
 Samples: 8
 Average estimated saving: 12%
 Minimum preservation: 100%
@@ -17,16 +17,16 @@ Strict gate: PASS
 ## MTP / Speculative Comparison
 Budget: 80 | Target: codex
 Runs: 9 (warmup: 1, seed: 20260512)
-Normal latency (mean/p50/p95/stddev): 1.2/1.1/1.7/0.2 ms
-Spec latency   (mean/p50/p95/stddev): 13.5/13.4/17/1.3 ms
-Slowdown mean (spec-normal): 12.3 ms
+Normal latency (mean/p50/p95/stddev): 1.1/1/1.5/0.2 ms
+Spec latency   (mean/p50/p95/stddev): 13.1/12.7/15.6/1.1 ms
+Slowdown mean (spec-normal): 12 ms
 Spec hit rate: 87.5%
 Enhanced gain on corpus_long_repetitive_mixed_tech_v1: 12233.3% (required >= 12%)
 MTP gate: PASS
 ## Drift Monitor (repeated-run stability)
 Normal saved   (mean/p50/p95/stddev): 7.8/7.8/7.8/0
 Spec saved     (mean/p50/p95/stddev): 7.9/7.9/7.9/0
-Slowdown (ms)  (mean/p50/p95/stddev): 12.4/12.3/15.3/1.1
+Slowdown (ms)  (mean/p50/p95/stddev): 12/11.7/14.1/0.9
 | Mode | Avg Saved | Avg After | Avg Preserve | Over Budget | Spec Mode Hits |
 |---|---:|---:|---:|---:|---:|
 | normal | 7.8 | 52.9 | 100% | 0 | 0 |
