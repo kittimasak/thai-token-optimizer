@@ -173,11 +173,14 @@ function aggressiveLogDedup(lines, level = 'auto') {
       while (j < lines.length && lines[j] === current) j++;
       const count = j - i;
       if (count >= 3) {
-        out.push(`[${current}] รันซ้ำ ${count} ครั้ง`);
-        i = j;
-      } else {
-        out.push(lines[i++]);
+        const savesSpace = (current.length * count) > (current.length + 20);
+        if (count >= 5 || savesSpace) {
+          out.push(`[${current.trim()}] รันซ้ำ ${count} ครั้ง`);
+          i = j;
+          continue;
+        }
       }
+      out.push(lines[i++]);
       continue;
     }
 
@@ -194,8 +197,8 @@ function aggressiveLogDedup(lines, level = 'auto') {
     while (j < lines.length && normalizeSemanticKey(lines[j]) === key) j++;
     const exactCount = j - i;
     const savesSpace = (current.length * exactCount) > (current.length + 15);
-    if (exactCount >= 3 || (exactCount >= 2 && savesSpace)) {
-      out.push(`[${current.replace(/\.+$/, '')}] รันซ้ำ ${exactCount} ครั้ง`);
+    if (exactCount >= 3 && (exactCount >= 5 || savesSpace)) {
+      out.push(`[${current.replace(/\.+$/, '').trim()}] รันซ้ำ ${exactCount} ครั้ง`);
       i = j;
       continue;
     }
@@ -536,14 +539,18 @@ function compressPrompt(text, options = {}) {
   const level = options.level || 'auto';
   const original = String(text || '');
   const semanticBlocks = extractSemanticBlocks(original);
-  
+
   const compressed = transformSemanticAware(original, seg => compressSegment(seg, level));
   let normalized = compressed.replace(/\n{3,}/g, '\n\n').trim();
-  if (options.semanticDedup !== false) normalized = semanticDedup(normalized, level);
+
+  // ALWAYS apply semanticDedup for auto/full/ultra to handle ALD
+  if (options.semanticDedup !== false && (level === 'auto' || level === 'full' || level === 'ultra')) {
+    normalized = semanticDedup(normalized, level);
+  }
+
   if (options.selectiveWindow || level === 'ultra') normalized = selectiveWindowCompress(normalized, level, semanticBlocks);
   return options.lockConstraints === false ? normalized : appendMissingConstraints(original, normalized);
 }
-
 function formatCompressionReport(original, optimized, estimateSavings, preservation) {
   const stats = estimateSavings(original, optimized);
   const lines = [
