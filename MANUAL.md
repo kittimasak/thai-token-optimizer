@@ -125,7 +125,9 @@ quality [--pretty]
 coach [--pretty] [--apply quick|safe]
 calibration status|record|from-stats|clear [--pretty]
 context [--pretty]
+proxy|run <command...>  Run command and compress output for AI (Shell Proxy Mode)
 checkpoint status|list|capture|restore|precompact|postcompact [--pretty]
+
 cache stats|clear [--pretty]
 backup [target]
 backups
@@ -1063,9 +1065,51 @@ npm run calibration:gate
 
 ---
 
-## 29. Troubleshooting
+## 29. Shell Proxy Mode (TTO-Proxy)
 
-### 29.1 `UserPromptSubmit hook failed`
+TTO-Proxy ใช้ครอบคำสั่ง Shell เพื่อบีบอัด Output ภาษาไทยหรือ Log ที่ซ้ำซ้อนก่อนที่ AI Agent จะได้อ่าน ช่วยประหยัด Input Token ตั้งแต่ "ต้นน้ำ"
+
+### 29.1 การใช้งานพื้นฐาน
+
+```bash
+tto proxy <command> [args...]
+tto run <command> [args...]
+```
+
+ตัวอย่าง:
+
+```bash
+tto proxy npm run test
+tto run git status
+```
+
+### 29.2 Options
+
+| Option | ความหมาย |
+|---|---|
+| `--level auto|lite|full|safe` | เลือกระดับ compression (default: auto) |
+| `--target codex|claude` | ใช้ target estimator (default: codex) |
+| `--silent` | ปิด header/footer ของ TTO-Proxy (แสดงเฉพาะ output ที่บีบอัด) |
+
+### 29.3 Integration กับ AI Agents
+
+คุณสามารถตั้งค่าให้ Agent เรียกใช้ TTO-Proxy อัตโนมัติสำหรับคำสั่ง Bash เช่นใน `.claude/settings.json`:
+
+```json
+{
+  "tools": {
+    "BashCommand": {
+      "wrapper": "tto proxy --silent --"
+    }
+  }
+}
+```
+
+---
+
+## 30. Troubleshooting
+
+### 30.1 `UserPromptSubmit hook failed`
 
 อาการ:
 
@@ -1094,7 +1138,7 @@ node --check hooks/tto-stop-summary.js
 - debug log ควรไป stderr หรือปิดใน hook path
 - fallback ต้องคืน minimal valid JSON เช่น `{"continue":true}` ตาม hook contract
 
-### 29.2 `Stop hook failed`
+### 30.2 `Stop hook failed`
 
 อาการ:
 
@@ -1116,7 +1160,7 @@ node --check hooks/tto-stop-summary.js
 - ห้ามพิมพ์ dashboard/banner ลง stdout ใน stop hook
 - ใช้ stage message แบบ compact เฉพาะช่องทางที่ agent อนุญาต
 
-### 29.3 `doctor` เป็น WARN
+### 30.3 `doctor` เป็น WARN
 
 ไม่จำเป็นต้องแปลว่า TTO core พังเสมอไป ให้ดู target ที่ WARN:
 
@@ -1128,7 +1172,7 @@ tto doctor hermes --pretty
 
 ถ้าเป็น optional adapter ที่ยังไม่ได้ติดตั้งจริง สามารถติดตั้ง target นั้นหรือปล่อยไว้ตาม workflow ได้
 
-### 29.4 `benchmark` fail
+### 30.4 `benchmark` fail
 
 ตรวจ artifacts:
 

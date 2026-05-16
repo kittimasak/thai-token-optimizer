@@ -34,6 +34,7 @@ const { listProfiles, setProfile, describeProfile } = require('../hooks/tto-prof
 const { buildContextAudit } = require('../hooks/tto-context-audit');
 const { buildFleetAudit } = require('../hooks/tto-fleet-audit');
 const { summarizeCalibration, recordCalibration, recordFromStatsRealTotal, clearCalibration } = require('../hooks/tto-calibration');
+const { runProxy } = require('../hooks/tto-proxy');
 const {
   captureCheckpoint,
   listCheckpoints,
@@ -70,6 +71,7 @@ Commands:
   coach [--pretty] [--apply quick|safe] Guided remediation plan (health + anti-pattern + fix plan)
   calibration status|record|from-stats|clear [--pretty]
   context [--pretty]      Deep context component audit (skills/mcp/config/memory/agents/tools)
+  proxy|run <command...>  Run command and compress output for AI (Shell Proxy Mode)
   checkpoint status|list|capture|restore|precompact|postcompact [--pretty]
   cache stats|clear [--pretty]
   backup [target]         Create config backup
@@ -303,6 +305,40 @@ function runClassify(args) {
   const text = textFromArgsOrFile(cleanArgs);
   const result = classifyText(text);
   console.log(pretty ? renderSafety(result) : JSON.stringify(result, null, 2));
+}
+async function runProxyCommand(args) {
+  const flags = ['--pretty', '--silent'];
+  const valueOptions = ['--level', '--target', '--budget'];
+  validateKnownOptions(args, { flags, valueOptions });
+  
+  const level = parseOption(args, '--level', 'auto');
+  const target = parseOption(args, '--target', 'codex');
+  const budget = parseInt(parseOption(args, '--budget', '0'));
+  const silent = hasFlag(args, '--silent');
+  
+  // Find the start of the command (anything that is not a flag or a value for a flag)
+  let cmdStart = -1;
+  const valOpts = ['--level', '--target', '--budget'];
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a.startsWith('--')) {
+      if (valOpts.includes(a)) i++; // skip the value
+      continue;
+    }
+    cmdStart = i;
+    break;
+  }
+  
+  if (cmdStart === -1) {
+    console.error('Usage: tto proxy|run [--level L] [--target T] [--budget B] <command...>');
+    process.exit(1);
+  }
+  
+  const command = args[cmdStart];
+  const cmdArgs = args.slice(cmdStart + 1);
+  
+  const code = await runProxy(command, cmdArgs, { level, target, budget, silent });
+  process.exit(code);
 }
 function runDoctorCommand(args = []) {
   validateKnownOptions(args, { flags: ['--ci', '--pretty'] });
@@ -870,6 +906,7 @@ try {
   else if (cmd === 'uninstall') uninstall(normalizeTarget(rest[0]));
   else if (cmd === 'install-agents') installAgents();
   else if (cmd === 'estimate') runEstimate(rest);
+  else if (cmd === 'proxy' || cmd === 'run') runProxyCommand(rest);
   else if (cmd === 'compress' || cmd === 'rewrite') runCompress(rest);
   else if (cmd === 'preserve') runPreserve(rest);
   else if (cmd === 'classify') runClassify(rest);
