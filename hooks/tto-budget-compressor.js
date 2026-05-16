@@ -21,7 +21,7 @@
 
 const { compressPrompt } = require('./tto-compressor');
 const { estimateTokens, estimateSavings } = require('./tto-token-estimator');
-const { checkPreservation } = require('./tto-preservation-checker');
+const { checkPreservation, normalizedIncludes } = require('./tto-preservation-checker');
 const { appendMissingConstraints, extractConstraints } = require('./tto-constraint-locker');
 const { collectProtectedRanges } = require('./tto-code-aware-parser');
 const { classifyTask, TIERS } = require('./tto-profiles');
@@ -52,29 +52,25 @@ function protectedValues(text) {
 function appendMissingProtected(original, optimized) {
   let out = String(optimized || '').trim();
   
-  // If the optimized output already contains a sequence summary, 
-  // we assume individual repetitive technical values are intentionally summarized.
-  const hasSequenceSummary = /sequence detected|รันซ้ำ|พบซ้ำ/.test(out);
+  // If the optimized output already contains a summary or SMT placeholder,
+  // we assume technical items are likely summarized.
+  const hasSummary = /sequence detected|รันซ้ำ|พบซ้ำ|ย่อรายละเอียด/.test(out);
   
   const missing = unique(protectedValues(original)).filter(v => {
-    if (out.includes(v) || out.includes(String(v).trim())) return false;
-    // SMT awareness: if it's a long technical value that was middle-truncated
-    if (v.length > 20 && v.includes('...')) {
-      const parts = v.split('...');
-      if (parts.length >= 2 && out.includes(parts[0].trim()) && out.includes(parts[parts.length-1].trim())) return false;
-    }
+    if (normalizedIncludes(out, v)) return false;
+    
     // If we have any summary, be extremely selective about adding remnants
-    if (hasSequenceSummary) {
-      if (v.includes('module_') || v.includes('0x') || /^[a-z0-9_.-]+\.[a-z]{2,4}$/i.test(v) || /^\d+$/.test(v)) return false;
+    if (hasSummary) {
+      // Only keep critical items if summarized (e.g. destructive commands, IP, Port)
+      if (!/rm|drop|delete|terminate|stop|git\s+push|--force|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|:\d{4,5}/i.test(v)) return false;
     }
     
     return true;
   });
   if (!missing.length) return out;
   
-  // Smart Limiting: Only show up to 3 remnants if a summary exists
-  if (hasSequenceSummary && missing.length > 10) return out;
-  const displayLimit = hasSequenceSummary ? 3 : 5;
+  // Smart Limiting
+  const displayLimit = hasSummary ? 2 : 5;
   const displayMissing = missing.slice(0, displayLimit);
   const remnantCount = missing.length - displayMissing.length;
   const suffix = [
@@ -88,9 +84,12 @@ function appendMissingProtected(original, optimized) {
 
 function enforcePreservation(original, optimized, budget = 0) {
   let out = optimized;
-  const targetTokens = budget > 0 ? budget : 2000; // Default threshold
 
-  // Try adding protected technical values, but be budget-aware
+  // Check if we actually need to enforce anything
+  const currentStatus = checkPreservation(original, out);
+  if (currentStatus.preservationPercent === 100) return out;
+
+  // Try adding protected technical values
   out = appendMissingProtected(original, out);
 
   // Try adding constraints - SMT aware

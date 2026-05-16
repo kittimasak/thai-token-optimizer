@@ -66,7 +66,13 @@ function normalizedIncludes(haystack, needle) {
   const h = String(haystack || '').toLowerCase();
   const n = String(needle || '').toLowerCase();
   if (!n) return true;
-  if (h.includes(n)) return true;
+  
+  // Collapse whitespace for loose matching
+  const hNorm = h.replace(/\s+/g, ' ');
+  const nNorm = n.replace(/\s+/g, ' ');
+  
+  if (hNorm.includes(nNorm)) return true;
+  
   if (n.length > 60) {
     const tokens = n.match(/[A-Za-z0-9_.:@#=+\-/]+|[\u0E00-\u0E7F]+/g) || [];
     const important = tokens.filter(t => t.length > 1).slice(0, 12);
@@ -93,4 +99,4 @@ if (require.main === module) {
   process.stdout.write(JSON.stringify(checkPreservation(original, optimized), null, 2) + '\n');
 }
 
-module.exports = { IMPORTANT_PATTERNS, collectImportantItems, checkPreservation };
+module.exports = { IMPORTANT_PATTERNS, collectImportantItems, checkPreservation, normalizedIncludes };

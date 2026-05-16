@@ -84,19 +84,23 @@ async function runProxy(command, args, options = {}) {
       // Try to find a lens for the command or any arg if command is 'node'/'npm'
       let lensCmd = command;
       const knownLenses = ['git', 'docker', 'kubectl', 'npm', 'pnpm', 'yarn', 'bun'];
-      
       const findLens = (cmd, args) => {
         const c = String(cmd).toLowerCase();
         if (knownLenses.includes(c)) return c;
-        for (const arg of args) {
-          const a = String(arg).toLowerCase();
-          for (const k of knownLenses) {
-            if (a.includes(k)) return k;
-          }
+        if ((c === 'node' || c === 'npm' || c === 'npx' || c === 'bun') && args.length > 0) {
+           for (const arg of args) {
+             if (!arg || arg.startsWith('-')) continue;
+             const a = String(arg).toLowerCase();
+             for (const k of knownLenses) {
+               // Check if tool name is in path (e.g. bin/git) or filename (e.g. git_mock.js)
+               if (a === k || a.includes('/' + k) || a.includes('\\' + k) || a.includes(k + '_') || a.includes('_' + k)) return k;
+             }
+             break;
+           }
         }
         return c;
       };
-      
+
       lensCmd = findLens(command, args);
       const lensOutput = applyLens(lensCmd, args, fullOutput, { silent });
 

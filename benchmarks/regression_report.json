@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-16T05:16:48.525Z",
+  "generatedAt": "2026-05-16T05:41:47.807Z",
   "strict": true,
   "mtp": true,
   "reportPath": "benchmarks/regression_report.md",
@@ -36,10 +36,10 @@
     "warmup": 1,
     "normal": {
       "speculative": false,
-      "elapsedMs": 1.6,
-      "avgSaved": 7.5,
-      "avgAfter": 55.5,
-      "avgPreserve": 93.8,
+      "elapsedMs": 1,
+      "avgSaved": 7.8,
+      "avgAfter": 52.9,
+      "avgPreserve": 100,
       "overBudgetCount": 0,
       "specModeCount": 0,
       "rows": [
@@ -70,9 +70,9 @@
         {
           "id": "research",
           "mode": "normal",
-          "saved": 0,
-          "after": 73,
-          "preserve": 50,
+          "saved": 2,
+          "after": 52,
+          "preserve": 100,
           "overBudget": false
         },
         {
@@ -111,7 +111,7 @@
     },
     "speculative": {
       "speculative": true,
-      "elapsedMs": 15,
+      "elapsedMs": 12.1,
       "avgSaved": 7.9,
       "avgAfter": 52.8,
       "avgPreserve": 100,
@@ -185,19 +185,19 @@
       ]
     },
     "normalLatency": {
-      "mean": 1.5,
-      "p50": 1.5,
-      "p95": 2,
+      "mean": 1.2,
+      "p50": 1.1,
+      "p95": 1.7,
       "stddev": 0.2
     },
     "speculativeLatency": {
-      "mean": 14.9,
-      "p50": 14.8,
-      "p95": 18.4,
+      "mean": 13.5,
+      "p50": 13.4,
+      "p95": 17,
       "stddev": 1.3
     },
     "specHitRatePercent": 87.5,
-    "slowdownMeanMs": 13.4,
+    "slowdownMeanMs": 12.3,
     "gate": {
       "mtpMinAveragePreservationPercent": 100,
       "mtpMinSpecHitRatePercent": 60,
@@ -216,16 +216,16 @@
       "actionRoutingOk": true
     },
     "delta": {
-      "elapsedMs": 13.4,
-      "avgSaved": 0.4,
-      "avgAfter": -2.7,
-      "avgPreserve": 6.2
+      "elapsedMs": 11.1,
+      "avgSaved": 0.1,
+      "avgAfter": -0.1,
+      "avgPreserve": 0
     },
     "drift": {
       "normalSaved": {
-        "mean": 7.5,
-        "p50": 7.5,
-        "p95": 7.5,
+        "mean": 7.8,
+        "p50": 7.8,
+        "p95": 7.8,
         "stddev": 0
       },
       "speculativeSaved": {
@@ -235,9 +235,9 @@
         "stddev": 0
       },
       "slowdownMs": {
-        "mean": 13.4,
-        "p50": 13.4,
-        "p95": 16.4,
+        "mean": 12.4,
+        "p50": 12.3,
+        "p95": 15.3,
         "stddev": 1.1
       }
     },
