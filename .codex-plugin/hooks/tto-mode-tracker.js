@@ -90,22 +90,10 @@ function emitActiveReminder(state, prompt, safety) {
   const est = estimateTokens(prompt, 'codex/claude', { exact: policy.exactTokenizer });
   appendStats({ event: 'UserPromptSubmit', estimatedPromptTokens: est.estimatedTokens, level: state.level, effectiveLevel, safetyCategories: safety.categories });
   setState({ lastSafetyCategory: safety.categories[0] || undefined });
-  const context =
-    Number(est.estimatedTokens || 0) >= 300 || safety.safeCritical || safety.shouldRelaxCompression
-      ? `[TTO Stage 1/4] Detect Intent\n` +
-        `mode=${state.level}; effective=${effectiveLevel}; profile=${state.profile || 'coding'}; speculative=${state.speculative ? 'on' : 'off'}\n` +
-        `[TTO Stage 3/4] Preserve Critical\n` +
-        `คง command/path/error/identifier ให้ตรงเดิม; safety=${safety.categories.join(', ') || 'clear'}\n` +
-        `[TTO Stage 4/4] Output Compact\n` +
-        `ตอบไทยกระชับ พร้อม next action ที่จำเป็น`
-      : `TTO: compact Thai active (${state.level}->${effectiveLevel}); keep command/path/error/ID exact.`;
-  process.stdout.write(JSON.stringify({
-    continue: true,
-    hookSpecificOutput: {
-      hookEventName: 'UserPromptSubmit',
-      additionalContext: context
-    }
-  }));
+  // Codex hook output must be strict JSON and schema-compatible.
+  // In practice, many Codex builds only accept `{ continue: true }` here.
+  // Any additional fields risk "invalid user prompt submit JSON output".
+  process.stdout.write(JSON.stringify({ continue: true }));
 }
 
 if (require.main === module) {

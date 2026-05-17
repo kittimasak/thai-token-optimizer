@@ -44,8 +44,9 @@ process.stdin.on('end', () => {
         hookSpecificOutput: {
           hookEventName: 'PreToolUse',
           additionalContext:
-            `THAI TOKEN OPTIMIZER v2.0 SAFETY OVERRIDE: ${safety.categories.join(', ')}. ` +
-            'Before tool use, preserve exact command, explain risk briefly, include backup/rollback/verification when relevant. Do not compress safety-critical steps.'
+            `[TTO Stage 3/4] Preserve Critical (Safety Override)\n` +
+            `หมวดความเสี่ยง: ${safety.categories.join(', ') || 'unknown'}\n` +
+            'ก่อนใช้ tool: คง command exact, อธิบายความเสี่ยงสั้นๆ, ระบุ backup/rollback/verification และห้ามบีบอัดส่วนที่กระทบความปลอดภัย'
         }
       });
     } else {

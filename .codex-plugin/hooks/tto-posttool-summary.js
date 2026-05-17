@@ -38,7 +38,7 @@ process.stdin.on('end', () => {
       hookSpecificOutput: {
         hookEventName: 'PostToolUse',
         additionalContext:
-          'THAI TOKEN OPTIMIZER v2.0 POST-TOOL: summarize tool result in compact Thai. Include only changed files, key output, errors, and next action. Keep exact paths/errors.'
+          '[TTO Stage 4/4] Output Compact\nสรุปผลแบบสั้นและชัด: ไฟล์ที่เปลี่ยน, ผลลัพธ์สำคัญ, error (ถ้ามี), และ next action โดยคง path/error exact'
       }
     });
   } catch (e) {

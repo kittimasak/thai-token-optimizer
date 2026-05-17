@@ -127,6 +127,13 @@ function hookCommand(file) { const root = path.resolve(__dirname, '..'); return 
 function isTtoEntry(entry) { const s = JSON.stringify(entry); return s.includes('tto-') || s.includes('thai-token-optimizer'); }
 function commandHook(file, timeout = 5, statusMessage) { const hook = { type: 'command', command: hookCommand(file), timeout }; if (statusMessage) hook.statusMessage = statusMessage; return hook; }
 function addHookEvent(container, eventName, entry) { container[eventName] ||= []; container[eventName] = container[eventName].filter(e => !isTtoEntry(e)).concat(entry); }
+const CODEX_STAGE_STATUS = Object.freeze({
+  SessionStart: '[TTO Stage 1/4] Detect Intent - loading Thai Token Optimizer v2.0',
+  UserPromptSubmit: '[TTO Stage 1/4] Detect Intent - tracking TTO mode/profile/safety',
+  PreToolUse: '[TTO Stage 3/4] Preserve Critical - checking safety guard',
+  PostToolUse: '[TTO Stage 4/4] Output Compact - preparing compact tool summary',
+  Stop: '[TTO Stage 4/4] Output Compact - finalizing safely'
+});
 
 function installCodex() {
   const codexHome = process.env.CODEX_HOME || path.join(os.homedir(), '.codex');
@@ -134,11 +141,11 @@ function installCodex() {
   const configPath = path.join(codexHome, 'config.toml');
   const hooks = readJson(hooksPath, { hooks: {} });
   hooks.hooks ||= {};
-  addHookEvent(hooks.hooks, 'SessionStart', { matcher: 'startup|resume|clear', hooks: [commandHook('tto-activate.js', 5, 'Loading Thai Token Optimizer v2.0')] });
-  addHookEvent(hooks.hooks, 'UserPromptSubmit', { hooks: [commandHook('tto-mode-tracker.js', 5)] });
-  addHookEvent(hooks.hooks, 'PreToolUse', { hooks: [commandHook('tto-pretool-guard.js', 5)] });
-  addHookEvent(hooks.hooks, 'PostToolUse', { hooks: [commandHook('tto-posttool-summary.js', 5)] });
-  addHookEvent(hooks.hooks, 'Stop', { hooks: [commandHook('tto-stop-summary.js', 5)] });
+  addHookEvent(hooks.hooks, 'SessionStart', { matcher: 'startup|resume|clear', hooks: [commandHook('tto-activate.js', 5, CODEX_STAGE_STATUS.SessionStart)] });
+  addHookEvent(hooks.hooks, 'UserPromptSubmit', { hooks: [commandHook('tto-mode-tracker.js', 5, CODEX_STAGE_STATUS.UserPromptSubmit)] });
+  addHookEvent(hooks.hooks, 'PreToolUse', { hooks: [commandHook('tto-pretool-guard.js', 5, CODEX_STAGE_STATUS.PreToolUse)] });
+  addHookEvent(hooks.hooks, 'PostToolUse', { hooks: [commandHook('tto-posttool-summary.js', 5, CODEX_STAGE_STATUS.PostToolUse)] });
+  addHookEvent(hooks.hooks, 'Stop', { hooks: [commandHook('tto-stop-summary.js', 5, CODEX_STAGE_STATUS.Stop)] });
   writeJson(hooksPath, hooks);
   const changed = ensureCodexFeatureFlag(configPath);
   console.log(`Installed ${NAME} ${VERSION_LABEL} for Codex:\n- ${hooksPath}\n- ${configPath}${changed ? ' (enabled codex_hooks)' : ''}`);

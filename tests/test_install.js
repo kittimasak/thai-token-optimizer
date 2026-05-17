@@ -44,6 +44,9 @@ test('install writes Codex hooks and enables codex_hooks feature', () => {
   const hooks = JSON.parse(fs.readFileSync(path.join(codexHome, 'hooks.json'), 'utf8'));
   assert.ok(JSON.stringify(hooks).includes('tto-activate.js'));
   assert.ok(JSON.stringify(hooks).includes('tto-mode-tracker.js'));
+  assert.match(JSON.stringify(hooks), /\[TTO Stage 1\/4\] Detect Intent/);
+  assert.match(JSON.stringify(hooks), /\[TTO Stage 3\/4\] Preserve Critical/);
+  assert.match(JSON.stringify(hooks), /\[TTO Stage 4\/4\] Output Compact/);
   const config = fs.readFileSync(path.join(codexHome, 'config.toml'), 'utf8');
   assert.match(config, /\[features\][\s\S]*codex_hooks\s*=\s*true/);
 });

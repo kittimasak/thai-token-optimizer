@@ -73,13 +73,23 @@ function scriptExists(root, file) {
   return fs.existsSync(path.join(root, 'hooks', file));
 }
 
-function simulateHook(root, file, input = '{}') {
+function simulateHook(root, file, input = '{}', options = {}) {
   const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'tto-doctor-hook-'));
   try {
     const env = { ...process.env, TTO_HOME: tmpHome, THAI_TOKEN_OPTIMIZER_HOME: tmpHome };
     const script = path.join(root, 'hooks', file);
     const r = spawnSync(process.execPath, [script], { input, encoding: 'utf8', env, timeout: 5000 });
-    return { ok: r.status === 0, detail: r.status === 0 ? file : `${file} exit ${r.status}: ${(r.stderr || '').trim()}` };
+    if (r.status !== 0) return { ok: false, detail: `${file} exit ${r.status}: ${(r.stderr || '').trim()}` };
+    if (options.requireJson) {
+      try {
+        const parsed = JSON.parse((r.stdout || '').trim());
+        if (parsed && parsed.continue === true) return { ok: true, detail: `${file} JSON` };
+        return { ok: false, detail: `${file} JSON missing continue=true` };
+      } catch (e) {
+        return { ok: false, detail: `${file} invalid JSON stdout: ${e.message}` };
+      }
+    }
+    return { ok: true, detail: file };
   } catch (e) {
     return { ok: false, detail: `${file}: ${e.message}` };
   } finally {
@@ -115,7 +125,7 @@ function addCodexChecks(checks, paths, root) {
     const commands = hookCommandsForEvent(hooks?.hooks, eventName);
     checks.push({ name: `Codex ${eventName} hook command`, ok: commandUsesExpectedScript(commands, root, file), detail: path.join(root, 'hooks', file), required: true });
     checks.push({ name: `Codex ${eventName} hook script`, ok: scriptExists(root, file), detail: path.join(root, 'hooks', file), required: true });
-    const sim = simulateHook(root, file, input);
+    const sim = simulateHook(root, file, input, { requireJson: eventName !== 'SessionStart' });
     checks.push({ name: `Codex ${eventName} hook simulation`, ok: sim.ok, detail: sim.detail, required: true });
   }
 }
